@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reporte Integral — Ventas · Reservas · Retiros | Ciudad del Valle</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --primary:#0f2b4a;--accent:#3b82f6;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;
+  --purple:#8b5cf6;--cyan:#06b6d4;
+  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;
+  --sidebar:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+#sidebar{width:var(--sidebar);background:var(--primary);color:#94a3b8;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:200;display:flex;flex-direction:column}
+.sb-logo{padding:1.25rem 1rem;border-bottom:1px solid #ffffff18;display:flex;align-items:center;gap:.6rem}
+.sb-logo span{font-size:1.5rem}
+.sb-logo h1{font-size:.82rem;font-weight:700;color:#fff;line-height:1.3}
+.sb-nav{padding:.75rem 0;flex:1}
+.sb-section{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;color:#475569;padding:.6rem 1rem .3rem;font-weight:700}
+.sb-link{display:flex;align-items:center;gap:.6rem;padding:.55rem 1rem;color:#94a3b8;text-decoration:none;font-size:.82rem;transition:all .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.sb-link:hover,.sb-link.active{background:#ffffff12;color:#fff}
+.sb-link .icon{font-size:.95rem;width:1.2rem;text-align:center}
+.sb-footer{padding:.75rem 1rem;border-top:1px solid #ffffff18;font-size:.72rem;color:#475569}
+
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px #0001}
+.topbar h2{font-size:1rem;color:var(--primary);font-weight:700}
+.topbar-pills{display:flex;gap:.5rem}
+.pill{font-size:.72rem;padding:.25rem .65rem;border-radius:20px;font-weight:600}
+.pill-blue{background:#dbeafe;color:#1d4ed8}
+.pill-green{background:#dcfce7;color:#15803d}
+.pill-red{background:#fee2e2;color:#991b1b}
+
+/* ── SECTIONS ── */
+.page-section{padding:1.5rem;display:none}
+.page-section.active{display:block}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:1.5rem}
+.kpi-card{background:var(--card);border-radius:14px;padding:1.1rem 1.25rem;border:1px solid var(--border);box-shadow:0 2px 8px #0001;display:flex;flex-direction:column;gap:.4rem;position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:4px 0 0 4px}
+.kpi-card.blue::after{background:var(--accent)}
+.kpi-card.green::after{background:var(--green)}
+.kpi-card.red::after{background:var(--red)}
+.kpi-card.yellow::after{background:var(--yellow)}
+.kpi-card.purple::after{background:var(--purple)}
+.kpi-card.cyan::after{background:var(--cyan)}
+.kpi-icon{font-size:1.5rem}
+.kpi-val{font-size:2rem;font-weight:800;line-height:1}
+.kpi-val.blue{color:var(--accent)}
+.kpi-val.green{color:var(--green)}
+.kpi-val.red{color:var(--red)}
+.kpi-val.yellow{color:var(--yellow)}
+.kpi-val.purple{color:var(--purple)}
+.kpi-lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi-sub{font-size:.75rem;color:var(--muted)}
+
+/* ── SECTION HEADER ── */
+.sec-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--accent)}
+.sec-header h2{font-size:1.15rem;color:var(--primary);font-weight:700}
+.sec-tag{background:var(--accent);color:#fff;font-size:.7rem;padding:.2rem .65rem;border-radius:12px;font-weight:700}
+.sec-tag.green{background:var(--green)}
+.sec-tag.red{background:var(--red)}
+
+/* ── CHART GRID ── */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.chart-box{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:1.25rem;box-shadow:0 2px 8px #0001}
+.chart-box h3{font-size:.88rem;font-weight:700;color:var(--primary);margin-bottom:1rem;display:flex;align-items:center;gap:.4rem}
+.chart-box.full{grid-column:1/-1}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;border-radius:12px;box-shadow:0 2px 8px #0001;margin-bottom:1.5rem}
+.data-table{width:100%;border-collapse:collapse;font-size:.83rem;background:var(--card)}
+.data-table thead tr{background:var(--primary);color:#fff}
+.data-table th{padding:.65rem .85rem;text-align:center;font-weight:600;font-size:.78rem;white-space:nowrap}
+.data-table th.left{text-align:left}
+.data-table td{padding:.55rem .8rem;text-align:center;border-bottom:1px solid var(--border)}
+.data-table td.left{text-align:left;font-weight:600}
+.data-table tr:nth-child(even) td{background:#f8fafc}
+.data-table tr:hover td{background:#f0f7ff}
+.data-table .top1 td{background:#fffbeb!important}
+.data-table .top2 td{background:#f0f9ff!important}
+.data-table .top3 td{background:#f0fdf4!important}
+
+/* ── MINI BAR ── */
+.mini-bar-wrap{display:flex;align-items:center;gap:.4rem}
+.mini-bar{height:8px;border-radius:4px;background:var(--accent);min-width:2px;transition:width .3s}
+.mini-bar.green{background:var(--green)}
+.mini-bar.red{background:var(--red)}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:.18rem .55rem;border-radius:8px;font-size:.74rem;font-weight:700}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-yellow{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-gray{background:#f1f5f9;color:#64748b}
+.badge-purple{background:#f3e8ff;color:#7e22ce}
+
+/* ── TABS ── */
+.tab-bar{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.tab-btn{padding:.45rem 1rem;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:.8rem;color:var(--muted);transition:all .15s;font-weight:600}
+.tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* ── HEATMAP ── */
+.heatmap-table{width:100%;border-collapse:collapse;font-size:.78rem;white-space:nowrap;background:var(--card)}
+.heatmap-table th{background:var(--primary);color:#fff;padding:.5rem .55rem;text-align:center;font-size:.74rem;font-weight:600}
+.heatmap-table th.nametop{text-align:left;min-width:90px}
+.heatmap-table td{padding:.4rem .5rem;text-align:center;border:1px solid #e8eef4}
+.heatmap-table .name-cell{text-align:left;font-weight:700;padding-left:.75rem;background:#f8fafc}
+.heatmap-table .total-cell{font-weight:800;color:var(--accent);background:#f0f7ff}
+.hm0{color:#d1d5db;font-size:.72rem}
+.hm1{background:#dbeafe;color:#1d4ed8;font-weight:600}
+.hm2{background:#bfdbfe;color:#1e40af;font-weight:700}
+.hm3{background:#93c5fd;color:#1e3a8a;font-weight:700}
+.hm4{background:#3b82f6;color:#fff;font-weight:800}
+.hm5{background:#1d4ed8;color:#fff;font-weight:800}
+
+/* ── ACUM CHART WRAPPER ── */
+.acum-row{display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+
+/* ── VENDEDOR PROFILE ── */
+.vend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.25rem;margin-bottom:1.5rem}
+.vend-profile{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 10px #0001}
+.vp-header{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.vp-name{display:flex;align-items:center;gap:.6rem}
+.vp-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;color:#fff}
+.vp-name h4{font-size:.95rem;font-weight:700;color:var(--primary)}
+.vp-rank{font-size:.72rem;color:var(--muted)}
+.vp-kpis{display:flex;gap:.75rem;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);background:#fafbfc}
+.vp-kpi{text-align:center;min-width:55px}
+.vp-kpi .v{font-size:1.2rem;font-weight:800}
+.vp-kpi .l{font-size:.65rem;color:var(--muted);text-transform:uppercase;font-weight:600}
+.vp-body{padding:.85rem 1.25rem}
+.vp-ytable{width:100%;font-size:.78rem;border-collapse:collapse}
+.vp-ytable th{color:var(--muted);font-weight:600;font-size:.7rem;text-transform:uppercase;padding:.3rem .4rem;text-align:center;border-bottom:2px solid var(--border)}
+.vp-ytable th.lft{text-align:left}
+.vp-ytable td{padding:.3rem .4rem;text-align:center;border-bottom:1px solid #f1f5f9}
+
+/* ── NOTE BOX ── */
+.note{background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:#78350f;line-height:1.5}
+.note.info{background:#eff6ff;border-color:#93c5fd;color:#1e3a5f}
+.note strong{font-weight:700}
+
+/* ── PROGRESS BAR ── */
+.prog-bar-bg{background:#e2e8f0;border-radius:99px;height:8px;overflow:hidden;flex:1}
+.prog-bar-fill{height:100%;border-radius:99px;transition:width .4s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  #sidebar{transform:translateX(-100%)}
+  #main{margin-left:0}
+  .acum-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <span>🏘️</span>
+    <h1>Ciudad del Valle<br><span style="color:#64748b;font-weight:400">Informe Integral</span></h1>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Empresa</div>
+    <button class="sb-link active" onclick="showSection('resumen')"><span class="icon">📊</span>Resumen General</button>
+    <button class="sb-link" onclick="showSection('anual')"><span class="icon">📅</span>Por Año</button>
+    <button class="sb-link" onclick="showSection('acumulado')"><span class="icon">📈</span>Acumulado</button>
+    <div class="sb-section">Equipo</div>
+    <button class="sb-link" onclick="showSection('vendedores')"><span class="icon">👥</span>Vendedores</button>
+    <button class="sb-link" onclick="showSection('formalizadores')"><span class="icon">📝</span>Formalizadores</button>
+    <div class="sb-section">Detalle</div>
+    <button class="sb-link" onclick="showSection('mensual')"><span class="icon">🗓️</span>Tablas Mensuales</button>
+  </div>
+  <div class="sb-footer">Datos 2019–Feb 2026</div>
+</nav>
+
+<!-- ── MAIN ── -->
+<main id="main">
+  <div class="topbar">
+    <h2 id="topbar-title">📊 Resumen General</h2>
+    <div class="topbar-pills">
+      <span class="pill pill-blue">732 Formaliz.</span>
+      <span class="pill pill-green">907 Reservas</span>
+      <span class="pill pill-red">213 Retiros</span>
+    </div>
+  </div>
+
+
+  <!-- ── SECTION: RESUMEN ── -->
+  <div class="page-section active" id="sec-resumen">
+    <div class="sec-header"><h2>📊 Resumen General</h2><span class="sec-tag">2019 – 2026</span></div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card blue"><div class="kpi-icon">✅</div><div class="kpi-val blue">732</div><div class="kpi-lbl">Formalizaciones Totales</div><div class="kpi-sub">2019 – Feb 2026</div></div>
+      <div class="kpi-card green"><div class="kpi-icon">📋</div><div class="kpi-val green">907</div><div class="kpi-lbl">Reservas Totales</div><div class="kpi-sub">Cuadro Resumen</div></div>
+      <div class="kpi-card red"><div class="kpi-icon">❌</div><div class="kpi-val red">213</div><div class="kpi-lbl">Retiros Estimados</div><div class="kpi-sub">Reservas sin formalizar</div></div>
+      <div class="kpi-card yellow"><div class="kpi-icon">💰</div><div class="kpi-val yellow">₡153.7B</div><div class="kpi-lbl">Ventas Totales</div><div class="kpi-sub">Colones (Billones)</div></div>
+      <div class="kpi-card purple"><div class="kpi-icon">🏆</div><div class="kpi-val purple">90</div><div class="kpi-lbl">Máx. Vendedor</div><div class="kpi-sub">Hannia (2021–2025)</div></div>
+      <div class="kpi-card cyan"><div class="kpi-icon">⏱️</div><div class="kpi-val cyan">49d</div><div class="kpi-lbl">Mejor Tiempo 2025</div><div class="kpi-sub">Promedio Reserva→Form.</div></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box full">
+        <h3>📊 Evolución Anual — Formalizaciones · Reservas · Retiros (2019–2026)</h3>
+        <canvas id="cGlobalLine" height="120"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>💰 Ventas Anuales (₡ Billones)</h3>
+        <canvas id="cVentasBar" height="220"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>🍩 Distribución Formaliz. por Vendedor (Top 10)</h3>
+        <canvas id="cPieVend" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-header" style="margin-top:1.5rem"><h2>📋 Tabla Resumen Anual</h2><span class="sec-tag green">Datos Completos</span></div>
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>
+        <th class="left">Año</th>
+        <th>Formalizaciones</th><th>Reservas</th><th>Retiros</th>
+        <th>Tasa Cierre</th><th>Ventas (₡B)</th><th>Días Prom.</th>
+        <th>Pico Mes</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="left"><strong>2019</strong></td>
+          <td><strong style="color:#3b82f6">53</strong></td>
+          <td>53</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">100.0%</span></td>
+          <td><strong>₡6.415B</strong></td>
+          <td><span class="badge badge-gray">N/D</span></td>
+          <td>Septiembre (10)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2020</strong></td>
+          <td><strong style="color:#3b82f6">100</strong></td>
+          <td>94</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">106.4%</span></td>
+          <td><strong>₡17.835B</strong></td>
+          <td><span class="badge badge-gray">N/D</span></td>
+          <td>Octubre (15)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2021</strong></td>
+          <td><strong style="color:#3b82f6">174</strong></td>
+          <td>169</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">103.0%</span></td>
+          <td><strong>₡32.908B</strong></td>
+          <td><span class="badge badge-gray">N/D</span></td>
+          <td>Junio (22)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2022</strong></td>
+          <td><strong style="color:#3b82f6">132</strong></td>
+          <td>126</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">104.8%</span></td>
+          <td><strong>₡30.468B</strong></td>
+          <td><span class="badge badge-gray">N/D</span></td>
+          <td>Febrero (20)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2023</strong></td>
+          <td><strong style="color:#3b82f6">79</strong></td>
+          <td>70</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">112.9%</span></td>
+          <td><strong>₡19.087B</strong></td>
+          <td><span class="badge badge-yellow">61.5d</span></td>
+          <td>Junio (11)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2024</strong></td>
+          <td><strong style="color:#3b82f6">80</strong></td>
+          <td>153</td>
+          <td><span class="badge badge-red">77</span></td>
+          <td><span class="badge badge-red">52.3%</span></td>
+          <td><strong>₡18.911B</strong></td>
+          <td><span class="badge badge-yellow">68.3d</span></td>
+          <td>Junio (12)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2025</strong></td>
+          <td><strong style="color:#3b82f6">104</strong></td>
+          <td>236</td>
+          <td><span class="badge badge-red">136</span></td>
+          <td><span class="badge badge-red">44.1%</span></td>
+          <td><strong>₡26.309B</strong></td>
+          <td><span class="badge badge-green">48.6d</span></td>
+          <td>Abril (12)</td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2026</strong></td>
+          <td><strong style="color:#3b82f6">10</strong></td>
+          <td>6</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td><span class="badge badge-green">166.7%</span></td>
+          <td><strong>₡1.804B</strong></td>
+          <td><span class="badge badge-green">50.0d</span></td>
+          <td>Febrero (4)</td>
+        </tr>
+      </tbody></table></div>
+  </div>
+
+  <!-- ── SECTION: ANUAL ── -->
+  <div class="page-section" id="sec-anual">
+    <div class="sec-header"><h2>📅 Detalle por Año</h2><span class="sec-tag">Mensual</span></div>
+    <div class="tab-bar" id="yearTabs">
+      <button class="tab-btn " onclick="switchYearTab(2026)">2026</button>
+      <button class="tab-btn active" onclick="switchYearTab(2025)">2025</button>
+      <button class="tab-btn " onclick="switchYearTab(2024)">2024</button>
+      <button class="tab-btn " onclick="switchYearTab(2023)">2023</button>
+      <button class="tab-btn " onclick="switchYearTab(2022)">2022</button>
+      <button class="tab-btn " onclick="switchYearTab(2021)">2021</button>
+      <button class="tab-btn " onclick="switchYearTab(2020)">2020</button>
+      <button class="tab-btn " onclick="switchYearTab(2019)">2019</button>
+    </div>
+
+    <div class="tab-pane " id="ytab-2019">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">53</div><div class="kpi-lbl">Formalizaciones 2019</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">53</div><div class="kpi-lbl">Reservas 2019</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2019</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡6.415B</div><div class="kpi-lbl">Ventas 2019</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">100.0%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">N/Dd</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2019 — por Vendedor</h3>
+          <canvas id="cYearMon-2019" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2020">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">100</div><div class="kpi-lbl">Formalizaciones 2020</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">94</div><div class="kpi-lbl">Reservas 2020</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2020</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡17.835B</div><div class="kpi-lbl">Ventas 2020</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">106.4%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">N/Dd</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2020 — por Vendedor</h3>
+          <canvas id="cYearMon-2020" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2021">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">174</div><div class="kpi-lbl">Formalizaciones 2021</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">169</div><div class="kpi-lbl">Reservas 2021</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2021</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡32.908B</div><div class="kpi-lbl">Ventas 2021</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">103.0%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">N/Dd</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2021 — por Vendedor</h3>
+          <canvas id="cYearMon-2021" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm5">6</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="total-cell">26</td></tr>
+        <tr><td class="name-cell">Irving</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">25</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm5">6</td><td class="hm1">1</td><td class="total-cell">22</td></tr>
+        <tr><td class="name-cell">Jonathan</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm4">4</td><td class="hm4">5</td><td class="hm4">5</td><td class="hm5">6</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">33</td></tr>
+        <tr><td class="name-cell">Olga</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm4">5</td><td class="hm0">·</td><td class="total-cell">17</td></tr>
+        <tr><td class="name-cell">Francia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">7</td></tr>
+        <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">11</td></tr>
+        <tr><td class="name-cell">Diego</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="total-cell">13</td></tr>
+        <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="total-cell">5</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2022">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">132</div><div class="kpi-lbl">Formalizaciones 2022</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">126</div><div class="kpi-lbl">Reservas 2022</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2022</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡30.468B</div><div class="kpi-lbl">Ventas 2022</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">104.8%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">N/Dd</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2022 — por Vendedor</h3>
+          <canvas id="cYearMon-2022" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Hannia</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">25</td></tr>
+        <tr><td class="name-cell">Irving</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">19</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm2">2</td><td class="hm5">10</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">20</td></tr>
+        <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">15</td></tr>
+        <tr><td class="name-cell">Olga</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">16</td></tr>
+        <tr><td class="name-cell">Francia</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">12</td></tr>
+        <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm4">5</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">8</td></tr>
+        <tr><td class="name-cell">Diego</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+        <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">3</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2023">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">79</div><div class="kpi-lbl">Formalizaciones 2023</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">70</div><div class="kpi-lbl">Reservas 2023</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2023</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡19.087B</div><div class="kpi-lbl">Ventas 2023</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">112.9%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">61.5d</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2023 — por Vendedor</h3>
+          <canvas id="cYearMon-2023" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Irving</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">13</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm3">3</td><td class="total-cell">14</td></tr>
+        <tr><td class="name-cell">Olga</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+        <tr><td class="name-cell">Pamela</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">6</td></tr>
+        <tr><td class="name-cell">Francia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">7</td></tr>
+        <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">3</td></tr>
+        <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">1</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2024">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">80</div><div class="kpi-lbl">Formalizaciones 2024</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">153</div><div class="kpi-lbl">Reservas 2024</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">77</div><div class="kpi-lbl">Retiros Est. 2024</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡18.911B</div><div class="kpi-lbl">Ventas 2024</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">52.3%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">68.3d</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2024 — por Vendedor</h3>
+          <canvas id="cYearMon-2024" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Hannia</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">13</td></tr>
+        <tr><td class="name-cell">Irving</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">12</td></tr>
+        <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">11</td></tr>
+        <tr><td class="name-cell">Pamela</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">6</td></tr>
+        <tr><td class="name-cell">Francia</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">1</td></tr>
+        <tr><td class="name-cell">Randall</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">7</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane active" id="ytab-2025">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">104</div><div class="kpi-lbl">Formalizaciones 2025</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">236</div><div class="kpi-lbl">Reservas 2025</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">136</div><div class="kpi-lbl">Retiros Est. 2025</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡26.309B</div><div class="kpi-lbl">Ventas 2025</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">44.1%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">48.6d</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2025 — por Vendedor</h3>
+          <canvas id="cYearMon-2025" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">16</td></tr>
+        <tr><td class="name-cell">Irving</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">9</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Pamela</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="total-cell">21</td></tr>
+        <tr><td class="name-cell">Randall</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">8</td></tr>
+        <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+        <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+        </tbody></table></div>
+    </div>
+
+    <div class="tab-pane " id="ytab-2026">
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-val blue">10</div><div class="kpi-lbl">Formalizaciones 2026</div></div>
+        <div class="kpi-card green"><div class="kpi-val green">6</div><div class="kpi-lbl">Reservas 2026</div></div>
+        <div class="kpi-card red"><div class="kpi-val red">0</div><div class="kpi-lbl">Retiros Est. 2026</div></div>
+        <div class="kpi-card yellow"><div class="kpi-val yellow">₡1.804B</div><div class="kpi-lbl">Ventas 2026</div></div>
+        <div class="kpi-card cyan"><div class="kpi-val cyan">166.7%</div><div class="kpi-lbl">Tasa Cierre</div></div>
+        <div class="kpi-card purple"><div class="kpi-val purple">50.0d</div><div class="kpi-lbl">Días Prom.</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box full">
+          <h3>📊 Formaliz. Mensuales 2026 — por Vendedor</h3>
+          <canvas id="cYearMon-2026" height="130"></canvas>
+        </div>
+      </div>
+      <div class="table-wrap">
+      <table class="heatmap-table">
+        <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead>
+        <tbody>
+        <tr><td class="name-cell">Irving</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">1</td></tr>
+        <tr><td class="name-cell">Olman</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">1</td></tr>
+        <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">1</td></tr>
+        </tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ── SECTION: ACUMULADO ── -->
+  <div class="page-section" id="sec-acumulado">
+    <div class="sec-header"><h2>📈 Acumulado Histórico</h2><span class="sec-tag green">2019–2026</span></div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card blue"><div class="kpi-val blue">732</div><div class="kpi-lbl">Formalizaciones Acum.</div><div class="kpi-sub">Total histórico</div></div>
+      <div class="kpi-card green"><div class="kpi-val green">907</div><div class="kpi-lbl">Reservas Acum.</div><div class="kpi-sub">Total histórico</div></div>
+      <div class="kpi-card red"><div class="kpi-val red">213</div><div class="kpi-lbl">Retiros Acum.</div><div class="kpi-sub">Total histórico</div></div>
+      <div class="kpi-card yellow"><div class="kpi-val yellow">₡153.74B</div><div class="kpi-lbl">Ventas Acum.</div><div class="kpi-sub">Total histórico</div></div>
+    </div>
+
+    <div class="acum-row">
+      <div class="chart-box">
+        <h3>📈 Acumulado: Formalizaciones · Reservas · Retiros</h3>
+        <canvas id="cAcumMain" height="180"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>💰 Ventas Acumuladas (₡B)</h3>
+        <canvas id="cAcumVen" height="180"></canvas>
+      </div>
+    </div>
+
+    <div class="sec-header"><h2>📋 Tabla Acumulada por Año</h2></div>
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>
+        <th class="left">Año</th>
+        <th>Form. del Año</th><th>Form. Acumuladas</th>
+        <th>Reservas del Año</th><th>Reservas Acum.</th>
+        <th>Retiros del Año</th><th>Retiros Acum.</th>
+        <th>Ventas del Año</th><th>Ventas Acum.</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="left"><strong>2019</strong></td>
+          <td><strong style="color:#3b82f6">53</strong></td>
+          <td style="color:#3b82f6;font-weight:700">53</td>
+          <td style="color:#10b981;font-weight:600">53</td>
+          <td style="color:#10b981;font-weight:700">53</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">0</td>
+          <td>₡6.415B</td>
+          <td><strong>₡6.42B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2020</strong></td>
+          <td><strong style="color:#3b82f6">100</strong></td>
+          <td style="color:#3b82f6;font-weight:700">153</td>
+          <td style="color:#10b981;font-weight:600">94</td>
+          <td style="color:#10b981;font-weight:700">147</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">0</td>
+          <td>₡17.835B</td>
+          <td><strong>₡24.25B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2021</strong></td>
+          <td><strong style="color:#3b82f6">174</strong></td>
+          <td style="color:#3b82f6;font-weight:700">327</td>
+          <td style="color:#10b981;font-weight:600">169</td>
+          <td style="color:#10b981;font-weight:700">316</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">0</td>
+          <td>₡32.908B</td>
+          <td><strong>₡57.16B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2022</strong></td>
+          <td><strong style="color:#3b82f6">132</strong></td>
+          <td style="color:#3b82f6;font-weight:700">459</td>
+          <td style="color:#10b981;font-weight:600">126</td>
+          <td style="color:#10b981;font-weight:700">442</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">0</td>
+          <td>₡30.468B</td>
+          <td><strong>₡87.63B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2023</strong></td>
+          <td><strong style="color:#3b82f6">79</strong></td>
+          <td style="color:#3b82f6;font-weight:700">538</td>
+          <td style="color:#10b981;font-weight:600">70</td>
+          <td style="color:#10b981;font-weight:700">512</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">0</td>
+          <td>₡19.087B</td>
+          <td><strong>₡106.71B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2024</strong></td>
+          <td><strong style="color:#3b82f6">80</strong></td>
+          <td style="color:#3b82f6;font-weight:700">618</td>
+          <td style="color:#10b981;font-weight:600">153</td>
+          <td style="color:#10b981;font-weight:700">665</td>
+          <td><span class="badge badge-red">77</span></td>
+          <td style="color:#ef4444;font-weight:700">77</td>
+          <td>₡18.911B</td>
+          <td><strong>₡125.62B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2025</strong></td>
+          <td><strong style="color:#3b82f6">104</strong></td>
+          <td style="color:#3b82f6;font-weight:700">722</td>
+          <td style="color:#10b981;font-weight:600">236</td>
+          <td style="color:#10b981;font-weight:700">901</td>
+          <td><span class="badge badge-red">136</span></td>
+          <td style="color:#ef4444;font-weight:700">213</td>
+          <td>₡26.309B</td>
+          <td><strong>₡151.93B</strong></td>
+        </tr>
+        <tr>
+          <td class="left"><strong>2026</strong></td>
+          <td><strong style="color:#3b82f6">10</strong></td>
+          <td style="color:#3b82f6;font-weight:700">732</td>
+          <td style="color:#10b981;font-weight:600">6</td>
+          <td style="color:#10b981;font-weight:700">907</td>
+          <td><span class="badge badge-gray">0</span></td>
+          <td style="color:#ef4444;font-weight:700">213</td>
+          <td>₡1.804B</td>
+          <td><strong>₡153.74B</strong></td>
+        </tr>
+      </tbody></table></div>
+  </div>
+
+  <!-- ── SECTION: VENDEDORES ── -->
+  <div class="page-section" id="sec-vendedores">
+    <div class="sec-header"><h2>👥 Rendimiento por Vendedor</h2><span class="sec-tag">2019–2026</span></div>
+    <div class="note info"><strong>ℹ️ Nota:</strong> Las "reservas registradas" reflejan la Fecha de Venta disponible en hojas 2022–2026.
+    Para 2019–2021 esa columna no existe, por lo que los totales de reserva son parciales en esos años.
+    Los retiros de 2024–2025 incluyen reservas pendientes de formalización futura.</div>
+
+    <div class="sec-header"><h2>🏆 Ranking Global de Vendedores</h2></div>
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>
+        <th>#</th><th class="left">Vendedor</th>
+        <th>Form. Total</th><th>Reservas</th><th>Retiros</th>
+        <th>Tasa</th><th>Ventas (₡M)</th><th>Días Prom.</th>
+<th>2019</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th>      </tr></thead><tbody>
+        <tr class="top1">
+          <td>🥇</td>
+          <td class="left"><strong>Hannia</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">90</strong><div class="mini-bar" style="width:120px"></div></div></td>
+          <td>64</td>
+          <td><span class="badge badge-red">10</span></td>
+          <td><span class="badge badge-green">140.6%</span></td>
+          <td>₡7,058M</td>
+          <td><span class="badge badge-yellow">60.7d</span></td>
+          <td></td><td></td><td>26</td><td>25</td><td>10</td><td>13</td><td>16</td><td></td>
+        </tr>
+        <tr class="top2">
+          <td>🥈</td>
+          <td class="left"><strong>Irving</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">77</strong><div class="mini-bar" style="width:103px"></div></div></td>
+          <td>52</td>
+          <td><span class="badge badge-red">8</span></td>
+          <td><span class="badge badge-green">148.1%</span></td>
+          <td>₡5,737M</td>
+          <td><span class="badge badge-yellow">56.9d</span></td>
+          <td></td><td></td><td>25</td><td>19</td><td>13</td><td>10</td><td>9</td><td>1</td>
+        </tr>
+        <tr class="top3">
+          <td>🥉</td>
+          <td class="left"><strong>Olman</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">75</strong><div class="mini-bar" style="width:100px"></div></div></td>
+          <td>53</td>
+          <td><span class="badge badge-red">20</span></td>
+          <td><span class="badge badge-green">141.5%</span></td>
+          <td>₡5,660M</td>
+          <td><span class="badge badge-yellow">73.0d</span></td>
+          <td></td><td></td><td>22</td><td>20</td><td>10</td><td>12</td><td>10</td><td>1</td>
+        </tr>
+        <tr class="">
+          <td>4</td>
+          <td class="left"><strong>Jonathan</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">73</strong><div class="mini-bar" style="width:97px"></div></div></td>
+          <td>40</td>
+          <td><span class="badge badge-red">7</span></td>
+          <td><span class="badge badge-green">182.5%</span></td>
+          <td>₡5,353M</td>
+          <td><span class="badge badge-green">53.9d</span></td>
+          <td></td><td></td><td>33</td><td>15</td><td>14</td><td>11</td><td></td><td></td>
+        </tr>
+        <tr class="">
+          <td>5</td>
+          <td class="left"><strong>Olga</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">37</strong><div class="mini-bar" style="width:49px"></div></div></td>
+          <td>20</td>
+          <td><span class="badge badge-red">6</span></td>
+          <td><span class="badge badge-green">185.0%</span></td>
+          <td>₡2,658M</td>
+          <td><span class="badge badge-red">102.8d</span></td>
+          <td></td><td></td><td>17</td><td>16</td><td>4</td><td></td><td></td><td></td>
+        </tr>
+        <tr class="">
+          <td>6</td>
+          <td class="left"><strong>Pamela</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">33</strong><div class="mini-bar" style="width:44px"></div></div></td>
+          <td>33</td>
+          <td><span class="badge badge-yellow">2</span></td>
+          <td><span class="badge badge-green">100.0%</span></td>
+          <td>₡2,893M</td>
+          <td><span class="badge badge-yellow">57.3d</span></td>
+          <td></td><td></td><td></td><td></td><td>6</td><td>6</td><td>21</td><td></td>
+        </tr>
+        <tr class="">
+          <td>7</td>
+          <td class="left"><strong>Francia</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">27</strong><div class="mini-bar" style="width:36px"></div></div></td>
+          <td>20</td>
+          <td><span class="badge badge-red">6</span></td>
+          <td><span class="badge badge-green">135.0%</span></td>
+          <td>₡2,183M</td>
+          <td><span class="badge badge-yellow">60.2d</span></td>
+          <td></td><td></td><td>7</td><td>12</td><td>7</td><td>1</td><td></td><td></td>
+        </tr>
+        <tr class="">
+          <td>8</td>
+          <td class="left"><strong>Sergio</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">22</strong><div class="mini-bar" style="width:29px"></div></div></td>
+          <td>11</td>
+          <td><span class="badge badge-yellow">1</span></td>
+          <td><span class="badge badge-green">200.0%</span></td>
+          <td>₡1,638M</td>
+          <td><span class="badge badge-green">47.0d</span></td>
+          <td></td><td></td><td>11</td><td>8</td><td>3</td><td></td><td></td><td></td>
+        </tr>
+        <tr class="">
+          <td>9</td>
+          <td class="left"><strong>Randall</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">18</strong><div class="mini-bar" style="width:24px"></div></div></td>
+          <td>18</td>
+          <td><span class="badge badge-green">0</span></td>
+          <td><span class="badge badge-green">100.0%</span></td>
+          <td>₡1,610M</td>
+          <td><span class="badge badge-green">52.8d</span></td>
+          <td></td><td></td><td></td><td></td><td></td><td>10</td><td>8</td><td></td>
+        </tr>
+        <tr class="">
+          <td>10</td>
+          <td class="left"><strong>Xinia</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">18</strong><div class="mini-bar" style="width:24px"></div></div></td>
+          <td>18</td>
+          <td><span class="badge badge-yellow">1</span></td>
+          <td><span class="badge badge-green">100.0%</span></td>
+          <td>₡1,545M</td>
+          <td><span class="badge badge-green">39.8d</span></td>
+          <td></td><td></td><td></td><td></td><td>1</td><td>7</td><td>10</td><td></td>
+        </tr>
+        <tr class="">
+          <td>11</td>
+          <td class="left"><strong>Diego</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">17</strong><div class="mini-bar" style="width:23px"></div></div></td>
+          <td>4</td>
+          <td><span class="badge badge-yellow">1</span></td>
+          <td><span class="badge badge-green">425.0%</span></td>
+          <td>₡1,143M</td>
+          <td><span class="badge badge-gray">N/D</span></td>
+          <td></td><td></td><td>13</td><td>4</td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="">
+          <td>12</td>
+          <td class="left"><strong>Marco</strong></td>
+          <td><div class="mini-bar-wrap"><strong style="color:#3b82f6">13</strong><div class="mini-bar" style="width:17px"></div></div></td>
+          <td>8</td>
+          <td><span class="badge badge-yellow">1</span></td>
+          <td><span class="badge badge-green">162.5%</span></td>
+          <td>₡1,037M</td>
+          <td><span class="badge badge-green">47.4d</span></td>
+          <td></td><td></td><td>5</td><td>3</td><td></td><td></td><td>4</td><td>1</td>
+        </tr>
+      </tbody></table></div>
+
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>📊 Formaliz. Totales por Vendedor</h3>
+        <canvas id="cVendForm" height="240"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>⚠️ Retiros Estimados por Vendedor</h3>
+        <canvas id="cVendRet" height="240"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>⏱️ Días Promedio Reserva → Formalización</h3>
+        <canvas id="cVendDays" height="220"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>💰 Ventas Totales por Vendedor (₡M)</h3>
+        <canvas id="cVendVen" height="220"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box full">
+        <h3>📅 Formaliz. Anuales — Top Vendedores (2019–2026)</h3>
+        <canvas id="cVendYearStack" height="130"></canvas>
+      </div>
+    </div>
+<div class="sec-header"><h2>📁 Fichas de Vendedores</h2><span class="sec-tag green">Detalle por Año</span></div>
+<div class="vend-grid">
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#3b82f6">H</div>
+        <div><h4>Hannia</h4><div class="vp-rank">🥇 · Rank #1</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">90</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">64</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">10</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">60.7d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡7,058M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>6</td><td style="color:#3b82f6;font-weight:700">26</td><td style="color:#ef4444">6</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>20</td><td style="color:#3b82f6;font-weight:700">25</td><td style="color:#ef4444">1</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>11</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">2</td><td style="color:#64748b">48.6d</td></tr>
+<tr><td class="lft">2024</td><td>12</td><td style="color:#3b82f6;font-weight:700">13</td><td style="color:#ef4444">1</td><td style="color:#64748b">77.1d</td></tr>
+<tr><td class="lft">2025</td><td>15</td><td style="color:#3b82f6;font-weight:700">16</td><td style="color:#ef4444">—</td><td style="color:#64748b">55.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#10b981">I</div>
+        <div><h4>Irving</h4><div class="vp-rank">🥈 · Rank #2</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">77</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">52</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">8</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">56.9d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡5,737M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>4</td><td style="color:#3b82f6;font-weight:700">25</td><td style="color:#ef4444">4</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>15</td><td style="color:#3b82f6;font-weight:700">19</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>14</td><td style="color:#3b82f6;font-weight:700">13</td><td style="color:#ef4444">1</td><td style="color:#64748b">59.5d</td></tr>
+<tr><td class="lft">2024</td><td>11</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">2</td><td style="color:#64748b">60.0d</td></tr>
+<tr><td class="lft">2025</td><td>8</td><td style="color:#3b82f6;font-weight:700">9</td><td style="color:#ef4444">1</td><td style="color:#64748b">51.2d</td></tr>
+<tr><td class="lft">2026</td><td>0</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#ef4444">—</td><td style="color:#64748b">45.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#f59e0b">O</div>
+        <div><h4>Olman</h4><div class="vp-rank">🥉 · Rank #3</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">75</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">53</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">20</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">73.0d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡5,660M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>13</td><td style="color:#3b82f6;font-weight:700">22</td><td style="color:#ef4444">13</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>7</td><td style="color:#3b82f6;font-weight:700">20</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>13</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">3</td><td style="color:#64748b">58.5d</td></tr>
+<tr><td class="lft">2024</td><td>12</td><td style="color:#3b82f6;font-weight:700">12</td><td style="color:#ef4444">3</td><td style="color:#64748b">108.0d</td></tr>
+<tr><td class="lft">2025</td><td>8</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">1</td><td style="color:#64748b">45.7d</td></tr>
+<tr><td class="lft">2026</td><td>0</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#ef4444">—</td><td style="color:#64748b">70.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#ef4444">J</div>
+        <div><h4>Jonathan</h4><div class="vp-rank">#4 · Rank #4</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">73</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">40</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">7</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">53.9d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡5,353M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>6</td><td style="color:#3b82f6;font-weight:700">33</td><td style="color:#ef4444">6</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>9</td><td style="color:#3b82f6;font-weight:700">15</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>15</td><td style="color:#3b82f6;font-weight:700">14</td><td style="color:#ef4444">1</td><td style="color:#64748b">52.4d</td></tr>
+<tr><td class="lft">2024</td><td>10</td><td style="color:#3b82f6;font-weight:700">11</td><td style="color:#ef4444">—</td><td style="color:#64748b">55.8d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#8b5cf6">O</div>
+        <div><h4>Olga</h4><div class="vp-rank">#5 · Rank #5</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">37</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">20</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">6</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">102.8d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡2,658M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>4</td><td style="color:#3b82f6;font-weight:700">17</td><td style="color:#ef4444">4</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>14</td><td style="color:#3b82f6;font-weight:700">16</td><td style="color:#ef4444">2</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>2</td><td style="color:#3b82f6;font-weight:700">4</td><td style="color:#ef4444">—</td><td style="color:#64748b">102.8d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#06b6d4">P</div>
+        <div><h4>Pamela</h4><div class="vp-rank">#6 · Rank #6</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">33</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">33</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">2</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">57.3d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡2,893M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2022</td><td>1</td><td style="color:#3b82f6;font-weight:700">0</td><td style="color:#ef4444">1</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>5</td><td style="color:#3b82f6;font-weight:700">6</td><td style="color:#ef4444">—</td><td style="color:#64748b">87.0d</td></tr>
+<tr><td class="lft">2024</td><td>7</td><td style="color:#3b82f6;font-weight:700">6</td><td style="color:#ef4444">1</td><td style="color:#64748b">57.0d</td></tr>
+<tr><td class="lft">2025</td><td>20</td><td style="color:#3b82f6;font-weight:700">21</td><td style="color:#ef4444">—</td><td style="color:#64748b">49.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#f97316">F</div>
+        <div><h4>Francia</h4><div class="vp-rank">#7 · Rank #7</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">27</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">20</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">6</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">60.2d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡2,183M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>5</td><td style="color:#3b82f6;font-weight:700">7</td><td style="color:#ef4444">5</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>7</td><td style="color:#3b82f6;font-weight:700">12</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>8</td><td style="color:#3b82f6;font-weight:700">7</td><td style="color:#ef4444">1</td><td style="color:#64748b">59.3d</td></tr>
+<tr><td class="lft">2024</td><td>0</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#ef4444">—</td><td style="color:#64748b">67.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#84cc16">S</div>
+        <div><h4>Sergio</h4><div class="vp-rank">#8 · Rank #8</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">22</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">11</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">1</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">47.0d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡1,638M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>1</td><td style="color:#3b82f6;font-weight:700">11</td><td style="color:#ef4444">1</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>7</td><td style="color:#3b82f6;font-weight:700">8</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2023</td><td>3</td><td style="color:#3b82f6;font-weight:700">3</td><td style="color:#ef4444">—</td><td style="color:#64748b">47.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#ec4899">R</div>
+        <div><h4>Randall</h4><div class="vp-rank">#9 · Rank #9</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">18</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">18</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">0</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">52.8d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡1,610M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2024</td><td>10</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">—</td><td style="color:#64748b">56.0d</td></tr>
+<tr><td class="lft">2025</td><td>8</td><td style="color:#3b82f6;font-weight:700">8</td><td style="color:#ef4444">—</td><td style="color:#64748b">48.8d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#6366f1">X</div>
+        <div><h4>Xinia</h4><div class="vp-rank">#10 · Rank #10</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">18</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">18</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">1</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">39.8d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡1,545M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2023</td><td>2</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#ef4444">1</td><td style="color:#64748b">35.0d</td></tr>
+<tr><td class="lft">2024</td><td>6</td><td style="color:#3b82f6;font-weight:700">7</td><td style="color:#ef4444">—</td><td style="color:#64748b">42.1d</td></tr>
+<tr><td class="lft">2025</td><td>10</td><td style="color:#3b82f6;font-weight:700">10</td><td style="color:#ef4444">—</td><td style="color:#64748b">38.6d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#14b8a6">D</div>
+        <div><h4>Diego</h4><div class="vp-rank">#11 · Rank #11</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">17</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">4</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">1</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">N/Dd</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡1,143M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>1</td><td style="color:#3b82f6;font-weight:700">13</td><td style="color:#ef4444">1</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>3</td><td style="color:#3b82f6;font-weight:700">4</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#d946ef">M</div>
+        <div><h4>Marco</h4><div class="vp-rank">#12 · Rank #12</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">13</div><div class="l">Form.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">8</div><div class="l">Reservas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">1</div><div class="l">Retiros</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">47.4d</div><div class="l">Días</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.95rem">₡1,037M</div><div class="l">Ventas</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Reservas</th><th>Formalizadas</th><th>Retiros</th><th>Días</th></tr></thead>
+        <tbody><tr><td class="lft">2021</td><td>0</td><td style="color:#3b82f6;font-weight:700">5</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2022</td><td>3</td><td style="color:#3b82f6;font-weight:700">3</td><td style="color:#ef4444">—</td><td style="color:#64748b">—</td></tr>
+<tr><td class="lft">2025</td><td>5</td><td style="color:#3b82f6;font-weight:700">4</td><td style="color:#ef4444">1</td><td style="color:#64748b">34.0d</td></tr>
+<tr><td class="lft">2026</td><td>0</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#ef4444">—</td><td style="color:#64748b">101.0d</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- ── SECTION: FORMALIZADORES ── -->
+  <div class="page-section" id="sec-formalizadores">
+    <div class="sec-header"><h2>📝 Rendimiento por Formalizador</h2><span class="sec-tag red">2023–2026</span></div>
+    <div class="note info"><strong>ℹ️ Nota:</strong> La columna "Formalizador" está disponible desde 2023. 
+    Para 2021–2022 no se registró, por lo que el análisis cubre 2023–Feb 2026.</div>
+
+    <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr>
+        <th class="left">Formalizador</th>
+        <th>Total Form.</th><th>Días Prom.</th><th>Ventas (₡M)</th>
+        <th>2023</th><th>2024</th><th>2025</th><th>2026</th>
+        <th>Días 2023</th><th>Días 2024</th><th>Días 2025</th>
+      </tr></thead><tbody>
+      <tr>
+        <td class="left"><strong style="color:#3b82f6">Form. W</strong></td>
+        <td><strong style="color:#3b82f6">84</strong></td>
+        <td><span class="badge badge-yellow">57.7d</span></td>
+        <td>₡6,846M</td>
+        <td>29</td>
+        <td>28</td>
+        <td>26</td>
+        <td>1</td>
+        <td><span class="badge badge-green">53.6d</span></td><td><span class="badge badge-yellow">71.4d</span></td><td><span class="badge badge-green">48.6d</span></td>
+      </tr>
+      <tr>
+        <td class="left"><strong style="color:#10b981">Form. H</strong></td>
+        <td><strong style="color:#10b981">77</strong></td>
+        <td><span class="badge badge-yellow">60.9d</span></td>
+        <td>₡6,390M</td>
+        <td>30</td>
+        <td>22</td>
+        <td>23</td>
+        <td>2</td>
+        <td><span class="badge badge-yellow">66.6d</span></td><td><span class="badge badge-yellow">67.5d</span></td><td><span class="badge badge-green">49.1d</span></td>
+      </tr>
+      <tr>
+        <td class="left"><strong style="color:#ef4444">Form. LC</strong></td>
+        <td><strong style="color:#ef4444">72</strong></td>
+        <td><span class="badge badge-yellow">60.0d</span></td>
+        <td>₡6,418M</td>
+        <td>16</td>
+        <td>26</td>
+        <td>29</td>
+        <td>1</td>
+        <td><span class="badge badge-yellow">66.2d</span></td><td><span class="badge badge-yellow">65.7d</span></td><td><span class="badge badge-green">51.9d</span></td>
+      </tr>
+      <tr>
+        <td class="left"><strong style="color:#f59e0b">Form. E</strong></td>
+        <td><strong style="color:#f59e0b">24</strong></td>
+        <td><span class="badge badge-green">46.2d</span></td>
+        <td>₡2,156M</td>
+        <td>—</td>
+        <td>—</td>
+        <td>22</td>
+        <td>2</td>
+        <td><span class="badge badge-gray">—</span></td><td><span class="badge badge-gray">—</span></td><td><span class="badge badge-green">43.6d</span></td>
+      </tr>
+    </tbody></table></div>
+
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>📊 Formaliz. por Formalizador y Año</h3>
+        <canvas id="cFormAnual" height="220"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>⏱️ Días Promedio por Formalizador y Año</h3>
+        <canvas id="cFormDays" height="220"></canvas>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box full">
+        <h3>📅 Formaliz. Mensuales 2025 — por Formalizador</h3>
+        <canvas id="cFormMon25" height="120"></canvas>
+      </div>
+    </div>
+<div class="vend-grid">
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#3b82f6">F-W</div>
+        <div><h4>Formalizador W</h4><div class="vp-rank">📉 Baja en 2025</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">84</div><div class="l">Form. Total</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">57.7d</div><div class="l">Días Prom.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.85rem">₡6,846M</div><div class="l">Ventas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">26</div><div class="l">Form. 2025</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Formalizaciones</th><th>Días Prom.</th><th>Ventas</th></tr></thead>
+        <tbody><tr><td class="lft">2023</td><td style="color:#3b82f6;font-weight:700">29</td><td style="color:#64748b">53.6d</td><td>₡2,398M</td></tr>
+<tr><td class="lft">2024</td><td style="color:#3b82f6;font-weight:700">28</td><td style="color:#64748b">71.4d</td><td>₡2,237M</td></tr>
+<tr><td class="lft">2025</td><td style="color:#3b82f6;font-weight:700">26</td><td style="color:#64748b">48.6d</td><td>₡2,128M</td></tr>
+<tr><td class="lft">2026</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#64748b">26.0d</td><td>₡82M</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#10b981">F-H</div>
+        <div><h4>Formalizador H</h4><div class="vp-rank">📈 Crecimiento en 2025</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#10b981">77</div><div class="l">Form. Total</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">60.9d</div><div class="l">Días Prom.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.85rem">₡6,390M</div><div class="l">Ventas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">23</div><div class="l">Form. 2025</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Formalizaciones</th><th>Días Prom.</th><th>Ventas</th></tr></thead>
+        <tbody><tr><td class="lft">2023</td><td style="color:#3b82f6;font-weight:700">30</td><td style="color:#64748b">66.6d</td><td>₡2,544M</td></tr>
+<tr><td class="lft">2024</td><td style="color:#3b82f6;font-weight:700">22</td><td style="color:#64748b">67.5d</td><td>₡1,782M</td></tr>
+<tr><td class="lft">2025</td><td style="color:#3b82f6;font-weight:700">23</td><td style="color:#64748b">49.1d</td><td>₡1,881M</td></tr>
+<tr><td class="lft">2026</td><td style="color:#3b82f6;font-weight:700">2</td><td style="color:#64748b">40.0d</td><td>₡184M</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#ef4444">F-LC</div>
+        <div><h4>Formalizador LC</h4><div class="vp-rank">📈 Crecimiento en 2025</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#ef4444">72</div><div class="l">Form. Total</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">60.0d</div><div class="l">Días Prom.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.85rem">₡6,418M</div><div class="l">Ventas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">29</div><div class="l">Form. 2025</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Formalizaciones</th><th>Días Prom.</th><th>Ventas</th></tr></thead>
+        <tbody><tr><td class="lft">2023</td><td style="color:#3b82f6;font-weight:700">16</td><td style="color:#64748b">66.2d</td><td>₡1,364M</td></tr>
+<tr><td class="lft">2024</td><td style="color:#3b82f6;font-weight:700">26</td><td style="color:#64748b">65.7d</td><td>₡2,231M</td></tr>
+<tr><td class="lft">2025</td><td style="color:#3b82f6;font-weight:700">29</td><td style="color:#64748b">51.9d</td><td>₡2,732M</td></tr>
+<tr><td class="lft">2026</td><td style="color:#3b82f6;font-weight:700">1</td><td style="color:#64748b">45.0d</td><td>₡91M</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="vend-profile">
+    <div class="vp-header">
+      <div class="vp-name">
+        <div class="vp-avatar" style="background:#f59e0b">F-E</div>
+        <div><h4>Formalizador E</h4><div class="vp-rank">📈 Crecimiento en 2025</div></div>
+      </div>
+    </div>
+    <div class="vp-kpis">
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b">24</div><div class="l">Form. Total</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#10b981">46.2d</div><div class="l">Días Prom.</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#f59e0b;font-size:.85rem">₡2,156M</div><div class="l">Ventas</div></div>
+      <div class="vp-kpi"><div class="v" style="color:#3b82f6">22</div><div class="l">Form. 2025</div></div>
+    </div>
+    <div class="vp-body">
+      <table class="vp-ytable">
+        <thead><tr><th class="lft">Año</th><th>Formalizaciones</th><th>Días Prom.</th><th>Ventas</th></tr></thead>
+        <tbody><tr><td class="lft">2025</td><td style="color:#3b82f6;font-weight:700">22</td><td style="color:#64748b">43.6d</td><td>₡1,971M</td></tr>
+<tr><td class="lft">2026</td><td style="color:#3b82f6;font-weight:700">2</td><td style="color:#64748b">74.5d</td><td>₡185M</td></tr>
+</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+  </div>
+
+  <!-- ── SECTION: MENSUAL ── -->
+  <div class="page-section" id="sec-mensual">
+    <div class="sec-header"><h2>🗓️ Tablas Mensuales Completas</h2><span class="sec-tag">Heatmap</span></div>
+
+    <div class="sec-header" style="margin-top:.5rem"><h2>👥 Por Vendedor</h2></div>
+    <div class="tab-bar" id="mVendTabs">
+      <button class="tab-btn active" onclick="switchMTab('mv','2025')">2025</button>
+      <button class="tab-btn" onclick="switchMTab('mv','2024')">2024</button>
+      <button class="tab-btn" onclick="switchMTab('mv','2023')">2023</button>
+      <button class="tab-btn" onclick="switchMTab('mv','2022')">2022</button>
+      <button class="tab-btn" onclick="switchMTab('mv','2021')">2021</button>
+    </div>
+    <div class="tab-pane active" id="mvtab-2025"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">16</td></tr>
+      <tr><td class="name-cell">Irving</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">9</td></tr>
+      <tr><td class="name-cell">Olman</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Pamela</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="total-cell">21</td></tr>
+      <tr><td class="name-cell">Randall</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">8</td></tr>
+      <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mvtab-2024"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell">Hannia</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">13</td></tr>
+      <tr><td class="name-cell">Irving</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Olman</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">12</td></tr>
+      <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">11</td></tr>
+      <tr><td class="name-cell">Pamela</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">6</td></tr>
+      <tr><td class="name-cell">Francia</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">1</td></tr>
+      <tr><td class="name-cell">Randall</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">7</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mvtab-2023"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Irving</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">13</td></tr>
+      <tr><td class="name-cell">Olman</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">10</td></tr>
+      <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm3">3</td><td class="total-cell">14</td></tr>
+      <tr><td class="name-cell">Olga</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+      <tr><td class="name-cell">Pamela</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">6</td></tr>
+      <tr><td class="name-cell">Francia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">7</td></tr>
+      <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">3</td></tr>
+      <tr><td class="name-cell">Xinia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="total-cell">1</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mvtab-2022"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell">Hannia</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">25</td></tr>
+      <tr><td class="name-cell">Irving</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">19</td></tr>
+      <tr><td class="name-cell">Olman</td><td class="hm2">2</td><td class="hm5">10</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">20</td></tr>
+      <tr><td class="name-cell">Jonathan</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">15</td></tr>
+      <tr><td class="name-cell">Olga</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="total-cell">16</td></tr>
+      <tr><td class="name-cell">Francia</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">12</td></tr>
+      <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm4">5</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">8</td></tr>
+      <tr><td class="name-cell">Diego</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">4</td></tr>
+      <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">3</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mvtab-2021"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Vendedor</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell">Hannia</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm5">6</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="total-cell">26</td></tr>
+      <tr><td class="name-cell">Irving</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">5</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">25</td></tr>
+      <tr><td class="name-cell">Olman</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm5">6</td><td class="hm1">1</td><td class="total-cell">22</td></tr>
+      <tr><td class="name-cell">Jonathan</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm4">4</td><td class="hm4">5</td><td class="hm4">5</td><td class="hm5">6</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm0">·</td><td class="total-cell">33</td></tr>
+      <tr><td class="name-cell">Olga</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm4">5</td><td class="hm0">·</td><td class="total-cell">17</td></tr>
+      <tr><td class="name-cell">Francia</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">7</td></tr>
+      <tr><td class="name-cell">Sergio</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="total-cell">11</td></tr>
+      <tr><td class="name-cell">Diego</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="total-cell">13</td></tr>
+      <tr><td class="name-cell">Marco</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm2">2</td><td class="total-cell">5</td></tr>
+      </tbody></table></div></div>
+
+    <div class="sec-header" style="margin-top:1.5rem"><h2>📝 Por Formalizador</h2></div>
+    <div class="tab-bar" id="mFormTabs">
+      <button class="tab-btn active" onclick="switchMTab('mf','2025')">2025</button>
+      <button class="tab-btn" onclick="switchMTab('mf','2024')">2024</button>
+      <button class="tab-btn" onclick="switchMTab('mf','2023')">2023</button>
+    </div>
+    <div class="tab-pane active" id="mftab-2025"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Formalizador</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell" style="color:#3b82f6">Form. W</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm5">6</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="total-cell">26</td></tr>
+      <tr><td class="name-cell" style="color:#10b981">Form. H</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm1">1</td><td class="total-cell">23</td></tr>
+      <tr><td class="name-cell" style="color:#ef4444">Form. LC</td><td class="hm2">2</td><td class="hm4">5</td><td class="hm3">3</td><td class="hm4">5</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm2">2</td><td class="total-cell">29</td></tr>
+      <tr><td class="name-cell" style="color:#f59e0b">Form. E</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm0">·</td><td class="hm4">5</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm2">2</td><td class="total-cell">22</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mftab-2024"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Formalizador</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell" style="color:#3b82f6">Form. W</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm0">·</td><td class="total-cell">28</td></tr>
+      <tr><td class="name-cell" style="color:#10b981">Form. H</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm3">3</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm0">·</td><td class="hm1">1</td><td class="hm0">·</td><td class="total-cell">22</td></tr>
+      <tr><td class="name-cell" style="color:#ef4444">Form. LC</td><td class="hm0">·</td><td class="hm3">3</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm1">1</td><td class="total-cell">26</td></tr>
+      <tr><td class="name-cell" style="color:#f59e0b">Form. E</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">0</td></tr>
+      </tbody></table></div></div>
+    <div class="tab-pane " id="mftab-2023"><div class="table-wrap"><table class="heatmap-table">
+      <thead><tr><th class="nametop">Formalizador</th><th>Ene</th><th>Feb</th><th>Mar</th><th>Abr</th><th>May</th><th>Jun</th><th>Jul</th><th>Ago</th><th>Sep</th><th>Oct</th><th>Nov</th><th>Dic</th><th>Total</th></tr></thead><tbody>
+      <tr><td class="name-cell" style="color:#3b82f6">Form. W</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm3">3</td><td class="hm4">4</td><td class="hm2">2</td><td class="hm5">6</td><td class="hm1">1</td><td class="hm3">3</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm1">1</td><td class="total-cell">29</td></tr>
+      <tr><td class="name-cell" style="color:#10b981">Form. H</td><td class="hm3">3</td><td class="hm2">2</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm5">7</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm2">2</td><td class="hm1">1</td><td class="hm4">4</td><td class="total-cell">30</td></tr>
+      <tr><td class="name-cell" style="color:#ef4444">Form. LC</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm4">4</td><td class="hm1">1</td><td class="hm1">1</td><td class="hm2">2</td><td class="hm4">5</td><td class="hm0">·</td><td class="hm3">3</td><td class="total-cell">16</td></tr>
+      <tr><td class="name-cell" style="color:#f59e0b">Form. E</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="hm0">·</td><td class="total-cell">0</td></tr>
+      </tbody></table></div></div>
+  </div>
+
+</main>
+
+<script>
+// ── Navigation ──
+function showSection(name) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.sb-link').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(b => {
+    if(b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
+  });
+  const titles = {resumen:'📊 Resumen General',anual:'📅 Detalle por Año',acumulado:'📈 Acumulado Histórico',vendedores:'👥 Rendimiento por Vendedor',formalizadores:'📝 Rendimiento por Formalizador',mensual:'🗓️ Tablas Mensuales'};
+  document.getElementById('topbar-title').textContent = titles[name] || name;
+}
+
+// ── Year tabs ──
+function switchYearTab(yr) {
+  document.querySelectorAll('[id^="ytab-"]').forEach(e => e.classList.remove('active'));
+  document.getElementById('ytab-'+yr).classList.add('active');
+  document.querySelectorAll('#yearTabs .tab-btn').forEach(b => b.classList.toggle('active', b.textContent==String(yr)));
+}
+
+// ── Monthly tabs ──
+function switchMTab(prefix, yr) {
+  document.querySelectorAll('[id^="'+prefix+'tab-"]').forEach(e => e.classList.remove('active'));
+  document.getElementById(prefix+'tab-'+yr).classList.add('active');
+  var id = prefix=='mv' ? 'mVendTabs' : 'mFormTabs';
+  document.querySelectorAll('#'+id+' .tab-btn').forEach(b => b.classList.toggle('active', b.textContent==yr));
+}
+
+// ─── Chart Data ───────────────────────────────────────────────────────────
+var YEARS = ["2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"];
+var MS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+var MO = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+var COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16", "#ec4899", "#6366f1", "#14b8a6", "#d946ef", "#64748b", "#a855f7"];
+
+// Global line chart
+new Chart(document.getElementById('cGlobalLine'), {
+  type:'line',
+  data:{
+    labels:YEARS,
+    datasets:[
+      {label:'Formalizaciones',data:[53, 100, 174, 132, 79, 80, 104, 10],borderColor:'#3b82f6',backgroundColor:'#3b82f620',borderWidth:3,pointRadius:5,fill:true,tension:.3},
+      {label:'Reservas',data:[53, 94, 169, 126, 70, 153, 236, 6],borderColor:'#10b981',backgroundColor:'#10b98120',borderWidth:3,pointRadius:5,fill:true,tension:.3},
+      {label:'Retiros Est.',data:[0, 0, 0, 0, 0, 77, 136, 0],borderColor:'#ef4444',backgroundColor:'#ef444420',borderWidth:2,pointRadius:5,fill:true,tension:.3,borderDash:[6,3]}
+    ]
+  },
+  options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{boxWidth:14,font:{size:12}}}},scales:{y:{beginAtZero:true}}}
+});
+
+// Ventas bar
+new Chart(document.getElementById('cVentasBar'), {
+  type:'bar',
+  data:{labels:YEARS,datasets:[{label:'Ventas ₡B',data:[6.415, 17.835, 32.908, 30.468, 19.087, 18.911, 26.309, 1.804],backgroundColor:COLORS.map(c=>c+'bb'),borderColor:COLORS,borderWidth:2}]},
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+
+// Pie vendedor
+new Chart(document.getElementById('cPieVend'), {
+  type:'doughnut',
+  data:{labels:["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"],datasets:[{data:[90, 77, 75, 73, 37, 33, 27, 22, 18, 18, 17, 13],backgroundColor:COLORS,borderWidth:2}]},
+  options:{responsive:true,plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}}}}
+});
+
+// Acumulado main
+new Chart(document.getElementById('cAcumMain'), {
+  type:'line',
+  data:{
+    labels:YEARS,
+    datasets:[
+      {label:'Formalizaciones Acum.',data:[53, 153, 327, 459, 538, 618, 722, 732],borderColor:'#3b82f6',borderWidth:3,fill:false,tension:.3,pointRadius:5},
+      {label:'Reservas Acum.',data:[53, 147, 316, 442, 512, 665, 901, 907],borderColor:'#10b981',borderWidth:3,fill:false,tension:.3,pointRadius:5},
+      {label:'Retiros Acum.',data:[0, 0, 0, 0, 0, 77, 213, 213],borderColor:'#ef4444',borderWidth:2,fill:false,tension:.3,pointRadius:5,borderDash:[6,3]}
+    ]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:14,font:{size:11}}}},scales:{y:{beginAtZero:true}}}
+});
+
+// Acumulado ventas
+new Chart(document.getElementById('cAcumVen'), {
+  type:'bar',
+  data:{labels:YEARS,datasets:[{label:'Ventas Acum. ₡B',data:[6.42, 24.25, 57.16, 87.63, 106.71, 125.62, 151.93, 153.74],backgroundColor:'#f59e0bbb',borderColor:'#f59e0b',borderWidth:2}]},
+  options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+
+// Vendedor form total
+new Chart(document.getElementById('cVendForm'), {
+  type:'bar',
+  data:{labels:["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"],datasets:[{label:'Formalizaciones',data:[90, 77, 75, 73, 37, 33, 27, 22, 18, 18, 17, 13],backgroundColor:COLORS.map(c=>c+'bb'),borderColor:COLORS,borderWidth:2}]},
+  options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+});
+
+// Vendedor retiros
+new Chart(document.getElementById('cVendRet'), {
+  type:'bar',
+  data:{labels:["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"],datasets:[{label:'Retiros Estimados',data:[10, 8, 20, 7, 6, 2, 6, 1, 0, 1, 1, 1],backgroundColor:'#ef444488',borderColor:'#ef4444',borderWidth:2}]},
+  options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+});
+
+// Vendedor days
+new Chart(document.getElementById('cVendDays'), {
+  type:'bar',
+  data:{labels:["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"],datasets:[{label:'Días Prom.',data:[60.7, 56.9, 73.0, 53.9, 102.8, 57.3, 60.2, 47.0, 52.8, 39.8, 0, 47.4],backgroundColor:[60.7, 56.9, 73.0, 53.9, 102.8, 57.3, 60.2, 47.0, 52.8, 39.8, 0, 47.4].map(v=>v<=55?'#10b98188':v<=75?'#f59e0b88':'#ef444488'),borderColor:[60.7, 56.9, 73.0, 53.9, 102.8, 57.3, 60.2, 47.0, 52.8, 39.8, 0, 47.4].map(v=>v<=55?'#10b981':v<=75?'#f59e0b':'#ef4444'),borderWidth:2}]},
+  options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,max:130}}}
+});
+
+// Vendedor ventas
+new Chart(document.getElementById('cVendVen'), {
+  type:'bar',
+  data:{labels:["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"],datasets:[{label:'Ventas ₡M',data:[7057.7, 5737.4, 5660.3, 5353.0, 2657.5, 2892.9, 2183.3, 1637.5, 1609.8, 1545.3, 1143.4, 1037.1],backgroundColor:'#8b5cf688',borderColor:'#8b5cf6',borderWidth:2}]},
+  options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+});
+
+// Vendedor year stacked
+new Chart(document.getElementById('cVendYearStack'), {
+  type:'bar',
+  data:{
+    labels:YEARS,
+    datasets:[{"label": "Hannia", "data": [0, 0, 26, 25, 10, 13, 16, 0], "backgroundColor": "#3b82f6bb", "borderColor": "#3b82f6", "borderWidth": 2}, {"label": "Irving", "data": [0, 0, 25, 19, 13, 10, 9, 1], "backgroundColor": "#10b981bb", "borderColor": "#10b981", "borderWidth": 2}, {"label": "Olman", "data": [0, 0, 22, 20, 10, 12, 10, 1], "backgroundColor": "#f59e0bbb", "borderColor": "#f59e0b", "borderWidth": 2}, {"label": "Jonathan", "data": [0, 0, 33, 15, 14, 11, 0, 0], "backgroundColor": "#ef4444bb", "borderColor": "#ef4444", "borderWidth": 2}, {"label": "Olga", "data": [0, 0, 17, 16, 4, 0, 0, 0], "backgroundColor": "#8b5cf6bb", "borderColor": "#8b5cf6", "borderWidth": 2}, {"label": "Pamela", "data": [0, 0, 0, 0, 6, 6, 21, 0], "backgroundColor": "#06b6d4bb", "borderColor": "#06b6d4", "borderWidth": 2}, {"label": "Francia", "data": [0, 0, 7, 12, 7, 1, 0, 0], "backgroundColor": "#f97316bb", "borderColor": "#f97316", "borderWidth": 2}, {"label": "Sergio", "data": [0, 0, 11, 8, 3, 0, 0, 0], "backgroundColor": "#84cc16bb", "borderColor": "#84cc16", "borderWidth": 2}, {"label": "Randall", "data": [0, 0, 0, 0, 0, 10, 8, 0], "backgroundColor": "#ec4899bb", "borderColor": "#ec4899", "borderWidth": 2}, {"label": "Xinia", "data": [0, 0, 0, 0, 1, 7, 10, 0], "backgroundColor": "#6366f1bb", "borderColor": "#6366f1", "borderWidth": 2}, {"label": "Diego", "data": [0, 0, 13, 4, 0, 0, 0, 0], "backgroundColor": "#14b8a6bb", "borderColor": "#14b8a6", "borderWidth": 2}, {"label": "Marco", "data": [0, 0, 5, 3, 0, 0, 4, 1], "backgroundColor": "#d946efbb", "borderColor": "#d946ef", "borderWidth": 2}]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}}},scales:{x:{stacked:false},y:{beginAtZero:true,stacked:false}}}
+});
+
+// Year monthly charts (one per year)
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Irving": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olman": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Jonathan": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olga": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Pamela": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Francia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Sergio": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2019'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Irving": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olman": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Jonathan": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olga": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Pamela": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Francia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Sergio": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2020'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 1, 1, 1, 5, 6, 2, 3, 2, 1, 1, 3], "Irving": [2, 1, 2, 1, 3, 2, 3, 2, 1, 5, 1, 2], "Olman": [1, 3, 2, 1, 1, 2, 0, 0, 1, 4, 6, 1], "Jonathan": [1, 0, 1, 3, 4, 5, 5, 6, 3, 3, 2, 0], "Olga": [0, 0, 0, 2, 2, 1, 0, 3, 0, 4, 5, 0], "Pamela": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Francia": [0, 0, 0, 0, 1, 2, 1, 0, 0, 1, 1, 1], "Sergio": [0, 0, 0, 0, 1, 1, 3, 1, 0, 2, 1, 2], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Diego": [0, 0, 0, 0, 1, 2, 2, 1, 2, 2, 2, 1], "Marco": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 2]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2021'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [4, 1, 5, 2, 1, 2, 4, 2, 0, 2, 1, 1], "Irving": [2, 1, 4, 1, 3, 0, 2, 1, 2, 0, 1, 2], "Olman": [2, 10, 2, 1, 1, 0, 2, 1, 0, 0, 1, 0], "Jonathan": [0, 4, 1, 2, 1, 2, 0, 2, 0, 1, 1, 1], "Olga": [3, 1, 1, 1, 1, 1, 2, 3, 0, 1, 0, 2], "Pamela": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Francia": [3, 2, 1, 1, 0, 0, 1, 2, 0, 2, 0, 0], "Sergio": [0, 1, 0, 0, 1, 0, 5, 1, 0, 0, 0, 0], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Diego": [1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2022'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 3, 0, 1, 0, 2, 0, 0, 0, 4, 0, 0], "Irving": [0, 0, 2, 0, 3, 1, 1, 1, 1, 2, 0, 2], "Olman": [0, 0, 1, 0, 1, 3, 1, 2, 1, 1, 0, 0], "Jonathan": [0, 0, 2, 1, 1, 2, 1, 3, 1, 0, 0, 3], "Olga": [1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0], "Pamela": [1, 0, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0], "Francia": [0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 2, 0], "Sergio": [0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2023'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [1, 1, 2, 0, 2, 0, 1, 1, 3, 0, 2, 0], "Irving": [1, 0, 1, 0, 0, 1, 3, 1, 0, 2, 1, 0], "Olman": [0, 1, 1, 0, 1, 3, 1, 1, 2, 1, 0, 1], "Jonathan": [0, 3, 1, 2, 1, 4, 0, 0, 0, 0, 0, 0], "Olga": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Pamela": [0, 0, 1, 2, 0, 1, 2, 0, 0, 0, 0, 0], "Francia": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Sergio": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Randall": [0, 0, 0, 1, 0, 1, 0, 3, 2, 0, 3, 0], "Xinia": [0, 2, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2024'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 1, 1, 2, 4, 1, 1, 0, 4, 1, 1, 0], "Irving": [1, 1, 0, 1, 1, 0, 2, 0, 0, 1, 0, 2], "Olman": [2, 3, 0, 0, 0, 1, 0, 1, 1, 0, 0, 2], "Jonathan": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olga": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Pamela": [1, 1, 4, 2, 2, 1, 1, 0, 3, 2, 1, 3], "Francia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Sergio": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Randall": [0, 2, 2, 1, 1, 0, 0, 0, 1, 0, 0, 1], "Xinia": [0, 0, 1, 1, 1, 2, 1, 0, 1, 1, 2, 0], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 3, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2025'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+(function(){
+  var vends_top = ["Hannia", "Irving", "Olman", "Jonathan", "Olga", "Pamela", "Francia", "Sergio", "Randall", "Xinia", "Diego", "Marco"];
+  var data_yr = {"Hannia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Irving": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olman": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Jonathan": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Olga": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Pamela": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Francia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Sergio": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Randall": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Xinia": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Diego": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "Marco": [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]};
+  var ds = vends_top.map((v,i) => ({label:v,data:data_yr[v],backgroundColor:COLORS[i%COLORS.length]+'bb',borderColor:COLORS[i%COLORS.length],borderWidth:2}));
+  new Chart(document.getElementById('cYearMon-2026'), {type:'bar',data:{labels:MS,datasets:ds},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+})();
+
+
+// Form anual
+new Chart(document.getElementById('cFormAnual'), {
+  type:'bar',
+  data:{
+    labels:['2023','2024','2025','2026'],
+    datasets:[{"label": "Form. W", "data": [29, 28, 26, 1], "backgroundColor": "#3b82f6bb", "borderColor": "#3b82f6", "borderWidth": 2}, {"label": "Form. H", "data": [30, 22, 23, 2], "backgroundColor": "#10b981bb", "borderColor": "#10b981", "borderWidth": 2}, {"label": "Form. LC", "data": [16, 26, 29, 1], "backgroundColor": "#ef4444bb", "borderColor": "#ef4444", "borderWidth": 2}, {"label": "Form. E", "data": [0, 0, 22, 2], "backgroundColor": "#f59e0bbb", "borderColor": "#f59e0b", "borderWidth": 2}]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true}}}
+});
+
+// Form days by year
+new Chart(document.getElementById('cFormDays'), {
+  type:'bar',
+  data:{
+    labels:['2023','2024','2025'],
+    datasets:[{"label": "Form. W", "data": [53.6, 71.4, 48.6], "backgroundColor": "#3b82f6bb", "borderColor": "#3b82f6", "borderWidth": 2}, {"label": "Form. H", "data": [66.6, 67.5, 49.1], "backgroundColor": "#10b981bb", "borderColor": "#10b981", "borderWidth": 2}, {"label": "Form. LC", "data": [66.2, 65.7, 51.9], "backgroundColor": "#ef4444bb", "borderColor": "#ef4444", "borderWidth": 2}, {"label": "Form. E", "data": [0, 0, 43.6], "backgroundColor": "#f59e0bbb", "borderColor": "#f59e0b", "borderWidth": 2}]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,max:100}}}
+});
+
+// Form monthly 2025
+new Chart(document.getElementById('cFormMon25'), {
+  type:'bar',
+  data:{
+    labels:MS,
+    datasets:[{"label": "Form. W", "data": [1, 4, 1, 6, 3, 1, 3, 1, 1, 1, 1, 3], "backgroundColor": "#3b82f6bb", "borderColor": "#3b82f6", "borderWidth": 2}, {"label": "Form. H", "data": [1, 1, 3, 0, 4, 4, 0, 2, 1, 2, 4, 1], "backgroundColor": "#10b981bb", "borderColor": "#10b981", "borderWidth": 2}, {"label": "Form. LC", "data": [2, 5, 3, 5, 2, 1, 1, 1, 4, 0, 3, 2], "backgroundColor": "#ef4444bb", "borderColor": "#ef4444", "borderWidth": 2}, {"label": "Form. E", "data": [0, 0, 2, 1, 2, 3, 3, 0, 5, 2, 2, 2], "backgroundColor": "#f59e0bbb", "borderColor": "#f59e0b", "borderWidth": 2}]
+  },
+  options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true}}}
+});
+
+</script>
+</body>
+</html>
