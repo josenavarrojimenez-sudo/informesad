@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis de Cierre de Ventas — Ciudad del Valle</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #1a2f4a;
+    --secondary: #c0392b;
+    --accent: #e67e22;
+    --green: #27ae60;
+    --blue: #2980b9;
+    --purple: #8e44ad;
+    --teal: #16a085;
+    --gold: #f39c12;
+    --bg: #f0f3f8;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #dde3ea;
+    --shadow: 0 3px 20px rgba(26,47,74,0.10);
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --ok: #27ae60;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* ─── HEADER ─── */
+  .header {
+    background: linear-gradient(135deg, #1a2f4a 0%, #c0392b 70%, #e67e22 100%);
+    color: white; padding: 46px 40px 32px; text-align: center; position: relative; overflow: hidden;
+  }
+  .header::after { content:''; position:absolute; bottom:-40px; left:-40px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.05); }
+  .header h1 { font-size: 2.2rem; font-weight: 800; }
+  .header .subtitle { font-size: 1.05rem; opacity: .85; margin-top: 8px; }
+  .badge-header { display:inline-block; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35); padding:5px 18px; border-radius:30px; font-size:.82rem; margin-top:14px; }
+
+  /* ─── ALERT BANNER ─── */
+  .alert-bar { background:linear-gradient(90deg,#c0392b,#e67e22); color:white; text-align:center; padding:10px 20px; font-size:.9rem; font-weight:600; }
+
+  /* ─── CONTAINER ─── */
+  .container { max-width: 1320px; margin: 0 auto; padding: 28px 22px; }
+
+  /* ─── SECTION ─── */
+  .section { margin-bottom: 42px; }
+  .section-title {
+    font-size: 1.25rem; font-weight: 800; color: var(--primary);
+    border-left: 5px solid var(--secondary); padding-left: 14px; margin-bottom: 22px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* ─── KPI GRID ─── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px,1fr)); gap: 16px; margin-bottom: 30px; }
+  .kpi { background: var(--card); border-radius: 14px; padding: 20px 16px; box-shadow: var(--shadow); text-align: center; border-top: 4px solid var(--blue); transition: transform .2s; }
+  .kpi:hover { transform: translateY(-3px); }
+  .kpi.red { border-top-color: var(--danger); }
+  .kpi.orange { border-top-color: var(--warning); }
+  .kpi.green { border-top-color: var(--ok); }
+  .kpi.purple { border-top-color: var(--purple); }
+  .kpi.gold { border-top-color: var(--gold); }
+  .kpi-val { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
+  .kpi-label { font-size: .74rem; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: .5px; }
+  .kpi-sub { font-size: .82rem; color: var(--blue); margin-top: 5px; font-weight: 600; }
+
+  /* ─── CARDS GRID ─── */
+  .cards { display: grid; gap: 22px; }
+  .cards.c2 { grid-template-columns: 1fr 1fr; }
+  .cards.c3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card { background: var(--card); border-radius: 14px; padding: 22px 20px; box-shadow: var(--shadow); }
+  .card.full { grid-column: 1 / -1; }
+  .card-title { font-size: .92rem; font-weight: 700; color: var(--primary); margin-bottom: 14px; }
+
+  /* ─── TABLE ─── */
+  .tw { overflow-x: auto; border-radius: 12px; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); }
+  thead tr { background: var(--primary); color: white; }
+  thead th { padding: 11px 13px; font-size: .8rem; text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:hover { background: #eef4fb; }
+  tbody td { padding: 9px 13px; font-size: .85rem; }
+  td.num, th.num { text-align: right; }
+  td.ctr, th.ctr { text-align: center; }
+
+  /* ─── SCORE BADGE ─── */
+  .score { display:inline-block; padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:700; }
+  .s-ok   { background:#d5f5e3; color:#1d8348; }
+  .s-warn { background:#fdebd0; color:#b9770e; }
+  .s-bad  { background:#fadbd8; color:#922b21; }
+
+  /* ─── PROGRESS ─── */
+  .prog { display:flex; align-items:center; gap:9px; margin-bottom:9px; font-size:.84rem; }
+  .prog-lbl { width:100px; flex-shrink:0; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .prog-lbl.wide { width:140px; }
+  .prog-track { flex:1; background:var(--border); border-radius:6px; height:10px; overflow:hidden; }
+  .prog-fill { height:10px; border-radius:6px; }
+  .prog-fill.green { background:linear-gradient(90deg,#27ae60,#2ecc71); }
+  .prog-fill.orange { background:linear-gradient(90deg,#e67e22,#f39c12); }
+  .prog-fill.red { background:linear-gradient(90deg,#c0392b,#e74c3c); }
+  .prog-fill.blue { background:linear-gradient(90deg,#2980b9,#3498db); }
+  .prog-fill.purple { background:linear-gradient(90deg,#8e44ad,#9b59b6); }
+  .prog-val { width:38px; text-align:right; font-weight:700; color:var(--primary); font-size:.82rem; }
+  .prog-n { width:28px; text-align:right; color:var(--muted); font-size:.78rem; }
+
+  /* ─── TIMELINE STRIP ─── */
+  .timeline { display:flex; gap:0; margin:16px 0; }
+  .tl-item { flex:1; text-align:center; position:relative; }
+  .tl-item::after { content:''; position:absolute; top:18px; left:50%; right:-50%; height:2px; background:var(--border); z-index:0; }
+  .tl-item:last-child::after { display:none; }
+  .tl-dot { width:36px; height:36px; border-radius:50%; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem; color:white; position:relative; z-index:1; }
+  .tl-label { font-size:.72rem; color:var(--muted); font-weight:600; }
+  .tl-val { font-size:1rem; font-weight:800; color:var(--primary); }
+
+  /* ─── HEATMAP ─── */
+  .hm-cell { width:32px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px; font-size:.75rem; font-weight:600; }
+
+  /* ─── RANK TABLE ─── */
+  .rank-num { font-weight:800; color:var(--muted); }
+  .rank-1 { color:#f1c40f; }
+  .rank-2 { color:#95a5a6; }
+  .rank-3 { color:#cd7f32; }
+
+  /* ─── ALERT BOX ─── */
+  .alert-box { border-radius:10px; padding:14px 18px; margin-bottom:16px; font-size:.87rem; }
+  .alert-box.red { background:#fadbd8; border-left:4px solid var(--danger); color:#78281f; }
+  .alert-box.orange { background:#fdebd0; border-left:4px solid var(--warning); color:#784212; }
+  .alert-box.green { background:#d5f5e3; border-left:4px solid var(--ok); color:#1d6a39; }
+  .alert-box strong { font-weight:700; }
+
+  /* ─── FOOTER ─── */
+  .footer { text-align:center; color:var(--muted); font-size:.78rem; padding:20px; border-top:1px solid var(--border); margin-top:20px; }
+
+  @media(max-width:800px){
+    .cards.c2,.cards.c3{grid-template-columns:1fr;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .header h1{font-size:1.6rem;}
+  }
+
+  /* ─── TABS ─── */
+  .tab-wrap { margin-bottom: 0; }
+  .tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:18px; flex-wrap:wrap; }
+  .tab-btn { padding:8px 18px; border:none; background:none; cursor:pointer; font-size:.84rem; font-weight:600; color:var(--muted); border-bottom:3px solid transparent; margin-bottom:-2px; transition:all .2s; border-radius:6px 6px 0 0; }
+  .tab-btn.active { color:var(--primary); border-bottom-color:var(--secondary); background:#eef4fb; }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🔍 Análisis de Cierre de Ventas</h1>
+  <div class="subtitle">Vendedores · Formalizadores · Tiempos de Cierre · Ciudad del Valle</div>
+  <div class="badge-header">📅 Datos: 2021–Feb 2026 &nbsp;|&nbsp; Proyectos: Valle Ilios · Novarum · Barani</div>
+</div>
+
+<div class="alert-bar">
+  ⚠️ Tiempo promedio global reserva→formalización: <strong>66 días</strong> &nbsp;|&nbsp;
+  Las reservas cruzadas (año anterior) tardan hasta <strong>2.5× más</strong> que las del mismo año
+</div>
+
+<div class="container">
+
+  <!-- ═══════════ KPIs ═══════════ -->
+  <div class="section" style="margin-top:22px">
+    <div class="section-title">📊 Indicadores Clave de Cierre</div>
+    <div class="kpi-grid">
+      <div class="kpi red">
+        <div class="kpi-val">66d</div>
+        <div class="kpi-label">Días promedio (global)</div>
+        <div class="kpi-sub">Reserva → Formalización</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-val">49d</div>
+        <div class="kpi-label">Promedio 2025</div>
+        <div class="kpi-sub">Mejor año registrado</div>
+      </div>
+      <div class="kpi orange">
+        <div class="kpi-val">83d</div>
+        <div class="kpi-label">Promedio 2022</div>
+        <div class="kpi-sub">Año más lento</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">385</div>
+        <div class="kpi-label">Registros con tiempo</div>
+        <div class="kpi-sub">de 555 formalizaciones</div>
+      </div>
+      <div class="kpi purple">
+        <div class="kpi-val">56%</div>
+        <div class="kpi-label">Cierres ≤ 60 días</div>
+        <div class="kpi-sub">Zona de eficiencia</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-val">10%</div>
+        <div class="kpi-label">Cierres > 120 días</div>
+        <div class="kpi-sub">Zona de riesgo</div>
+      </div>
+      <div class="kpi gold">
+        <div class="kpi-val">BN</div>
+        <div class="kpi-label">Banco dominante</div>
+        <div class="kpi-sub">62–97% por año</div>
+      </div>
+      <div class="kpi green">
+        <div class="kpi-val">Novarum</div>
+        <div class="kpi-label">Proyecto activo 2025</div>
+        <div class="kpi-sub">98% de unidades 2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TIEMPO RESERVA→FORMALIZACIÓN ═══════════ -->
+  <div class="section">
+    <div class="section-title">⏱️ Análisis de Tiempo: Reserva → Formalización</div>
+
+    <!-- Alerts -->
+    <div class="alert-box red">
+      <strong>🚨 Reservas del año anterior:</strong> Las unidades reservadas en un año y formalizadas en el siguiente tienen un tiempo promedio de <strong>91–159 días</strong> (hasta 3× más que las del mismo año). Son el principal foco de riesgo de caída.
+    </div>
+    <div class="alert-box orange">
+      <strong>⚠️ 2022 fue el año con mayor demora:</strong> Promedio de <strong>83 días</strong> y máximo de <strong>284 días</strong>. Las reservas cruzadas de 2021→2022 promediaron 114 días.
+    </div>
+    <div class="alert-box green">
+      <strong>✅ Tendencia positiva:</strong> El tiempo promedio bajó de <strong>83d (2022) → 61d (2023) → 68d (2024) → 49d (2025)</strong>. El equipo está mejorando significativamente.
+    </div>
+
+    <div class="cards c2">
+      <!-- Chart: días por año -->
+      <div class="card">
+        <div class="card-title">📉 Tiempo Promedio por Año (días)</div>
+        <canvas id="chartDiasAnio" height="200"></canvas>
+      </div>
+      <!-- Distribución rangos -->
+      <div class="card">
+        <div class="card-title">📊 Distribución de Tiempos de Cierre</div>
+        <canvas id="chartDiasBuckets" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="cards c2" style="margin-top:22px">
+      <!-- Mismo año vs cruzado -->
+      <div class="card">
+        <div class="card-title">🗓️ Mismo Año vs Reserva Cruzada (año anterior)</div>
+        <canvas id="chartMismoAnio" height="200"></canvas>
+        <p style="font-size:.75rem;color:var(--muted);margin-top:10px">
+          "Mismo año" = reserva y formalización en el mismo año calendario.<br>
+          "Año anterior" = reserva en año N−1, formalización en año N.
+        </p>
+      </div>
+      <!-- Timeline strip -->
+      <div class="card">
+        <div class="card-title">📐 Rango de Tiempos de Cierre por Año</div>
+        <div style="overflow-x:auto">
+          <table style="min-width:340px">
+            <thead><tr>
+              <th>Año</th><th class="num">N</th><th class="num">Mín</th><th class="num">Prom</th><th class="num">Máx</th><th class="ctr">Estado</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>2022</td><td class="num">127</td><td class="num">4d</td><td class="num"><strong>83d</strong></td><td class="num">284d</td><td class="ctr"><span class="score s-bad">Lento</span></td></tr>
+              <tr><td>2023</td><td class="num">76</td><td class="num">25d</td><td class="num"><strong>61d</strong></td><td class="num">255d</td><td class="ctr"><span class="score s-warn">Moderado</span></td></tr>
+              <tr><td>2024</td><td class="num">76</td><td class="num">10d</td><td class="num"><strong>68d</strong></td><td class="num">330d</td><td class="ctr"><span class="score s-warn">Moderado</span></td></tr>
+              <tr><td>2025</td><td class="num">100</td><td class="num">13d</td><td class="num"><strong>49d</strong></td><td class="num">193d</td><td class="ctr"><span class="score s-ok">Eficiente</span></td></tr>
+              <tr><td>2026*</td><td class="num">6</td><td class="num">10d</td><td class="num"><strong>50d</strong></td><td class="num">101d</td><td class="ctr"><span class="score s-ok">En ruta</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:20px">
+          <div class="card-title">📦 Mismo año vs Reserva cruzada</div>
+          <table>
+            <thead><tr><th>Año</th><th class="num">Mismo Año</th><th class="num">Prom días</th><th class="num">Año Anterior</th><th class="num">Prom días</th></tr></thead>
+            <tbody>
+              <tr><td>2022</td><td class="num">86</td><td class="num">68d</td><td class="num">40</td><td class="num"><span style="color:#c0392b;font-weight:700">114d</span></td></tr>
+              <tr><td>2023</td><td class="num">69</td><td class="num">59d</td><td class="num">6</td><td class="num"><span style="color:#e67e22;font-weight:700">91d</span></td></tr>
+              <tr><td>2024</td><td class="num">66</td><td class="num">55d</td><td class="num">10</td><td class="num"><span style="color:#c0392b;font-weight:700">159d</span></td></tr>
+              <tr><td>2025</td><td class="num">92</td><td class="num">45d</td><td class="num">8</td><td class="num"><span style="color:#e67e22;font-weight:700">91d</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ VENDEDORES ═══════════ -->
+  <div class="section">
+    <div class="section-title">👥 Análisis por Vendedor</div>
+
+    <div class="cards c2">
+      <div class="card">
+        <div class="card-title">🏆 Ranking por Volumen — Formalizaciones Totales</div>
+        <canvas id="chartVendTotal" height="240"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">⏱️ Tiempo Promedio por Vendedor (días) — 2022–2025</div>
+        <canvas id="chartVendDias" height="240"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabla detalle vendedores -->
+    <div style="margin-top:22px">
+      <div class="card-title" style="margin-bottom:14px">📋 Detalle Completo por Vendedor</div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Vendedor</th>
+              <th class="num">Total</th>
+              <th class="num">2021</th><th class="num">2022</th><th class="num">2023</th><th class="num">2024</th><th class="num">2025</th><th class="num">2026*</th>
+              <th class="num">⌀ días</th>
+              <th class="ctr">Eficiencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="rank-num rank-1">🥇</td><td><strong>Hannia</strong></td><td class="num">90</td><td class="num">26</td><td class="num">25</td><td class="num">10</td><td class="num">13</td><td class="num">16</td><td class="num">—</td><td class="num">62d</td><td class="ctr"><span class="score s-warn">Bueno</span></td></tr>
+            <tr><td class="rank-num rank-2">🥈</td><td><strong>Irving</strong></td><td class="num">77</td><td class="num">25</td><td class="num">19</td><td class="num">13</td><td class="num">10</td><td class="num">9</td><td class="num">1</td><td class="num">65d</td><td class="ctr"><span class="score s-warn">Bueno</span></td></tr>
+            <tr><td class="rank-num rank-3">🥉</td><td><strong>Olman</strong></td><td class="num">75</td><td class="num">22</td><td class="num">20</td><td class="num">10</td><td class="num">12</td><td class="num">10</td><td class="num">1</td><td class="num">83d</td><td class="ctr"><span class="score s-bad">Revisar</span></td></tr>
+            <tr><td class="rank-num">4</td><td><strong>Jonathan</strong></td><td class="num">73</td><td class="num">33</td><td class="num">15</td><td class="num">14</td><td class="num">11</td><td class="num">—</td><td class="num">—</td><td class="num">67d</td><td class="ctr"><span class="score s-warn">Bueno</span></td></tr>
+            <tr><td class="rank-num">5</td><td><strong>Pamela</strong></td><td class="num">33</td><td class="num">—</td><td class="num">—</td><td class="num">6</td><td class="num">6</td><td class="num">21</td><td class="num">—</td><td class="num">57d</td><td class="ctr"><span class="score s-ok">Eficiente</span></td></tr>
+            <tr><td class="rank-num">6</td><td><strong>Olga</strong></td><td class="num">37</td><td class="num">17</td><td class="num">16</td><td class="num">4</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">104d</td><td class="ctr"><span class="score s-bad">⚠️ Alto</span></td></tr>
+            <tr><td class="rank-num">7</td><td><strong>Francia</strong></td><td class="num">27</td><td class="num">7</td><td class="num">12</td><td class="num">7</td><td class="num">1</td><td class="num">—</td><td class="num">—</td><td class="num">78d</td><td class="ctr"><span class="score s-bad">Revisar</span></td></tr>
+            <tr><td class="rank-num">8</td><td><strong>Sergio</strong></td><td class="num">22</td><td class="num">11</td><td class="num">8</td><td class="num">3</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">65d</td><td class="ctr"><span class="score s-warn">Bueno</span></td></tr>
+            <tr><td class="rank-num">9</td><td><strong>Xinia</strong></td><td class="num">18</td><td class="num">—</td><td class="num">—</td><td class="num">1</td><td class="num">7</td><td class="num">10</td><td class="num">—</td><td class="num">40d</td><td class="ctr"><span class="score s-ok">⭐ Mejor</span></td></tr>
+            <tr><td class="rank-num">10</td><td><strong>Randall</strong></td><td class="num">18</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">10</td><td class="num">8</td><td class="num">—</td><td class="num">53d</td><td class="ctr"><span class="score s-ok">Eficiente</span></td></tr>
+            <tr><td class="rank-num">11</td><td><strong>Mery</strong></td><td class="num">12</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">11</td><td class="num">1</td><td class="num">47d</td><td class="ctr"><span class="score s-ok">⭐ Mejor</span></td></tr>
+            <tr><td class="rank-num">12</td><td><strong>Marcela</strong></td><td class="num">11</td><td class="num">—</td><td class="num">—</td><td class="num">6</td><td class="num">5</td><td class="num">—</td><td class="num">—</td><td class="num">61d</td><td class="ctr"><span class="score s-warn">Bueno</span></td></tr>
+            <tr><td class="rank-num">13</td><td><strong>Diego</strong></td><td class="num">17</td><td class="num">13</td><td class="num">4</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">56d</td><td class="ctr"><span class="score s-ok">Eficiente</span></td></tr>
+            <tr><td class="rank-num">14</td><td><strong>Marco</strong></td><td class="num">13</td><td class="num">5</td><td class="num">3</td><td class="num">—</td><td class="num">—</td><td class="num">4</td><td class="num">1</td><td class="num">53d</td><td class="ctr"><span class="score s-ok">Eficiente</span></td></tr>
+            <tr><td class="rank-num">—</td><td style="color:var(--muted)">Gerencia</td><td class="num">5</td><td class="num">4</td><td class="num">—</td><td class="num">—</td><td class="num">1</td><td class="num">—</td><td class="num">—</td><td class="num"><span style="color:#c0392b;font-weight:700">198d</span></td><td class="ctr"><span class="score s-bad">Especial</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.75rem;color:var(--muted);margin-top:8px">*Eficiencia basada en días promedio: ⭐Mejor≤45d · Eficiente≤55d · Bueno≤70d · Revisar>70d · Alto>90d</p>
+    </div>
+
+    <!-- Vendedor x Año chart + progreso días -->
+    <div class="cards c2" style="margin-top:22px">
+      <div class="card">
+        <div class="card-title">📈 Evolución Tiempo por Vendedor (días) 2022→2025</div>
+        <canvas id="chartVendEvol" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Formalizaciones 2025 — Detalle por Vendedor y Mes</div>
+        <canvas id="chartVend2025" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Análisis de velocidad por vendedor -->
+    <div class="cards c2" style="margin-top:22px">
+      <div class="card">
+        <div class="card-title">🏎️ Velocidad de Cierre — Ranking por Días Promedio 2025</div>
+        <div style="padding:8px 0">
+          <div class="prog"><span class="prog-lbl">Xinia</span><div class="prog-track"><div class="prog-fill green" style="width:100%"></div></div><span class="prog-val">39d</span><span class="prog-n">(10)</span></div>
+          <div class="prog"><span class="prog-lbl">Mery</span><div class="prog-track"><div class="prog-fill green" style="width:95%"></div></div><span class="prog-val">47d</span><span class="prog-n">(11)</span></div>
+          <div class="prog"><span class="prog-lbl">Marco</span><div class="prog-track"><div class="prog-fill green" style="width:88%"></div></div><span class="prog-val">34d</span><span class="prog-n">(4)</span></div>
+          <div class="prog"><span class="prog-lbl">Randall</span><div class="prog-track"><div class="prog-fill green" style="width:82%"></div></div><span class="prog-val">49d</span><span class="prog-n">(8)</span></div>
+          <div class="prog"><span class="prog-lbl">Pamela</span><div class="prog-track"><div class="prog-fill green" style="width:80%"></div></div><span class="prog-val">49d</span><span class="prog-n">(21)</span></div>
+          <div class="prog"><span class="prog-lbl">Olman</span><div class="prog-track"><div class="prog-fill orange" style="width:73%"></div></div><span class="prog-val">46d</span><span class="prog-n">(10)</span></div>
+          <div class="prog"><span class="prog-lbl">Irving</span><div class="prog-track"><div class="prog-fill orange" style="width:67%"></div></div><span class="prog-val">51d</span><span class="prog-n">(9)</span></div>
+          <div class="prog"><span class="prog-lbl">Hannia</span><div class="prog-track"><div class="prog-fill orange" style="width:60%"></div></div><span class="prog-val">55d</span><span class="prog-n">(16)</span></div>
+        </div>
+        <p style="font-size:.72rem;color:var(--muted);">Barra verde = más rápido. Número en paréntesis = formalizaciones en 2025.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 Comparativa de Mejora: Olman (foco de revisión)</div>
+        <canvas id="chartOlmanEvol" height="200"></canvas>
+        <div class="alert-box orange" style="margin-top:12px">
+          <strong>Olman:</strong> En 2022 promedió <strong>101 días</strong> y en 2024 regresó a <strong>108 días</strong> (el mayor entre vendedores activos). Mejoró a <strong>46 días en 2025</strong>, lo que indica recuperación notable.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ FORMALIZADORES ═══════════ -->
+  <div class="section">
+    <div class="section-title">📝 Análisis por Formalizador</div>
+
+    <div class="alert-box orange">
+      <strong>ℹ️ Nota:</strong> Los formalizadores aparecen con iniciales en el sistema. W, H, LC y E son los principales. "E" es el más reciente (activo desde 2025) y muestra el mejor promedio de cierre: <strong>44 días</strong>.
+    </div>
+
+    <div class="cards c2">
+      <div class="card">
+        <div class="card-title">🏆 Volumen por Formalizador (2021–2026)</div>
+        <canvas id="chartFormVol" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">⏱️ Tiempo Promedio por Formalizador por Año</div>
+        <canvas id="chartFormDias" height="200"></canvas>
+      </div>
+    </div>
+
+    <div style="margin-top:22px">
+      <div class="card-title" style="margin-bottom:14px">📋 Detalle Completo por Formalizador</div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Formalizador</th>
+              <th class="num">Total</th>
+              <th class="num">2021</th><th class="num">2022</th><th class="num">2023</th><th class="num">2024</th><th class="num">2025</th><th class="num">2026*</th>
+              <th class="num">⌀ días</th>
+              <th class="num">Mín</th><th class="num">Máx</th>
+              <th class="ctr">Eficiencia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>W</strong></td><td class="num">143</td>
+              <td class="num">59</td><td class="num">—</td><td class="num">29</td><td class="num">28</td><td class="num">26</td><td class="num">1</td>
+              <td class="num">58d</td><td class="num">17d</td><td class="num">217d</td>
+              <td class="ctr"><span class="score s-ok">Eficiente</span></td>
+            </tr>
+            <tr>
+              <td><strong>H</strong></td><td class="num">139</td>
+              <td class="num">62</td><td class="num">—</td><td class="num">30</td><td class="num">22</td><td class="num">23</td><td class="num">2</td>
+              <td class="num">61d</td><td class="num">10d</td><td class="num">330d</td>
+              <td class="ctr"><span class="score s-warn">Bueno</span></td>
+            </tr>
+            <tr>
+              <td><strong>LC</strong></td><td class="num">120</td>
+              <td class="num">48</td><td class="num">—</td><td class="num">16</td><td class="num">26</td><td class="num">29</td><td class="num">1</td>
+              <td class="num">60d</td><td class="num">17d</td><td class="num">317d</td>
+              <td class="ctr"><span class="score s-ok">Eficiente</span></td>
+            </tr>
+            <tr>
+              <td><strong>E</strong></td><td class="num">24</td>
+              <td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">22</td><td class="num">2</td>
+              <td class="num"><strong style="color:#27ae60">44d</strong></td><td class="num">13d</td><td class="num">101d</td>
+              <td class="ctr"><span class="score s-ok">⭐ Mejor</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Heatmap formalizadores por mes -->
+    <div class="cards c2" style="margin-top:22px">
+      <div class="card full">
+        <div class="card-title">🗓️ Distribución Mensual por Formalizador (2023–2025)</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showTab('form-tab','f2023')">2023</button>
+          <button class="tab-btn" onclick="showTab('form-tab','f2024')">2024</button>
+          <button class="tab-btn" onclick="showTab('form-tab','f2025')">2025</button>
+        </div>
+
+        <div id="f2023" class="tab-content form-tab active">
+          <div class="tw"><table>
+            <thead><tr><th>Form.</th><th class="ctr">Ene</th><th class="ctr">Feb</th><th class="ctr">Mar</th><th class="ctr">Abr</th><th class="ctr">May</th><th class="ctr">Jun</th><th class="ctr">Jul</th><th class="ctr">Ago</th><th class="ctr">Sep</th><th class="ctr">Oct</th><th class="ctr">Nov</th><th class="ctr">Dic</th><th class="num">Total</th><th class="num">⌀ días</th></tr></thead>
+            <tbody>
+              <tr><td><strong>W</strong></td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">4</td><td class="ctr">2</td><td class="ctr" style="background:#fdebd0;font-weight:700">6</td><td class="ctr">1</td><td class="ctr">3</td><td class="ctr">3</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">1</td><td class="num">29</td><td class="num">54d</td></tr>
+              <tr><td><strong>H</strong></td><td class="ctr">3</td><td class="ctr">2</td><td class="ctr">4</td><td class="ctr">1</td><td class="ctr" style="background:#fdebd0;font-weight:700">7</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr">2</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">4</td><td class="num">30</td><td class="num">67d</td></tr>
+              <tr><td><strong>LC</strong></td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr" style="background:#fdebd0;font-weight:700">5</td><td class="ctr">—</td><td class="ctr">3</td><td class="num">16</td><td class="num">66d</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <div id="f2024" class="tab-content form-tab">
+          <div class="tw"><table>
+            <thead><tr><th>Form.</th><th class="ctr">Ene</th><th class="ctr">Feb</th><th class="ctr">Mar</th><th class="ctr">Abr</th><th class="ctr">May</th><th class="ctr">Jun</th><th class="ctr">Jul</th><th class="ctr">Ago</th><th class="ctr">Sep</th><th class="ctr">Oct</th><th class="ctr">Nov</th><th class="ctr">Dic</th><th class="num">Total</th><th class="num">⌀ días</th></tr></thead>
+            <tbody>
+              <tr><td><strong>W</strong></td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">3</td><td class="ctr">3</td><td class="ctr">2</td><td class="ctr" style="background:#fdebd0;font-weight:700">4</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">—</td><td class="num">28</td><td class="num">71d</td></tr>
+              <tr><td><strong>H</strong></td><td class="ctr">2</td><td class="ctr">2</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr" style="background:#fdebd0;font-weight:700">4</td><td class="ctr">3</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">1</td><td class="ctr">—</td><td class="ctr">1</td><td class="ctr">—</td><td class="num">22</td><td class="num">68d</td></tr>
+              <tr><td><strong>LC</strong></td><td class="ctr">—</td><td class="ctr">3</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr" style="background:#fdebd0;font-weight:700">4</td><td class="ctr" style="background:#fdebd0;font-weight:700">4</td><td class="ctr">1</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">1</td><td class="num">26</td><td class="num">66d</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <div id="f2025" class="tab-content form-tab">
+          <div class="tw"><table>
+            <thead><tr><th>Form.</th><th class="ctr">Ene</th><th class="ctr">Feb</th><th class="ctr">Mar</th><th class="ctr">Abr</th><th class="ctr">May</th><th class="ctr">Jun</th><th class="ctr">Jul</th><th class="ctr">Ago</th><th class="ctr">Sep</th><th class="ctr">Oct</th><th class="ctr">Nov</th><th class="ctr">Dic</th><th class="num">Total</th><th class="num">⌀ días</th></tr></thead>
+            <tbody>
+              <tr><td><strong>W</strong></td><td class="ctr">1</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">1</td><td class="ctr" style="background:#fdebd0;font-weight:700">6</td><td class="ctr">3</td><td class="ctr">1</td><td class="ctr">3</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">3</td><td class="num">26</td><td class="num">49d</td></tr>
+              <tr><td><strong>H</strong></td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">3</td><td class="ctr">—</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">—</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">1</td><td class="num">23</td><td class="num">49d</td></tr>
+              <tr><td><strong>LC</strong></td><td class="ctr">2</td><td class="ctr" style="background:#fdebd0;font-weight:700">5</td><td class="ctr">3</td><td class="ctr" style="background:#fdebd0;font-weight:700">5</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr">1</td><td class="ctr" style="background:#d5f5e3;font-weight:700">4</td><td class="ctr">—</td><td class="ctr">3</td><td class="ctr">2</td><td class="num">29</td><td class="num">52d</td></tr>
+              <tr><td><strong>E</strong></td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">2</td><td class="ctr">1</td><td class="ctr">2</td><td class="ctr">3</td><td class="ctr">3</td><td class="ctr">—</td><td class="ctr" style="background:#fdebd0;font-weight:700">5</td><td class="ctr">2</td><td class="ctr">2</td><td class="ctr">2</td><td class="num">22</td><td class="num" style="color:#27ae60;font-weight:700">44d</td></tr>
+            </tbody>
+          </table></div>
+          <p style="font-size:.74rem;color:var(--muted);margin-top:6px">Celda naranja = pico del mes. Celda verde = segundo pico.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CRUCE VENDEDOR x FORMALIZADOR ═══════════ -->
+  <div class="section">
+    <div class="section-title">🔗 Cruce Vendedor × Formalizador (2023–2025)</div>
+    <div class="cards c2">
+      <div class="card">
+        <div class="card-title">🔥 Mapa de Interacción Vendedor × Formalizador — 2025</div>
+        <canvas id="chartCruce" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Comparativa Volumen: Vendedores Activos 2024 vs 2025</div>
+        <canvas id="chartVendComp" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RETIROS / PERDIDAS ═══════════ -->
+  <div class="section">
+    <div class="section-title">❌ Indicadores de Riesgo de Caída de Ventas</div>
+
+    <div class="alert-box red">
+      <strong>🚨 Señal crítica:</strong> Las reservas con más de <strong>90 días sin formalizar</strong> tienen alta probabilidad de caer. En 2024, hubo 10 casos de reservas del año anterior con promedio de <strong>159 días</strong>.
+    </div>
+
+    <!-- Distribución de rango por año -->
+    <div class="cards c2">
+      <div class="card">
+        <div class="card-title">📊 Distribución por Rango de Días — Comparativa 2022–2025</div>
+        <canvas id="chartRangoComp" height="220"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ Zona de Riesgo: Casos &gt; 90 días por Año</div>
+        <canvas id="chartRiesgo" height="220"></canvas>
+      </div>
+    </div>
+
+    <div style="margin-top:22px">
+      <div class="card-title" style="margin-bottom:14px">🔍 Resumen de Riesgo por Vendedor (2022–2024 datos con días)</div>
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Vendedor</th>
+              <th class="ctr">⌀ días 2022</th>
+              <th class="ctr">⌀ días 2023</th>
+              <th class="ctr">⌀ días 2024</th>
+              <th class="ctr">⌀ días 2025</th>
+              <th class="ctr">Tendencia</th>
+              <th class="ctr">Riesgo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Olga</strong></td><td class="ctr">105d</td><td class="ctr">103d</td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">➡️</td><td class="ctr"><span class="score s-bad">Alto (inactiva)</span></td></tr>
+            <tr><td><strong>Olman</strong></td><td class="ctr">101d</td><td class="ctr">58d</td><td class="ctr">108d</td><td class="ctr">46d</td><td class="ctr">⬆️ 2025</td><td class="ctr"><span class="score s-warn">Moderado</span></td></tr>
+            <tr><td><strong>Francia</strong></td><td class="ctr">90d</td><td class="ctr">59d</td><td class="ctr">67d</td><td class="ctr">—</td><td class="ctr">⬇️</td><td class="ctr"><span class="score s-warn">Baja (inactiva)</span></td></tr>
+            <tr><td><strong>Irving</strong></td><td class="ctr">78d</td><td class="ctr">59d</td><td class="ctr">60d</td><td class="ctr">51d</td><td class="ctr">✅ Mejora</td><td class="ctr"><span class="score s-ok">Bajo</span></td></tr>
+            <tr><td><strong>Jonathan</strong></td><td class="ctr">88d</td><td class="ctr">52d</td><td class="ctr">56d</td><td class="ctr">—</td><td class="ctr">⬇️ Mejora</td><td class="ctr"><span class="score s-ok">Bajo (inactivo)</span></td></tr>
+            <tr><td><strong>Hannia</strong></td><td class="ctr">65d</td><td class="ctr">49d</td><td class="ctr">77d</td><td class="ctr">55d</td><td class="ctr">⬆️ 2024</td><td class="ctr"><span class="score s-warn">Moderado</span></td></tr>
+            <tr><td><strong>Pamela</strong></td><td class="ctr">—</td><td class="ctr">87d</td><td class="ctr">57d</td><td class="ctr">49d</td><td class="ctr">✅ Mejora</td><td class="ctr"><span class="score s-ok">Bajo</span></td></tr>
+            <tr><td><strong>Xinia</strong></td><td class="ctr">—</td><td class="ctr">35d</td><td class="ctr">42d</td><td class="ctr">39d</td><td class="ctr">✅ Estable</td><td class="ctr"><span class="score s-ok">Muy bajo</span></td></tr>
+            <tr><td><strong>Randall</strong></td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">56d</td><td class="ctr">49d</td><td class="ctr">✅ Mejora</td><td class="ctr"><span class="score s-ok">Bajo</span></td></tr>
+            <tr><td><strong>Mery</strong></td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">—</td><td class="ctr">47d</td><td class="ctr">✅ Nuevo</td><td class="ctr"><span class="score s-ok">Muy bajo</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RESUMEN EJECUTIVO ═══════════ -->
+  <div class="section">
+    <div class="section-title">🎯 Resumen Ejecutivo y Recomendaciones</div>
+    <div class="cards c2">
+      <div class="card">
+        <div class="card-title">✅ Fortalezas Identificadas</div>
+        <div class="alert-box green" style="margin-bottom:10px"><strong>Mejora sostenida en tiempos:</strong> El promedio bajó de 83d (2022) a 49d (2025), una reducción del 41%.</div>
+        <div class="alert-box green" style="margin-bottom:10px"><strong>Formalizador E (nuevo):</strong> Promedio de 44 días en 2025, el mejor del equipo.</div>
+        <div class="alert-box green" style="margin-bottom:10px"><strong>Vendedoras nuevas destacan:</strong> Xinia (39d) y Mery (47d) son las más eficientes en 2025.</div>
+        <div class="alert-box green"><strong>BN es el socio clave:</strong> Cubre hasta 97% del financiamiento en algunos años, lo que agiliza los cierres.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ Áreas de Mejora y Riesgo</div>
+        <div class="alert-box red" style="margin-bottom:10px"><strong>Olman — 2024:</strong> 108 días promedio, el más alto entre activos. Subió de 58d (2023) a 108d (2024). Requiere seguimiento individualizado.</div>
+        <div class="alert-box orange" style="margin-bottom:10px"><strong>Reservas cruzadas:</strong> 10 casos en 2024 con 159d promedio son el mayor riesgo de caída. Atención proactiva es crítica.</div>
+        <div class="alert-box orange" style="margin-bottom:10px"><strong>Hannia — 2024:</strong> Subió a 77d desde 49d (2023). Necesita revisión de gestión de expedientes.</div>
+        <div class="alert-box red"><strong>Máximos preocupantes:</strong> H registra máximo de 330d (2024) y LC de 317d. Casos individuales extremos que deben investigarse.</div>
+      </div>
+    </div>
+
+    <div class="cards c3" style="margin-top:22px">
+      <div class="card">
+        <div class="card-title">🎓 Recomendación 1 — Monitoreo Activo</div>
+        <p style="font-size:.87rem;line-height:1.6;color:var(--text);">
+          Implementar <strong>alertas automáticas</strong> a los 45, 60 y 90 días desde la reserva. Las reservas que superan 90 días deben ser escaladas a gerencia inmediatamente.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">🔄 Recomendación 2 — Capacitación</div>
+        <p style="font-size:.87rem;line-height:1.6;color:var(--text);">
+          Olman y Hannia deben participar en talleres de <strong>gestión de expedientes</strong>. Los casos extremos (>150 días) deben ser analizados en sesiones de retroalimentación mensual.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title">🏆 Recomendación 3 — Reconocimiento</div>
+        <p style="font-size:.87rem;line-height:1.6;color:var(--text);">
+          Reconocer a <strong>Xinia, Mery y E (formalizador)</strong> como modelos de eficiencia. Sus métodos deben documentarse como <em>best practice</em> para el equipo.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>🔍 Análisis de Cierre de Ventas — Ciudad del Valle | Generado: 24 de Febrero 2026</p>
+  <p style="margin-top:4px">Fuente: Informe Ejecutivo Formalizaciones | Años con datos de tiempos: 2022–2026</p>
+</div>
+
+<script>
+// ═══════════════════ DATA ═══════════════════
+const COLORS = {
+  blue:'#2980b9', red:'#c0392b', green:'#27ae60', orange:'#e67e22',
+  purple:'#8e44ad', teal:'#16a085', gold:'#f39c12', navy:'#1a2f4a',
+  cyan:'#3498db', pink:'#e91e8c'
+};
+const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ─ Días por año ─
+new Chart(document.getElementById('chartDiasAnio'), {
+  type: 'bar',
+  data: {
+    labels: ['2022','2023','2024','2025','2026*'],
+    datasets: [{
+      label: 'Días promedio',
+      data: [83, 61, 68, 49, 50],
+      backgroundColor: [COLORS.red, COLORS.orange, COLORS.orange, COLORS.green, COLORS.teal],
+      borderRadius: 8, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => `${ctx.parsed.y} días promedio` } }
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ─ Distribución buckets ─
+new Chart(document.getElementById('chartDiasBuckets'), {
+  type: 'doughnut',
+  data: {
+    labels: ['0–30 días','31–60 días','61–90 días','91–120 días','121–180 días','>180 días'],
+    datasets: [{
+      data: [40, 189, 89, 27, 29, 11],
+      backgroundColor: [COLORS.teal, COLORS.green, COLORS.gold, COLORS.orange, COLORS.red, COLORS.navy],
+      borderWidth: 3, borderColor: '#fff', hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/385)*100).toFixed(1)}%)` } }
+    }
+  }
+});
+
+// ─ Mismo año vs cruzado ─
+new Chart(document.getElementById('chartMismoAnio'), {
+  type: 'bar',
+  data: {
+    labels: ['2022','2023','2024','2025'],
+    datasets: [
+      { label: 'Mismo año (días)', data: [68, 59, 55, 45], backgroundColor: 'rgba(39,174,96,0.8)', borderRadius: 5 },
+      { label: 'Año anterior (días)', data: [114, 91, 159, 91], backgroundColor: 'rgba(192,57,43,0.8)', borderRadius: 5 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ─ Vendedores total ─
+new Chart(document.getElementById('chartVendTotal'), {
+  type: 'bar',
+  data: {
+    labels: ['Hannia','Irving','Olman','Jonathan','Olga','Pamela','Francia','Sergio','Diego','Xinia','Randall','Mery','Marco','Marcela'],
+    datasets: [{
+      label: 'Formalizaciones',
+      data: [90, 77, 75, 73, 37, 33, 27, 22, 17, 18, 18, 12, 13, 11],
+      backgroundColor: [COLORS.blue, COLORS.blue, COLORS.orange, COLORS.blue,
+                        COLORS.navy, COLORS.green, COLORS.navy, COLORS.teal,
+                        COLORS.teal, COLORS.green, COLORS.green, COLORS.green, COLORS.gold, COLORS.gold],
+      borderRadius: 5
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true, grid: { color: '#eee' } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+  }
+});
+
+// ─ Vendedores días ─
+new Chart(document.getElementById('chartVendDias'), {
+  type: 'bar',
+  data: {
+    labels: ['Xinia','Mery','Marco','Randall','Pamela','Olman','Diego','Irving','Hannia','Jonathan','Marcela','Sergio','Francia','Olga'],
+    datasets: [{
+      label: 'Días promedio',
+      data: [40, 47, 53, 53, 57, 83, 56, 65, 62, 67, 61, 65, 78, 104],
+      backgroundColor: [COLORS.green,COLORS.green,COLORS.teal,COLORS.teal,COLORS.teal,
+                        COLORS.red,COLORS.teal,COLORS.gold,COLORS.gold,COLORS.gold,
+                        COLORS.gold,COLORS.gold,COLORS.orange,COLORS.red],
+      borderRadius: 5
+    }]
+  },
+  options: {
+    indexAxis: 'y', responsive: true,
+    plugins: { legend: { display: false },
+      annotation: { annotations: { line1: { type:'line', xMin:60, xMax:60, borderColor:'red', borderWidth:2, borderDash:[4,4] } } }
+    },
+    scales: { x: { beginAtZero: true, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+  }
+});
+
+// ─ Evolución vendedores por año ─
+new Chart(document.getElementById('chartVendEvol'), {
+  type: 'line',
+  data: {
+    labels: ['2022','2023','2024','2025'],
+    datasets: [
+      { label: 'Hannia', data: [65,49,77,55], borderColor: COLORS.blue, tension: 0.4, borderWidth: 2, pointRadius: 5 },
+      { label: 'Irving', data: [78,59,60,51], borderColor: COLORS.gold, tension: 0.4, borderWidth: 2, pointRadius: 5 },
+      { label: 'Olman', data: [101,58,108,46], borderColor: COLORS.red, tension: 0.4, borderWidth: 3, pointRadius: 5 },
+      { label: 'Jonathan', data: [88,52,56,null], borderColor: COLORS.teal, tension: 0.4, borderWidth: 2, pointRadius: 5, spanGaps: false },
+      { label: 'Pamela', data: [null,87,57,49], borderColor: COLORS.green, tension: 0.4, borderWidth: 2, pointRadius: 5, spanGaps: false },
+      { label: 'Xinia', data: [null,35,42,39], borderColor: COLORS.purple, tension: 0.4, borderWidth: 2, pointRadius: 5, spanGaps: false },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } },
+    scales: {
+      y: { beginAtZero: false, min: 30, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ─ Vendedores 2025 por mes ─
+new Chart(document.getElementById('chartVend2025'), {
+  type: 'bar',
+  data: {
+    labels: ['Hannia','Irving','Olman','Pamela','Xinia','Randall','Mery','Marco'],
+    datasets: [
+      { label: 'Ene-Mar', data: [1,1,2,4,0,2,0,0], backgroundColor: 'rgba(52,152,219,0.75)', borderRadius: 3 },
+      { label: 'Abr-Jun', data: [3,1,1,5,3,1,3,0], backgroundColor: 'rgba(39,174,96,0.75)', borderRadius: 3 },
+      { label: 'Jul-Sep', data: [6,3,2,4,2,1,2,0], backgroundColor: 'rgba(241,196,15,0.75)', borderRadius: 3 },
+      { label: 'Oct-Dic', data: [6,4,5,8,5,4,6,4], backgroundColor: 'rgba(192,57,43,0.75)', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: { x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }, y: { stacked: true, beginAtZero: true, grid: { color: '#eee' } } }
+  }
+});
+
+// ─ Olman evolución ─
+new Chart(document.getElementById('chartOlmanEvol'), {
+  type: 'line',
+  data: {
+    labels: ['2022','2023','2024','2025'],
+    datasets: [
+      { label: 'Olman (días)', data: [101,58,108,46], borderColor: COLORS.red, backgroundColor: 'rgba(192,57,43,0.12)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 7, pointBackgroundColor: [COLORS.red,COLORS.green,COLORS.red,COLORS.green] },
+      { label: 'Promedio equipo', data: [83,61,68,49], borderColor: COLORS.blue, borderDash: [6,4], tension: 0.4, borderWidth: 2, pointRadius: 4, fill: false }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { beginAtZero: false, min: 30, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ─ Formalizadores volumen ─
+new Chart(document.getElementById('chartFormVol'), {
+  type: 'bar',
+  data: {
+    labels: ['W','H','LC','E'],
+    datasets: [
+      { label: '2021', data: [59,62,48,0], backgroundColor: 'rgba(52,152,219,0.7)', borderRadius: 3 },
+      { label: '2023', data: [29,30,16,0], backgroundColor: 'rgba(39,174,96,0.7)', borderRadius: 3 },
+      { label: '2024', data: [28,22,26,0], backgroundColor: 'rgba(241,196,15,0.7)', borderRadius: 3 },
+      { label: '2025', data: [26,23,29,22], backgroundColor: 'rgba(192,57,43,0.7)', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: { x: { stacked: false, grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#eee' } } }
+  }
+});
+
+// ─ Formalizadores días por año ─
+new Chart(document.getElementById('chartFormDias'), {
+  type: 'line',
+  data: {
+    labels: ['2023','2024','2025'],
+    datasets: [
+      { label: 'W', data: [54,71,49], borderColor: COLORS.blue, tension: 0.4, borderWidth: 2.5, pointRadius: 6 },
+      { label: 'H', data: [67,68,49], borderColor: COLORS.red, tension: 0.4, borderWidth: 2.5, pointRadius: 6 },
+      { label: 'LC', data: [66,66,52], borderColor: COLORS.green, tension: 0.4, borderWidth: 2.5, pointRadius: 6 },
+      { label: 'E', data: [null,null,44], borderColor: COLORS.purple, tension: 0.4, borderWidth: 2.5, pointRadius: 6, spanGaps: false },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { min: 40, grid: { color: '#eee' }, ticks: { callback: v => `${v}d` } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// ─ Cruce vendedor x formalizador 2025 ─
+new Chart(document.getElementById('chartCruce'), {
+  type: 'bar',
+  data: {
+    labels: ['Hannia','Irving','Olman','Pamela','Xinia','Randall','Mery','Marco'],
+    datasets: [
+      { label: 'W', data: [4,2,1,6,2,3,2,1], backgroundColor: 'rgba(52,152,219,0.8)', borderRadius: 3 },
+      { label: 'H', data: [5,2,3,3,2,2,3,1], backgroundColor: 'rgba(192,57,43,0.8)', borderRadius: 3 },
+      { label: 'LC', data: [5,3,4,7,4,2,4,2], backgroundColor: 'rgba(39,174,96,0.8)', borderRadius: 3 },
+      { label: 'E', data: [2,2,2,5,2,1,2,0], backgroundColor: 'rgba(142,68,173,0.8)', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+      y: { stacked: true, beginAtZero: true, grid: { color: '#eee' } }
+    }
+  }
+});
+
+// ─ Comparativa vendedores 2024 vs 2025 ─
+new Chart(document.getElementById('chartVendComp'), {
+  type: 'bar',
+  data: {
+    labels: ['Hannia','Irving','Olman','Jonathan','Pamela','Francia','Xinia','Randall','Marcela'],
+    datasets: [
+      { label: '2024', data: [13,10,12,11,6,1,7,10,5], backgroundColor: 'rgba(52,152,219,0.7)', borderRadius: 4 },
+      { label: '2025', data: [16,9,10,0,21,0,10,8,0], backgroundColor: 'rgba(192,57,43,0.7)', borderRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 35 } },
+      y: { beginAtZero: true, grid: { color: '#eee' } }
+    }
+  }
+});
+
+// ─ Rangos comparativa ─
+new Chart(document.getElementById('chartRangoComp'), {
+  type: 'bar',
+  data: {
+    labels: ['0–30d','31–60d','61–90d','91–120d','121–180d','>180d'],
+    datasets: [
+      { label: '2022', data: [4,48,41,18,12,4], backgroundColor: 'rgba(192,57,43,0.6)', borderRadius: 3 },
+      { label: '2023', data: [4,38,21,5,6,2], backgroundColor: 'rgba(241,196,15,0.7)', borderRadius: 3 },
+      { label: '2024', data: [7,34,17,4,9,5], backgroundColor: 'rgba(52,152,219,0.7)', borderRadius: 3 },
+      { label: '2025', data: [25,69,10,0,2,0], backgroundColor: 'rgba(39,174,96,0.8)', borderRadius: 3 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, grid: { color: '#eee' } }
+    }
+  }
+});
+
+// ─ Zona de riesgo >90 días ─
+new Chart(document.getElementById('chartRiesgo'), {
+  type: 'bar',
+  data: {
+    labels: ['2022','2023','2024','2025'],
+    datasets: [
+      { label: '91–120d', data: [18,5,4,0], backgroundColor: 'rgba(241,196,15,0.8)', borderRadius: 4 },
+      { label: '121–180d', data: [12,6,9,2], backgroundColor: 'rgba(230,126,34,0.8)', borderRadius: 4 },
+      { label: '>180d', data: [4,2,5,0], backgroundColor: 'rgba(192,57,43,0.8)', borderRadius: 4 },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, beginAtZero: true, grid: { color: '#eee' } }
+    }
+  }
+});
+
+// ─ TABS ─
+function showTab(group, id) {
+  document.querySelectorAll('.' + group).forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const btn = document.querySelector(`[onclick="showTab('${group}','${id}')"]`);
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(group)) b.classList.remove('active');
+  });
+  if (btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>
