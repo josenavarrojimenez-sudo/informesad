@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(st){
     st.style.borderColor='rgba(96,165,250,0.45)';
     st.style.background='rgba(96,165,250,0.10)';
-    if(st.innerHTML.indexOf('PENDIENTE')!==-1){ st.innerHTML='JS status: <strong>HEAD_OK</strong> (si se queda aquí, el error está en el script principal)'; }
+    if(st.innerHTML.indexOf('PENDIENTE')!==-1){ if(st.innerHTML.indexOf('PENDIENTE')!==-1){ if(st.innerHTML.indexOf('PENDIENTE')!==-1){ st.innerHTML='JS status: <strong>HEAD_OK</strong> (si se queda aquí, el error está en el script principal)'; } } }
   }
 });
 </script>
