@@ -72,7 +72,14 @@
       thead th{top:152px;}
       .kanban{grid-template-columns:1fr;}
     }
-  </style>
+  
+/* --- CDV hotfix (mobile) --- */
+select, input{color: var(--text, #e9eef7) !important; background: rgba(255,255,255,0.06) !important;}
+select option{color:#111;}
+table{border-collapse: collapse; width:100%;}
+th, td{vertical-align: top; padding: 10px 12px; text-align:left;}
+thead th{position: sticky; top: 0; background: rgba(12,16,25,0.92); backdrop-filter: blur(8px); z-index:2;}
+</style>
 </head>
 <body>
   <header>
@@ -598,7 +605,7 @@ function renderGroup(){
   container.innerHTML='';
   const items=filtered();
   const groups={};
-  for(const it of items){ (groups[it.formalizador] ||= []).push(it); }
+  for(const it of items){ if(!groups[it.formalizador]) groups[it.formalizador]=[]; groups[it.formalizador].push(it); }
   for(const k of Object.keys(groups).sort((a,b)=>a.localeCompare(b))){
     const card=document.createElement('div');
     card.className='card';
@@ -640,7 +647,7 @@ function renderKanban(){
   const items=filtered();
   const order=['S1 Mar','S2 Mar','S3 Mar','S4 Mar','S5 Mar','S1 Abr','S2 Abr','S3 Abr','S4 Abr','(sin semana)'];
   const buckets={};
-  for(const it of items){ const b=it.semana||'(sin semana)'; (buckets[b] ||= []).push(it); }
+  for(const it of items){ const b=it.semana||'(sin semana)'; if(!buckets[b]) buckets[b]=[]; buckets[b].push(it); }
   const keys=Object.keys(buckets).sort((a,b)=>{
     const ia=order.indexOf(a), ib=order.indexOf(b);
     if(ia===-1 && ib===-1) return a.localeCompare(b);
