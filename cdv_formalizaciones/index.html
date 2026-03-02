@@ -87,6 +87,17 @@ table{border-collapse: collapse; width:100%;}
 th, td{vertical-align: top; padding: 10px 12px; text-align:left;}
 thead th{position: sticky; top: 0; background: rgba(12,16,25,0.92); backdrop-filter: blur(8px); z-index:2;}
 </style>
+<script>
+// JS_HEAD_PROBE
+document.addEventListener('DOMContentLoaded', function(){
+  var st=document.getElementById('jsStatus');
+  if(st){
+    st.style.borderColor='rgba(96,165,250,0.45)';
+    st.style.background='rgba(96,165,250,0.10)';
+    st.innerHTML='JS status: <strong>HEAD_OK</strong> (si se queda aquí, el error está en el script principal)';
+  }
+});
+</script>
 </head>
 <body>
   <header>
