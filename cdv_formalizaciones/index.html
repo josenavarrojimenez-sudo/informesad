@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporte de Formalizaciones – Ciudad del Valle</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a33;
+      --panel2:#0f1730;
+      --text: #e8ecff;
+      --muted: #aab4e6;
+      --accent: #6ea8fe;
+      --ok: #38d996;
+      --warn: #ffcc66;
+      --bad: #ff6b6b;
+      --chip: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+    }
+    body{margin:0; font-family: var(--sans); background: radial-gradient(1200px 600px at 15% 0%, #162252, transparent), var(--bg); color:var(--text);}
+    header{padding:18px 18px 10px; position:sticky; top:0; background: linear-gradient(to bottom, rgba(11,16,32,0.96), rgba(11,16,32,0.80)); backdrop-filter: blur(10px); border-bottom:1px solid var(--border); z-index:10;}
+    h1{font-size:18px; margin:0 0 6px; letter-spacing:0.2px;}
+    .sub{color:var(--muted); font-size:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .sub code{font-family:var(--mono); background:rgba(255,255,255,0.08); padding:2px 6px; border-radius:8px; border:1px solid var(--border);}
+
+    main{padding:14px 18px 40px;}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;}
+    .card{background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); border:1px solid var(--border); border-radius:14px; padding:12px; box-shadow: var(--shadow);}
+    .card h2{font-size:13px; margin:0 0 10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.08em;}
+
+    .controls{display:grid; grid-template-columns: repeat(6, minmax(140px, 1fr)); gap:10px; align-items:end;}
+    .controls label{display:block; font-size:11px; color:var(--muted); margin-bottom:4px;}
+    input, select{width:100%; background:var(--panel2); color:var(--text); border:1px solid var(--border); border-radius:10px; padding:10px 10px; font-size:13px; outline:none;}
+    input::placeholder{color:rgba(232,236,255,0.45);}
+    .btns{display:flex; gap:10px;}
+    button{cursor:pointer; background:rgba(110,168,254,0.18); color:var(--text); border:1px solid rgba(110,168,254,0.35); border-radius:10px; padding:10px 12px; font-weight:600; font-size:13px;}
+    button.secondary{background:rgba(255,255,255,0.06); border-color:var(--border); color:var(--muted);}
+    button:active{transform: translateY(1px);}
+
+    .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:12px 0;}
+    .tab{padding:8px 10px; border:1px solid var(--border); border-radius:999px; background:rgba(255,255,255,0.04); color:var(--muted); font-weight:600; font-size:12px;}
+    .tab.active{background:rgba(110,168,254,0.22); border-color:rgba(110,168,254,0.45); color:var(--text);}
+
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden;}
+    thead th{position:sticky; top:104px; background:rgba(18,26,51,0.92); backdrop-filter: blur(8px); border-bottom:1px solid var(--border); padding:10px; text-align:left; font-size:12px; color:var(--muted); z-index:5;}
+    tbody td{border-bottom:1px solid rgba(255,255,255,0.07); padding:10px; font-size:13px; vertical-align:top;}
+    tbody tr:hover{background:rgba(255,255,255,0.03)}
+
+    .chips{display:flex; gap:6px; flex-wrap:wrap;}
+    .chip{display:inline-flex; gap:6px; align-items:center; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:var(--chip); font-size:12px; color:var(--muted);}
+    .chip.ok{border-color:rgba(56,217,150,0.35); background:rgba(56,217,150,0.10); color:#bff7df;}
+    .chip.warn{border-color:rgba(255,204,102,0.35); background:rgba(255,204,102,0.10); color:#ffe6b3;}
+    .chip.bad{border-color:rgba(255,107,107,0.35); background:rgba(255,107,107,0.10); color:#ffd0d0;}
+
+    .kanban{display:grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap:12px;}
+    .col{background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+    .col h3{margin:0; padding:10px 12px; font-size:12px; color:var(--muted); background:rgba(255,255,255,0.04); border-bottom:1px solid var(--border);}
+    .kitems{padding:10px; display:flex; flex-direction:column; gap:10px;}
+    .kitem{border:1px solid var(--border); border-radius:12px; padding:10px; background:rgba(18,26,51,0.55);}
+    .kitem .t{display:flex; justify-content:space-between; gap:10px; font-weight:700;}
+    .kitem .m{color:var(--muted); font-size:12px; margin-top:4px;}
+    .kitem .p{margin-top:8px; color:rgba(232,236,255,0.88); font-size:13px; white-space:pre-wrap;}
+
+    .footerNote{color:var(--muted); font-size:12px; margin-top:10px;}
+
+    @media (max-width: 1100px){
+      .controls{grid-template-columns: repeat(2, minmax(180px, 1fr));}
+      thead th{top:152px;}
+      .kanban{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Informe interactivo – Casas proyectadas a formalizar (Ciudad del Valle)</h1>
+    <div style="margin-top:10px"><img src="cdv_logo.jpg" alt="Ciudad del Valle" style="height:54px; width:auto; border-radius:10px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.06); padding:6px"/></div>
+    <div class="sub">
+      <span>Vistas: <code>Tabla</code> · <code>Por formalizador</code> · <code>Kanban por fecha</code></span>
+      <span>Actualizado: <strong id="generatedAt"></strong></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Filtros</h2>
+      <div class="controls" style="grid-template-columns: repeat(6, minmax(140px, 1fr));">
+        <div>
+          <label>Buscar</label>
+          <input id="q" placeholder="Ej: avalúo, Tebas, Jean…" />
+        </div>
+        <div>
+          <label>Formalizador</label>
+          <select id="formalizador"></select>
+        </div>
+        <div>
+          <label>Semana</label>
+          <select id="semana"></select>
+        </div>
+        <div>
+          <label>Banco</label>
+          <select id="banco"></select>
+        </div>
+        <div>
+          <label>Modelo (grupo)</label>
+          <select id="modelo"></select>
+        </div>
+        <div class="btns">
+          <button id="btnReset" class="secondary">Reset</button>
+          <button id="btnExport">Exportar CSV</button>
+        </div>
+      </div>
+      <div class="footerNote">Filtros: formalizador, semana del mes, banco, y modelo (agrupado por nombre). Campo “Cliente” es el referente principal.</div>
+    </section>
+
+    <div class="tabs" style="margin-top:14px">
+      <div class="tab active" data-view="table">Tabla</div>
+      <div class="tab" data-view="formalizador">Por formalizador</div>
+      <div class="tab" data-view="kanban">Kanban (por fecha)</div>
+    </div>
+
+    <section id="view-table" class="card">
+      <h2>Casos</h2>
+      <div style="overflow:auto; border-radius:12px; border:1px solid var(--border)">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:90px">Lote</th>
+              <th style="min-width:180px">Cliente</th>
+              <th style="min-width:130px">Modelo (grupo)</th>
+              <th style="min-width:220px">Modelo (detalle)</th>
+              <th style="min-width:120px">Formalizador</th>
+              <th style="min-width:110px">Semana</th>
+              <th style="min-width:130px">Fecha</th>
+              <th style="min-width:120px">Banco</th>
+              <th style="min-width:250px">Estados</th>
+              <th style="min-width:360px">Pendientes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="view-group" class="card" style="display:none">
+      <h2 id="groupTitle">Agrupado</h2>
+      <div id="groupContainer"></div>
+    </section>
+
+    <section id="view-kanban" class="card" style="display:none">
+      <h2>Kanban por semana</h2>
+      <div class="kanban" id="kanban"></div>
+    </section>
+  </main>
+
+<script>
+window.addEventListener('error', (e)=>{
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;bottom:12px;left:12px;right:12px;padding:10px 12px;background:rgba(255,107,107,0.18);border:1px solid rgba(255,107,107,0.5);border-radius:12px;z-index:9999;color:#ffd0d0;font-size:12px;';
+  el.textContent='Error cargando reporte: ' + (e.message||e.error||'') + ' (si querés, mandame screenshot)';
+  document.body.appendChild(el);
+});
+
+const DATA = [
+  {
+    "id": "M.23",
+    "formalizador": "Hazel",
+    "cliente": "Hernan Nuñez Fioravantti",
+    "modeloGrupo": "Stella A",
+    "modeloDetalle": "Stella A 2D 2.5B WC L(PA)",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23 marzo",
+    "banco": "BCR",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Avalúo solicitado; en proceso pago de bono vivienda para proceder con venta de casa y completar capacidad."
+  },
+  {
+    "id": "K.14",
+    "formalizador": "Hazel",
+    "cliente": "Jean Monge Bonilla",
+    "modeloGrupo": "Neo Tripoli A",
+    "modeloDetalle": "Neo Tripoli A 3D 2B WC OF",
+    "semana": "S3 Mar",
+    "fechaDetalle": "16-03",
+    "banco": "Coopeande",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "Capacidad ¢80.0MM; diferencia financiar; ya tiene préstamo ¢6.0MM. Pendiente: avalúo solicitado; esperando confirmación de Víctor sobre revisión legal."
+  },
+  {
+    "id": "D.21",
+    "formalizador": "Hazel",
+    "cliente": "Mauricio Valverde Céspedes",
+    "modeloGrupo": "Ikaria A",
+    "modeloDetalle": "Ikaria A 2D 2B WC",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23-03",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "A espera de que cancele deuda para tener capacidad de pago. Pendiente: documentación actualizada."
+  },
+  {
+    "id": "L.53",
+    "formalizador": "Hazel",
+    "cliente": "Karen Vizcaino Vargas",
+    "modeloGrupo": "Zante T",
+    "modeloDetalle": "Zante T 4D 2.5B WC (PA)",
+    "semana": "S5 Mar",
+    "fechaDetalle": "28 de Marzo",
+    "banco": "Coopenae",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "Info en revisión. Cliente independiente no factura y declara en cero; caso visto con Coopenae; estados no reflejan ingresos."
+  },
+  {
+    "id": "M.07",
+    "formalizador": "Hazel",
+    "cliente": "Andres Ureña Abarca",
+    "modeloGrupo": "Santorini T",
+    "modeloDetalle": "Santorini T 3D 2.5B WC OF F30",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23-03",
+    "banco": "Mucap",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "A espera de información del cliente. Pendiente: estados de cuenta, CPA y carta de referencia."
+  },
+  {
+    "id": "K.26",
+    "formalizador": "Hazel",
+    "cliente": "Juan Carlos Peña Ramirez",
+    "modeloGrupo": "Tebas A",
+    "modeloDetalle": "Tebas A 3D 2B WC (18)",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23-03",
+    "banco": "BP",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "warn",
+      "capacidad": "warn"
+    },
+    "pendientes": "Permisos en trámite (CFIA / boleta electrónica). Cliente transportista independiente. A espera de info; contador preparando."
+  },
+  {
+    "id": "F.18",
+    "formalizador": "Hazel",
+    "cliente": "Maria Auxiliadora Araya Céspedes",
+    "modeloGrupo": "Ikaria A",
+    "modeloDetalle": "Ikaria A 2D 2B WC",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23 marzo",
+    "banco": "Caja de Ande",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "Maestra MEP; quiere trámite con Caja de Ande. Cliente quiere esperar condiciones de Expo; no ha enviado información."
+  },
+  {
+    "id": "K.25",
+    "formalizador": "Hazel",
+    "cliente": "Josue David Montoya Chavarría",
+    "modeloGrupo": "Tebas A",
+    "modeloDetalle": "Tebas A 3D 2B WC (Casa terminada)",
+    "semana": "S4 Mar",
+    "fechaDetalle": "23 marzo",
+    "banco": "Por definir",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: constancia y SICERE del cliente. Bonus: casa terminada."
+  },
+  {
+    "id": "M.05",
+    "formalizador": "Willem",
+    "cliente": "Silvia Salazar Sanchez",
+    "modeloGrupo": "Santorini A",
+    "modeloDetalle": "Santorini A 3D 2.5B WC",
+    "semana": "S3 Mar",
+    "fechaDetalle": "19 MARZO",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "Finalizado. Capacidad: pagar y cerrar Promerica ¢8.000.000."
+  },
+  {
+    "id": "L.32",
+    "formalizador": "Willem",
+    "cliente": "Mario Alexander Mena Barboza",
+    "modeloGrupo": "Zante A",
+    "modeloDetalle": "Zante A 4D 2.5B WC (PA)",
+    "semana": "S2 Mar",
+    "fechaDetalle": "12 MARZO",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Esperar cliente decida banco / no ha querido firmar contratos para pedir avalúo. Permiso ya salió; pedir presupuesto."
+  },
+  {
+    "id": "I.13",
+    "formalizador": "Willem",
+    "cliente": "Cristian Hidalgo Avila",
+    "modeloGrupo": "Zante T",
+    "modeloDetalle": "Zante T 2D 3.5B WC OF",
+    "semana": "S2 Abr",
+    "fechaDetalle": "10 de ABRIL",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: contrato laboral indefinido/plazo; se lo dan hasta 1 abril."
+  },
+  {
+    "id": "M.16",
+    "formalizador": "Willem",
+    "cliente": "Daniel Quiros Soto",
+    "modeloGrupo": "Stellita A",
+    "modeloDetalle": "Stellita A 2D 1.5B WC",
+    "semana": "S2 Mar",
+    "fechaDetalle": "12 MARZO",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: avalúo (cambio modelo); en cambio de láminas; espera miércoles para pedir avalúo."
+  },
+  {
+    "id": "L-31",
+    "formalizador": "Willem",
+    "cliente": "Elizabeth Cano",
+    "modeloGrupo": "Stella A",
+    "modeloDetalle": "Stella A",
+    "semana": "S5 Mar",
+    "fechaDetalle": "31 MARZO",
+    "banco": "Promerica",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "warn",
+      "capacidad": "ok"
+    },
+    "pendientes": "Permisos en CFIA. Pendientes: completo; esperando tasas Expo."
+  },
+  {
+    "id": "K-19",
+    "formalizador": "Willem",
+    "cliente": "Valeria Acosta",
+    "modeloGrupo": "Stella A",
+    "modeloDetalle": "Stella A",
+    "semana": "S5 Mar",
+    "fechaDetalle": "31 MARZO",
+    "banco": "BN",
+    "status": {
+      "traspaso": "warn",
+      "permisos": "warn",
+      "capacidad": "warn"
+    },
+    "pendientes": "Traspaso: hoy se solicita. Permisos: por tramitar. Capacidad: renunció; entra nuevo trabajo el 16; esperar contrato. Ajustado."
+  },
+  {
+    "id": "L.33",
+    "formalizador": "Luis Carlos",
+    "cliente": "Marcelly Alvarado Chaves",
+    "modeloGrupo": "Tebas T",
+    "modeloDetalle": "Tebas T 3D 2B (17)",
+    "semana": "S1 Mar",
+    "fechaDetalle": "6 de Marzo",
+    "banco": "Caja de Ande",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "No hay."
+  },
+  {
+    "id": "K.18",
+    "formalizador": "Luis Carlos",
+    "cliente": "Rafael Antonio Porras Castro",
+    "modeloGrupo": "Ikaria T",
+    "modeloDetalle": "Ikaria T 2D 2B",
+    "semana": "S2 Mar",
+    "fechaDetalle": "12 de marzo",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: valores avalúo."
+  },
+  {
+    "id": "I.30",
+    "formalizador": "Luis Carlos",
+    "cliente": "Isabel Jara Marín",
+    "modeloGrupo": "Stella T",
+    "modeloDetalle": "Stella T 2D 2.5B WC L",
+    "semana": "S3 Mar",
+    "fechaDetalle": "S3 marzo",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: contratos y formularios. Quiere esperar Expo."
+  },
+  {
+    "id": "I.36",
+    "formalizador": "Luis Carlos",
+    "cliente": "Geiner Ulises Naranjo Romero",
+    "modeloGrupo": "Zante T",
+    "modeloDetalle": "Zante T 4D 2.5B WC (PA)",
+    "semana": "S4 Mar",
+    "fechaDetalle": "27 de Marzo",
+    "banco": "BCR-MUCAP",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: actualizar información, contratos, formularios. Quiere esperar Expo."
+  },
+  {
+    "id": "L.01",
+    "formalizador": "Luis Carlos",
+    "cliente": "Juan Daniel Arias Pérez",
+    "modeloGrupo": "Stella A",
+    "modeloDetalle": "Stella A 3D 3.5B WC (PA)",
+    "semana": "S2 Abr",
+    "fechaDetalle": "14 ABRIL",
+    "banco": "BN-BCR-BP",
+    "status": {
+      "traspaso": "bad",
+      "permisos": "bad",
+      "capacidad": "warn"
+    },
+    "pendientes": "Sin folios ni catastros. Debe aumentar salario y reportar CCSS. Pendientes: constancia, contratos, formularios."
+  },
+  {
+    "id": "I.39",
+    "formalizador": "Luis Carlos",
+    "cliente": "Lohr Campbell Arguello",
+    "modeloGrupo": "Santorini T",
+    "modeloDetalle": "Santorini T",
+    "semana": "S4 Mar",
+    "fechaDetalle": "27 de marzo",
+    "banco": "BN",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "warn"
+    },
+    "pendientes": "Capacidad de pago no se ha realizado. Pendiente: recopilando información."
+  },
+  {
+    "id": "K.05",
+    "formalizador": "Esteban",
+    "cliente": "Joaquin Marin",
+    "modeloGrupo": "Santorini A",
+    "modeloDetalle": "Santorini A",
+    "semana": "S2 Mar",
+    "fechaDetalle": "12 de Marzo",
+    "banco": "PROMERICA",
+    "status": {
+      "traspaso": "ok",
+      "permisos": "ok",
+      "capacidad": "ok"
+    },
+    "pendientes": "Caso en aprobación; pendiente avalúo; contra avalúo pasar opción de compra para cuadrar número en dólares."
+  },
+  {
+    "id": "1-01",
+    "formalizador": "Esteban",
+    "cliente": "Jose Arturo Campos",
+    "modeloGrupo": "Barani - Santorini A",
+    "modeloDetalle": "Barani - Santorini A",
+    "semana": "S4 Mar",
+    "fechaDetalle": "27 de Marzo",
+    "banco": "MUCAP",
+    "status": {
+      "traspaso": "warn",
+      "permisos": "warn",
+      "capacidad": "ok"
+    },
+    "pendientes": "Pendiente: Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dólares; precio real según adenda (extras)."
+  }
+];
+
+const fmtStatus = (v) => ({
+  ok:   { cls: 'ok',   txt: '✅' },
+  warn: { cls: 'warn', txt: '⚠️' },
+  bad:  { cls: 'bad',  txt: '❌' },
+  na:   { cls: '',     txt: '—' }
+}[v] || { cls: '', txt: String(v) });
+
+const uniq = (arr) => Array.from(new Set(arr)).sort((a,b)=>String(a).localeCompare(String(b)));
+const normalize = (s) => (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+const state = { view:'table', q:'', formalizador:'(todos)', semana:'(todos)', banco:'(todos)', modelo:'(todos)' };
+
+function matches(it){
+  const q=normalize(state.q.trim());
+  if(q){
+    const blob=normalize([it.id,it.cliente,it.modeloGrupo,it.modeloDetalle,it.formalizador,it.semana,it.fechaDetalle,it.banco,it.pendientes].join(' | '));
+    if(!blob.includes(q)) return false;
+  }
+  if(state.formalizador!=='(todos)' && it.formalizador!==state.formalizador) return false;
+  if(state.semana!=='(todos)' && it.semana!==state.semana) return false;
+  if(state.banco!=='(todos)' && it.banco!==state.banco) return false;
+  if(state.modelo!=='(todos)' && it.modeloGrupo!==state.modelo) return false;
+  return true;
+}
+
+function filtered(){ return DATA.filter(matches); }
+
+function renderTable(){
+  const tbody=document.getElementById('tbody');
+  tbody.innerHTML='';
+  for(const it of filtered()){
+    const tr=document.createElement('tr');
+    const chips=document.createElement('div');
+    chips.className='chips';
+    const mk=(label,val)=>{ const s=fmtStatus(val); const el=document.createElement('span'); el.className='chip '+(s.cls||''); el.textContent=`${label}: ${s.txt}`; return el; };
+    chips.appendChild(mk('Traspaso', it.status.traspaso));
+    chips.appendChild(mk('Permisos', it.status.permisos));
+    chips.appendChild(mk('Capacidad', it.status.capacidad));
+
+    const cells=[it.id,it.cliente,it.modeloGrupo,it.modeloDetalle,it.formalizador,it.semana,it.fechaDetalle,it.banco,chips,it.pendientes];
+    for(const c of cells){
+      const td=document.createElement('td');
+      if(c instanceof HTMLElement) td.appendChild(c);
+      else td.textContent = c ?? '';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+function renderGroup(){
+  const container=document.getElementById('groupContainer');
+  container.innerHTML='';
+  const items=filtered();
+  const groups={};
+  for(const it of items){ (groups[it.formalizador] ||= []).push(it); }
+  for(const k of Object.keys(groups).sort((a,b)=>a.localeCompare(b))){
+    const card=document.createElement('div');
+    card.className='card';
+    card.style.marginTop='12px';
+    const h=document.createElement('h2');
+    h.textContent=`${k} · ${groups[k].length} casos`;
+    card.appendChild(h);
+
+    const list=document.createElement('div');
+    list.style.display='grid';
+    list.style.gridTemplateColumns='repeat(auto-fit, minmax(280px, 1fr))';
+    list.style.gap='10px';
+
+    for(const it of groups[k]){
+      const box=document.createElement('div');
+      box.className='kitem';
+      box.innerHTML=`
+        <div class="t"><span>${it.id} · ${it.modeloGrupo}</span><span style="color:var(--muted); font-weight:600">${it.semana}</span></div>
+        <div class="m">Cliente: ${it.cliente} · Banco: ${it.banco} · Fecha: ${it.fechaDetalle}</div>
+        <div class="chips" style="margin-top:8px"></div>
+        <div class="p">${(it.pendientes||'').replace(/</g,'&lt;')}</div>
+      `;
+      const ch=box.querySelector('.chips');
+      const mk=(label,val)=>{ const s=fmtStatus(val); const el=document.createElement('span'); el.className='chip '+(s.cls||''); el.textContent=`${label}: ${s.txt}`; return el; };
+      ch.appendChild(mk('Traspaso', it.status.traspaso));
+      ch.appendChild(mk('Permisos', it.status.permisos));
+      ch.appendChild(mk('Capacidad', it.status.capacidad));
+      list.appendChild(box);
+    }
+
+    card.appendChild(list);
+    container.appendChild(card);
+  }
+}
+
+function renderKanban(){
+  const k=document.getElementById('kanban');
+  k.innerHTML='';
+  const items=filtered();
+  const order=['S1 Mar','S2 Mar','S3 Mar','S4 Mar','S5 Mar','S1 Abr','S2 Abr','S3 Abr','S4 Abr','(sin semana)'];
+  const buckets={};
+  for(const it of items){ const b=it.semana||'(sin semana)'; (buckets[b] ||= []).push(it); }
+  const keys=Object.keys(buckets).sort((a,b)=>{
+    const ia=order.indexOf(a), ib=order.indexOf(b);
+    if(ia===-1 && ib===-1) return a.localeCompare(b);
+    if(ia===-1) return 1;
+    if(ib===-1) return -1;
+    return ia-ib;
+  });
+
+  const makeCol=(title, its)=>{
+    const col=document.createElement('div'); col.className='col';
+    const h=document.createElement('h3'); h.textContent=`${title} · ${its.length}`; col.appendChild(h);
+    const itemsDiv=document.createElement('div'); itemsDiv.className='kitems';
+    for(const it of its){
+      const box=document.createElement('div'); box.className='kitem';
+      const s=fmtStatus(it.status.capacidad);
+      box.innerHTML=`
+        <div class="t"><span>${it.id} · ${it.modeloGrupo}</span><span class="chip ${s.cls}">Cap: ${s.txt}</span></div>
+        <div class="m">${it.formalizador} · ${it.banco} · ${it.fechaDetalle}</div>
+        <div class="p">${(it.pendientes||'').replace(/</g,'&lt;')}</div>
+      `;
+      itemsDiv.appendChild(box);
+    }
+    col.appendChild(itemsDiv);
+    return col;
+  };
+
+  for(const kk of keys) k.appendChild(makeCol(kk, buckets[kk]));
+}
+
+function setView(v){
+  state.view=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.view===v));
+  document.getElementById('view-table').style.display = v==='table' ? '' : 'none';
+  document.getElementById('view-group').style.display = v==='formalizador' ? '' : 'none';
+  document.getElementById('view-kanban').style.display = v==='kanban' ? '' : 'none';
+
+  if(v==='table') renderTable();
+  if(v==='formalizador'){ document.getElementById('groupTitle').textContent='Agrupado por formalizador'; renderGroup(); }
+  if(v==='kanban') renderKanban();
+}
+
+function fillSelect(id, values){
+  const sel=document.getElementById(id);
+  sel.innerHTML='';
+  const opt0=document.createElement('option'); opt0.value='(todos)'; opt0.textContent='(todos)'; sel.appendChild(opt0);
+  for(const v of values){ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); }
+}
+
+function exportCSV(){
+  const items=filtered();
+  const cols=['id','cliente','modeloGrupo','modeloDetalle','formalizador','semana','fechaDetalle','banco','traspaso','permisos','capacidad','pendientes'];
+  const esc=(s)=>(''+(s??'')).replace(/"/g,'""');
+  const lines=[cols.join(',')];
+  for(const it of items){
+    const row=[it.id,it.cliente,it.modeloGrupo,it.modeloDetalle,it.formalizador,it.semana,it.fechaDetalle,it.banco,it.status.traspaso,it.status.permisos,it.status.capacidad,it.pendientes].map(v=>`"${esc(v)}"`);
+    lines.push(row.join(','));
+  }
+  const blob=new Blob([lines.join('
+')], {type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='formalizaciones_cdv.csv';
+  a.click();
+}
+
+function init(){
+  document.getElementById('generatedAt').textContent = new Date().toLocaleString();
+  fillSelect('formalizador', uniq(DATA.map(d=>d.formalizador)));
+  fillSelect('semana', uniq(DATA.map(d=>d.semana)));
+  fillSelect('banco', uniq(DATA.map(d=>d.banco)));
+  fillSelect('modelo', uniq(DATA.map(d=>d.modeloGrupo)));
+
+  document.getElementById('q').addEventListener('input', e=>{ state.q=e.target.value; setView(state.view); });
+  document.getElementById('formalizador').addEventListener('change', e=>{ state.formalizador=e.target.value; setView(state.view); });
+  document.getElementById('semana').addEventListener('change', e=>{ state.semana=e.target.value; setView(state.view); });
+  document.getElementById('banco').addEventListener('change', e=>{ state.banco=e.target.value; setView(state.view); });
+  document.getElementById('modelo').addEventListener('change', e=>{ state.modelo=e.target.value; setView(state.view); });
+
+  document.getElementById('btnReset').addEventListener('click', ()=>{
+    state.q=''; state.formalizador='(todos)'; state.semana='(todos)'; state.banco='(todos)'; state.modelo='(todos)';
+    document.getElementById('q').value='';
+    ['formalizador','semana','banco','modelo'].forEach(id=>document.getElementById(id).value='(todos)');
+    setView(state.view);
+  });
+
+  document.getElementById('btnExport').addEventListener('click', exportCSV);
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click', ()=>setView(t.dataset.view)));
+  setView('table');
+}
+
+init();
+</script>
+</body>
+</html>
