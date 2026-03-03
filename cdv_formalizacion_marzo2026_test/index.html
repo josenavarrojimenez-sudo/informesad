@@ -1898,7 +1898,7 @@ function renderKPIs() {
   const totalLoteQFI = filteredData.reduce((s, c) => s + (c.loteQFI||0), 0);
 
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi-card">
+<div class="kpi-card">
       <div class="kpi-card-label">Total Casas</div>
       <div class="kpi-card-value">${total}</div>
       <div class="kpi-card-sub">${terminadas} terminadas</div>
@@ -1911,12 +1911,7 @@ function renderKPIs() {
     <div class="kpi-card">
       <div class="kpi-card-label">Total Lotes AD</div>
       <div class="kpi-card-value">${fmt(totalLoteAD)}</div>
-      <div class="kpi-card-sub">Ingreso AD acumulado</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card-label">Total Lotes QFI</div>
-      <div class="kpi-card-value">${fmt(totalLoteQFI)}</div>
-      <div class="kpi-card-sub">Ingreso QFI acumulado</div>
+      <div class="kpi-card-sub">Monto acumulado</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-card-label">Casas Terminadas</div>
@@ -1928,19 +1923,19 @@ function renderKPIs() {
   document.getElementById('headerStats').innerHTML = `
     <div class="header-stat">
       <div class="header-stat-value">${total}</div>
-      <div class="header-stat-label">Casas</div>
+      <div class="header-stat-label">CASAS</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${terminadas}</div>
-      <div class="header-stat-label">Terminadas</div>
+      <div class="header-stat-label">TERMINADAS</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalDesembolso + totalLoteAD)}</div>
-      <div class="header-stat-label">Total Casas + Lote AD</div>
+      <div class="header-stat-label">TOTAL CASAS + LOTES</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalLoteQFI)}</div>
-      <div class="header-stat-label">Ingreso Lote QFI</div>
+      <div class="header-stat-label">TOTAL LOTES QFI</div>
     </div>
   `;
 }
