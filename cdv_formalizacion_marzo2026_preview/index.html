@@ -1066,6 +1066,18 @@ tbody td {
 </div>
 
 <script>
+window.addEventListener('error', function(e){
+  try {
+    var b=document.getElementById('jsErrorBanner');
+    if(!b){
+      b=document.createElement('div');
+      b.id='jsErrorBanner';
+      b.style.cssText='position:sticky;top:0;z-index:9999;padding:10px 14px;background:#fee2e2;color:#7f1d1d;font:12px/1.4 Inter,system-ui;border-bottom:1px solid #fecaca;';
+      document.body.prepend(b);
+    }
+    b.textContent='JS error: ' + (e.message || (e.error && e.error.message) || 'unknown');
+  } catch(_){ }
+});
 const casas = [
   {
     "lote": "M.23",
@@ -1740,7 +1752,7 @@ function renderFlow() {
 
   // Grand totals
   const grandCasa = filteredData.reduce((s, c) => s + c.montoCasa, 0);
-  const grandLote = filteredData.reduce((s, c) => s + c.montoLote, 0);
+  const grandLote = filteredData.reduce((s, c) => s + (c.loteAD||0), 0);
   html += `
     <div style="background:linear-gradient(135deg,#2D2014,#4A3728);border-radius:var(--radius-md);padding:20px 24px;color:#F5E6D3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
       <div style="font-size:16px;font-weight:700">📊 Totales Generales</div>
@@ -1921,7 +1933,7 @@ function exportToExcel() {
 
   for (const [wk, items] of Object.entries(weeks)) {
     const weekTotalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const weekTotalLote = items.reduce((s, c) => s + c.montoLote, 0);
+    const weekTotalLote = items.reduce((s, c) => s + (c.loteAD||0), 0);
     grandTotalCasa += weekTotalCasa;
     grandTotalLote += weekTotalLote;
 
@@ -1937,7 +1949,7 @@ function exportToExcel() {
         'Desembolso Casa (₡)': c.montoCasa,
         'Lote AD (₡)': (c.loteAD||0),
     'Lote QFI (₡)': (c.loteQFI||0),
-        'Total (₡)': c.montoCasa + c.montoLote,
+        'Total Casa + Lote AD (₡)': c.montoCasa + (c.loteAD||0),
         'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
       });
     });
@@ -1952,8 +1964,8 @@ function exportToExcel() {
       'Banco': '',
       'Formalizador': `${items.length} casos`,
       'Desembolso Casa (₡)': weekTotalCasa,
-      'Desembolso Lote (₡)': weekTotalLote,
-      'Total (₡)': weekTotalCasa + weekTotalLote,
+      'Lote AD (₡)': weekTotalLote,
+      'Total Casa + Lote AD (₡)': weekTotalCasa + weekTotalLote,
       'Casa Terminada': ''
     });
 
@@ -1971,8 +1983,8 @@ function exportToExcel() {
     'Banco': '',
     'Formalizador': `${filteredData.length} casos`,
     'Desembolso Casa (₡)': grandTotalCasa,
-    'Desembolso Lote (₡)': grandTotalLote,
-    'Total (₡)': grandTotalCasa + grandTotalLote,
+    'Lote AD (₡)': grandTotalLote,
+    'Total Casa + Lote AD (₡)': grandTotalCasa + grandTotalLote,
     'Casa Terminada': ''
   });
 
@@ -2024,7 +2036,7 @@ function exportToExcel() {
       'Cliente': '',
       'Modelo': '',
       'Desembolso Casa (₡)': totalCasa,
-      'Desembolso Lote (₡)': items.reduce((s, c) => s + c.montoLote, 0),
+      'Lote AD (₡)': items.reduce((s, c) => s + (c.loteAD||0), 0),
       'Fecha': '', 'Banco': '', 'Traspaso': '', 'Permisos': '',
       'Capacidad': '', 'Pendientes': '', 'Casa Terminada': ''
     });
@@ -2047,8 +2059,8 @@ function exportToExcel() {
     { 'Métrica': 'Casas en Proceso', 'Valor': filteredData.filter(c => !c.terminada).length },
     { 'Métrica': '% Completado', 'Valor': Math.round(filteredData.filter(c => c.terminada).length / filteredData.length * 100) + '%' },
     { 'Métrica': 'Total Desembolso Casas (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa, 0) },
-    { 'Métrica': 'Total Desembolso Lotes (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoLote, 0) },
-    { 'Métrica': 'Total Global (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + c.montoLote, 0) },
+    { 'Métrica': 'Total Lote AD (₡)', 'Valor': filteredData.reduce((s, c) => s + (c.loteAD||0), 0) },
+    { 'Métrica': 'Total Casa + Lote AD (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + (c.loteAD||0), 0) },
     { 'Métrica': '', 'Valor': '' },
     { 'Métrica': 'Formalizadores', 'Valor': '' },
   ];
