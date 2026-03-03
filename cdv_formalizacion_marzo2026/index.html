@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ciudad del Valle — Estado de Formalización</title>
+<link href="https://fonts.googleapis.com/css2?family=Tiempos+Fine:wght@400;500;600&family=Söhne:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #FAF9F7;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F5F4F0;
+  --bg-hover: #EEEEE8;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6560;
+  --text-tertiary: #9B958F;
+  --accent: #D97706;
+  --accent-light: #FEF3C7;
+  --accent-bg: #FFFBEB;
+  --border: #E5E2DC;
+  --border-light: #F0EDE8;
+  --success: #059669;
+  --success-light: #D1FAE5;
+  --success-bg: #ECFDF5;
+  --warning: #D97706;
+  --warning-light: #FEF3C7;
+  --danger: #DC2626;
+  --danger-light: #FEE2E2;
+  --claude-primary: #D4A27F;
+  --claude-secondary: #E8D5C4;
+  --claude-dark: #8B5E3C;
+  --claude-accent: #C77B3F;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --transition: all 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #2D2014 0%, #3D2E1F 50%, #4A3728 100%);
+  padding: 28px 40px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+}
+
+.header-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #F5E6D3;
+  letter-spacing: -0.3px;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: #BFA88E;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.month-toggle {
+  display: flex;
+  gap: 0;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.month-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #BFA88E;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.month-btn:hover {
+  color: #F5E6D3;
+  background: rgba(255,255,255,0.06);
+}
+
+.month-btn.active {
+  color: #2D2014;
+  background: #F5E6D3;
+  font-weight: 700;
+}
+
+.header-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.header-stat {
+  text-align: center;
+}
+
+.header-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #F5E6D3;
+}
+
+.header-stat-label {
+  font-size: 11px;
+  color: #BFA88E;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* NAVIGATION */
+.nav-bar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  position: sticky;
+  top: 84px;
+  z-index: 99;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-tab {
+  padding: 14px 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.nav-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.nav-tab.active {
+  color: var(--claude-dark);
+  border-bottom-color: var(--claude-accent);
+  font-weight: 600;
+}
+
+/* FILTERS */
+.filters-bar {
+  padding: 16px 40px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.filters-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.filter-select {
+  padding: 7px 32px 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B6560' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.filter-select:hover { border-color: var(--claude-primary); }
+.filter-select:focus { outline: none; border-color: var(--claude-accent); box-shadow: 0 0 0 3px rgba(199, 123, 63, 0.12); }
+
+.btn-export {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFF;
+  background: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(45,106,79,0.25);
+}
+
+.btn-export:hover {
+  background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%);
+  box-shadow: 0 4px 12px rgba(45,106,79,0.35);
+  transform: translateY(-1px);
+}
+
+.btn-export:active { transform: translateY(0); }
+
+.btn-export svg { width: 16px; height: 16px; }
+
+.filter-clear {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--claude-dark);
+  background: transparent;
+  border: 1px dashed var(--claude-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.filter-clear:hover {
+  background: var(--accent-bg);
+}
+
+/* MAIN CONTENT */
+.main {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 40px 60px;
+}
+
+/* KPI CARDS */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: var(--transition);
+}
+
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.kpi-card-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.kpi-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.kpi-card-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.kpi-highlight {
+  border-left: 3px solid var(--claude-accent);
+}
+
+.kpi-highlight .kpi-card-value {
+  color: var(--claude-dark);
+}
+
+/* TABLE */
+.table-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-header-bar {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.table-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-tertiary);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+tbody tr:hover { background: #FEFCF9; }
+
+tbody td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.lote-badge {
+  font-weight: 600;
+  color: var(--claude-dark);
+  background: #FAF0E6;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.monto-highlight {
+  font-weight: 700;
+  color: #B45309;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: inline-block;
+  border: 1px solid #FCD34D;
+  white-space: nowrap;
+}
+
+.monto-lote {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.status-check {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.status-pending {
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pill-green { background: var(--success-light); color: var(--success); }
+.pill-yellow { background: var(--warning-light); color: #92400E; }
+.pill-red { background: var(--danger-light); color: var(--danger); }
+
+.bank-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #EDE9FE;
+  color: #5B21B6;
+}
+
+.formalizador-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.form-hazel { background: #FDE7F3; color: #9D174D; }
+.form-willem { background: #DBEAFE; color: #1E40AF; }
+.form-luis { background: #D1FAE5; color: #065F46; }
+.form-esteban { background: #FEF3C7; color: #92400E; }
+.form-navarro { background: #E0E7FF; color: #3730A3; }
+
+.casa-terminada {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%) !important;
+  position: relative;
+}
+
+.casa-terminada td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--success);
+  border-radius: 0 4px 4px 0;
+}
+
+.terminada-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--success);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
+}
+
+.pendientes-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+/* KANBAN VIEW */
+.kanban-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+
+.kanban-column {
+  min-width: 300px;
+  flex: 1;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.kanban-col-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kanban-col-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.kanban-col-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.kanban-col-total {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--claude-dark);
+  padding: 3px 8px;
+  background: #FAF0E6;
+  border-radius: 6px;
+  margin-top: 6px;
+  display: inline-block;
+}
+
+.kanban-col-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kanban-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  transition: var(--transition);
+  cursor: default;
+}
+
+.kanban-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.kanban-card.terminada {
+  border-left: 3px solid var(--success);
+  background: linear-gradient(to right, #ECFDF5, var(--bg-secondary));
+}
+
+.kanban-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.kanban-card-lote {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--claude-dark);
+}
+
+.kanban-card-banco {
+  font-size: 10px;
+  font-weight: 600;
+  background: #EDE9FE;
+  color: #5B21B6;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.kanban-card-client {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.kanban-card-monto {
+  font-weight: 700;
+  color: #B45309;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.kanban-card-modelo {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.kanban-card-form {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 8px;
+  display: inline-block;
+}
+
+/* FLOW VIEW */
+.flow-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.flow-week {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.flow-week-header {
+  padding: 14px 20px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flow-week-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.flow-week-totals {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.flow-total-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.flow-total-item strong {
+  color: var(--claude-dark);
+  font-size: 14px;
+}
+
+.flow-week-body {
+  padding: 12px;
+}
+
+.flow-card {
+  display: grid;
+  grid-template-columns: 100px 1fr 160px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  transition: var(--transition);
+}
+
+.flow-card:last-child { border-bottom: none; }
+.flow-card:hover { background: #FEFCF9; }
+
+.flow-card.terminada {
+  background: linear-gradient(to right, #ECFDF5, transparent);
+  border-left: 3px solid var(--success);
+}
+
+.flow-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.flow-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flow-info-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-info-client {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.flow-info-modelo {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.flow-monto {
+  text-align: right;
+}
+
+/* FORMALIZADOR VIEW */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 20px;
+}
+
+.form-section {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.form-section-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-section-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.form-section-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.form-section-body {
+  padding: 12px 16px;
+}
+
+.form-case {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.form-case:last-child { border-bottom: none; }
+
+.form-case.terminada {
+  background: linear-gradient(to right, #ECFDF5, transparent);
+  padding: 14px;
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+  border-left: 3px solid var(--success);
+}
+
+.form-case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.form-case-lote {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--claude-dark);
+}
+
+.form-case-client {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.form-case-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.form-status-item {
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-case-pendientes {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  background: var(--bg-tertiary);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+/* VIEWS */
+.view-panel { display: none; }
+.view-panel.active { display: block; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .header { padding: 16px; position: relative; }
+  .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .header-inner > div:last-child { 
+    display: flex !important; 
+    flex-direction: column !important; 
+    align-items: flex-start !important; 
+    gap: 12px !important; 
+    width: 100%; 
+  }
+  .header h1 { font-size: 18px; }
+  .header-subtitle { font-size: 12px; }
+  .header-stats { 
+    display: flex; 
+    gap: 16px; 
+    width: 100%;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .header-stat-value { font-size: 16px; }
+  .header-stat-label { font-size: 9px; }
+  .month-toggle { width: 100%; }
+  .month-btn { flex: 1; text-align: center; padding: 8px 12px; }
+
+  .nav-bar { 
+    padding: 0 8px; 
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+    top: auto;
+    position: relative;
+  }
+  .nav-inner { gap: 0; }
+  .nav-tab { 
+    padding: 12px 14px; 
+    font-size: 12px; 
+    flex-shrink: 0;
+  }
+
+  .filters-bar { padding: 12px 12px; }
+  .filters-inner { 
+    gap: 8px; 
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-label { margin-bottom: -4px; }
+  .filter-select { width: 100%; font-size: 14px; padding: 10px 32px 10px 12px; }
+  .filter-clear { width: 100%; text-align: center; padding: 10px; }
+  .btn-export { width: 100%; justify-content: center; padding: 10px 16px; }
+  .filters-inner > div[style*="flex:1"] { display: none !important; }
+
+  .main { padding: 12px; }
+
+  .kpi-row { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px; 
+  }
+  .kpi-card { padding: 14px; }
+  .kpi-card-value { font-size: 20px; }
+  .kpi-card-label { font-size: 10px; }
+
+  /* TABLE MOBILE: card layout */
+  .table-container { border-radius: var(--radius-sm); }
+  .table-container table thead { display: none; }
+  .table-container table,
+  .table-container table tbody,
+  .table-container table tr,
+  .table-container table td {
+    display: block;
+    width: 100%;
+  }
+  .table-container table tr {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+  .table-container table td {
+    padding: 3px 0;
+    font-size: 13px;
+    border: none;
+  }
+  .table-container table td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .pendientes-text { max-width: 100%; }
+  .monto-highlight { font-size: 15px; }
+
+  /* KANBAN MOBILE */
+  .kanban-container { flex-direction: column; gap: 12px; }
+  .kanban-column { min-width: unset; }
+  .kanban-card { padding: 12px; }
+
+  /* FLOW MOBILE */
+  .flow-card { 
+    grid-template-columns: 1fr !important; 
+    gap: 6px !important; 
+    padding: 12px !important;
+  }
+  .flow-monto { text-align: left !important; }
+  .flow-week-header { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 8px; 
+  }
+  .flow-week-totals { 
+    flex-wrap: wrap; 
+    gap: 8px; 
+  }
+
+  /* FORMALIZADOR MOBILE */
+  .form-grid { grid-template-columns: 1fr; gap: 14px; }
+  .form-section-header { 
+    flex-direction: column; 
+    align-items: flex-start; 
+    gap: 8px; 
+  }
+  .form-section-stats { flex-wrap: wrap; }
+  .form-case-header { flex-direction: column; gap: 6px; align-items: flex-start; }
+
+  /* FLOW TOTALS BAR */
+  .main > div[style*="linear-gradient"] {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .main > div[style*="linear-gradient"] > div:last-child {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .kpi-card-value { font-size: 18px; }
+  .header h1 { font-size: 16px; }
+  .header-stats { flex-direction: column; gap: 8px; }
+  .header-stat { text-align: left; display: flex; justify-content: space-between; align-items: center; }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* NO DATA */
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+.no-data-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>🏘️ Condominio Ciudad del Valle</h1>
+      <div class="header-subtitle" id="headerSubtitle">Estado de Casas por Formalizar — Marzo 2026</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px">
+      <div class="month-toggle">
+        <button class="month-btn active" data-month="3" onclick="switchMonth(3)">Marzo</button>
+        <button class="month-btn" data-month="4" onclick="switchMonth(4)">Abril</button>
+      </div>
+      <div class="header-stats" id="headerStats"></div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-tab active" data-view="tabla" onclick="switchView('tabla')">📋 Tabla General</div>
+    <div class="nav-tab" data-view="flujo" onclick="switchView('flujo')">💰 Flujo de Desembolsos</div>
+    <div class="nav-tab" data-view="kanban" onclick="switchView('kanban')">📅 Kanban por Fecha</div>
+    <div class="nav-tab" data-view="formalizador" onclick="switchView('formalizador')">👤 Por Formalizador</div>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="filters-inner">
+    <span class="filter-label">Filtros:</span>
+    <select class="filter-select" id="filterFormalizador" onchange="applyFilters()">
+      <option value="">Todos los formalizadores</option>
+    </select>
+    <select class="filter-select" id="filterSemana" onchange="applyFilters()">
+      <option value="">Todas las semanas</option>
+      <option value="1">Semana 1 (1-7)</option>
+      <option value="2">Semana 2 (8-14)</option>
+      <option value="3">Semana 3 (15-21)</option>
+      <option value="4">Semana 4 (22-28)</option>
+      <option value="5">Semana 5 (29+)</option>
+    </select>
+    <select class="filter-select" id="filterBanco" onchange="applyFilters()">
+      <option value="">Todos los bancos</option>
+    </select>
+    <select class="filter-select" id="filterModelo" onchange="applyFilters()">
+      <option value="">Todos los modelos</option>
+    </select>
+    <button class="filter-clear" onclick="clearFilters()">✕ Limpiar filtros</button>
+    <div style="flex:1"></div>
+    <button class="btn-export" onclick="exportToExcel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Descargar Excel
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div id="viewTabla" class="view-panel active"></div>
+  <div id="viewFlujo" class="view-panel"></div>
+  <div id="viewKanban" class="view-panel"></div>
+  <div id="viewFormalizador" class="view-panel"></div>
+</div>
+
+<script>
+const casas = [
+  {
+    lote: "M.23", modelo: "Stella A 2D 2.5B WC L(PA)", modeloBase: "Stella",
+    cliente: "Hernan Nuñez Fioravantti", montoCasa: 17000000, montoLote: 10026955,
+    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa.",
+    terminada: false
+  },
+  {
+    lote: "K.14", modelo: "Neo Tripoli A 3D 2B WC OF", modeloBase: "Neo Tripoli",
+    cliente: "Jean Monge Bonilla", montoCasa: 14000000, montoLote: 8926156,
+    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "Parcial - capacidad ¢80MM, diferencia a financiar",
+    pendientes: "Avalúo solicitado, espera de confirmación de revisión legal por Victor.",
+    terminada: false
+  },
+  {
+    lote: "D.21", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
+    cliente: "Mauricio Valverde Céspedes", montoCasa: 73800000, montoLote: 10605988,
+    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "Espera cancelación de deuda",
+    pendientes: "Documentación actualizada.",
+    terminada: true
+  },
+  {
+    lote: "L.53", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Karen Vizcaino Vargas", montoCasa: 22000000, montoLote: 9226277.5,
+    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "En revisión",
+    pendientes: "Información en revisión, cliente independiente no factura y declara en cero.",
+    terminada: false
+  },
+  {
+    lote: "M.07", modelo: "Santorini T 3D 2.5B WC OF F30", modeloBase: "Santorini",
+    cliente: "Andres Ureña Abarca", montoCasa: 24000000, montoLote: 8563362,
+    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "Espera información del cliente",
+    pendientes: "Estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false
+  },
+  {
+    lote: "K.26", modelo: "Tebas A 3D 2B WC (18)", modeloBase: "Tebas",
+    cliente: "Juan Carlos Peña Ramirez", montoCasa: 16000000, montoLote: 6926156,
+    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel",
+    traspaso: true, permisos: false, capacidad: "Cliente transportista independiente",
+    pendientes: "Espera de información del cliente, boleta electrónica en CFIA.",
+    terminada: false
+  },
+  {
+    lote: "F.18", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
+    cliente: "Maria Auxiliadora Araya Céspedes", montoCasa: 14000000, montoLote: 7310057,
+    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "Maestra MEP, posible sin capacidad fuera de Caja de Ande",
+    pendientes: "Cliente quiere esperar condiciones de Expo, no ha enviado información.",
+    terminada: false
+  },
+  {
+    lote: "K.25", modelo: "Tebas A 3D 2B WC", modeloBase: "Tebas",
+    cliente: "Josue David Montoya Chavarría", montoCasa: 14000000, montoLote: 8839195,
+    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel",
+    traspaso: true, permisos: true, capacidad: "✅ Asalariado con capacidad",
+    pendientes: "Constancia y SICERE del cliente.",
+    terminada: true
+  },
+  // WILLEM
+  {
+    lote: "M.05", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Silvia Salazar Sanchez", montoCasa: 91000000, montoLote: 6561241,
+    fecha: "2026-03-19", banco: "BN", formalizador: "Willem",
+    traspaso: true, permisos: true, capacidad: "Pagar y cerrar Promerica ¢8MM",
+    pendientes: "Finalizado ✅",
+    terminada: true
+  },
+  {
+    lote: "L.32", modelo: "Zante A 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Mario Alexander Mena Barboza", montoCasa: 22000000, montoLote: 10839195,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
+    traspaso: true, permisos: true, capacidad: "Puede variar según banco",
+    pendientes: "Cliente no se decide de banco, no ha firmado contratos para avalúo.",
+    terminada: false
+  },
+  {
+    lote: "I.13", modelo: "Zante T 2D 3.5B WC OF", modeloBase: "Zante",
+    cliente: "Cristian Hidalgo Avila", montoCasa: 22000000, montoLote: 9226277.5,
+    fecha: "2026-04-10", banco: "BN", formalizador: "Willem",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Contrato laboral indefinido plazo, disponible a partir del 1 abril.",
+    terminada: false
+  },
+  {
+    lote: "M.16", modelo: "Stellita A 2D 1.5B WC", modeloBase: "Stellita",
+    cliente: "Daniel Quiros Soto", montoCasa: 14000000, montoLote: 8605988,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Avalúo pendiente por cambio de modelo, en cambio de láminas.",
+    terminada: false
+  },
+  {
+    lote: "L.31", modelo: "Stella A", modeloBase: "Stella",
+    cliente: "Elizabeth Cano", montoCasa: 22000000, montoLote: 9226277.5,
+    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem",
+    traspaso: true, permisos: false, capacidad: "✅",
+    pendientes: "Permisos en CFIA, esperando tasas Expo.",
+    terminada: false
+  },
+  {
+    lote: "K.19", modelo: "Stella A", modeloBase: "Stella",
+    cliente: "Valeria Acosta", montoCasa: 22000000, montoLote: 9226277.5,
+    fecha: "2026-03-31", banco: "BN", formalizador: "Willem",
+    traspaso: false, permisos: false, capacidad: "En evaluación - renunció, nuevo empleo 16 marzo",
+    pendientes: "Traspaso pendiente, permisos por tramitar, espera información laboral.",
+    terminada: false
+  },
+  // LUIS CARLOS
+  {
+    lote: "L.33", modelo: "Tebas T 3D 2D (17)", modeloBase: "Tebas",
+    cliente: "Marcelly Alvarado Chaves", montoCasa: 14000000, montoLote: 8839195,
+    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos",
+    traspaso: true, permisos: true, capacidad: "✅ Positiva",
+    pendientes: "No hay pendientes.",
+    terminada: false
+  },
+  {
+    lote: "K.18", modelo: "Ikaria T 2D 2B", modeloBase: "Ikaria",
+    cliente: "Rafael Antonio Porras Castro", montoCasa: 14000000, montoLote: 6926156,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos",
+    traspaso: true, permisos: true, capacidad: "✅ Positiva BN",
+    pendientes: "Valores de avalúo pendientes.",
+    terminada: false
+  },
+  {
+    lote: "I.30", modelo: "Stella T 2D 2.5B WC L", modeloBase: "Stella",
+    cliente: "Isabel Jara Marín", montoCasa: 22000000, montoLote: 9560335,
+    fecha: "2026-03-21", banco: "BN", formalizador: "Luis Carlos",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Contratos, formularios. Quiere esperar Expo.",
+    terminada: false
+  },
+  {
+    lote: "I.36", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Geiner Ulises Naranjo Romero", montoCasa: 20000000, montoLote: 9019480,
+    fecha: "2026-03-27", banco: "BCR/Mucap", formalizador: "Luis Carlos",
+    traspaso: true, permisos: true, capacidad: "Positiva",
+    pendientes: "Actualizar información, contratos, formularios. Quiere esperar Expo.",
+    terminada: false
+  },
+  {
+    lote: "L.01", modelo: "Stella A 3D 3.5B WC (PA)", modeloBase: "Stella",
+    cliente: "Juan Daniel Arias Pérez", montoCasa: 22000000, montoLote: 9226277.5,
+    fecha: "2026-04-14", banco: "BN/BCR/BP", formalizador: "Luis Carlos",
+    traspaso: false, permisos: false, capacidad: "Debe aumentar salario y reportar CCSS",
+    pendientes: "Sin folios ni catastros. Constancia, contratos, formularios.",
+    terminada: false
+  },
+  {
+    lote: "I.39", modelo: "Santorini T", modeloBase: "Santorini",
+    cliente: "Lohr Campbell Arguello", montoCasa: 24000000, montoLote: 9226277.5,
+    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos",
+    traspaso: true, permisos: true, capacidad: "No realizada",
+    pendientes: "Recopilando información.",
+    terminada: false
+  },
+  // ESTEBAN
+  {
+    lote: "K.05", modelo: "Santorini A", modeloBase: "Santorini",
+    cliente: "Joaquin Marin", montoCasa: 22000000, montoLote: 8618508,
+    fecha: "2026-03-12", banco: "Promerica", formalizador: "Esteban",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Caso en aprobación, avalúo pendiente, opción de compra en dólares.",
+    terminada: false
+  },
+  {
+    lote: "1-01 Barani", modelo: "Santorini A", modeloBase: "Santorini",
+    cliente: "Jose Arturo Campos", montoCasa: 105000000, montoLote: 0,
+    fecha: "2026-03-27", banco: "Mucap", formalizador: "Esteban",
+    traspaso: false, permisos: false, capacidad: "✅",
+    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, opción de compra en dólares.",
+    terminada: true
+  },
+  // JOSE NAVARRO
+  {
+    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, montoLote: 9563362,
+    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos",
+    traspaso: true, permisos: false, capacidad: "Espera información del cliente",
+    pendientes: "Caso con Mucap, estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false
+  }
+];
+
+// Helpers
+let selectedMonth = 3; // Default: March
+
+function fmt(n) {
+  return '₡' + n.toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function getMonthName(m) {
+  const names = { 3: 'Marzo', 4: 'Abril' };
+  return names[m] || `Mes ${m}`;
+}
+
+function getMonthNumber(dateStr) {
+  return new Date(dateStr + 'T12:00:00').getMonth() + 1;
+}
+
+function getWeekLabel(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDate();
+  const m = d.toLocaleDateString('es-CR', { month: 'long' });
+  if (day <= 7) return `S1 ${m} (1-7)`;
+  if (day <= 14) return `S2 ${m} (8-14)`;
+  if (day <= 21) return `S3 ${m} (15-21)`;
+  if (day <= 28) return `S4 ${m} (22-28)`;
+  return `S5 ${m} (29+)`;
+}
+
+function getWeekNumber(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDate();
+  if (day <= 7) return 1;
+  if (day <= 14) return 2;
+  if (day <= 21) return 3;
+  if (day <= 28) return 4;
+  return 5;
+}
+
+function getFormClass(name) {
+  const map = { 'Hazel': 'form-hazel', 'Willem': 'form-willem', 'Luis Carlos': 'form-luis', 'Esteban': 'form-esteban', 'Jose Navarro': 'form-navarro' };
+  return map[name] || '';
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
+}
+
+// Month switching
+function switchMonth(month) {
+  selectedMonth = month;
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.month-btn[data-month="${month}"]`).classList.add('active');
+  document.getElementById('headerSubtitle').textContent = `Estado de Casas por Formalizar — ${getMonthName(month)} 2026`;
+  applyFilters();
+}
+
+// Filters
+let filteredData = [...casas];
+
+function populateFilters() {
+  const formalizadores = [...new Set(casas.map(c => c.formalizador))].sort();
+  const bancos = [...new Set(casas.map(c => c.banco))].sort();
+  const modelos = [...new Set(casas.map(c => c.modeloBase))].sort();
+
+  const fF = document.getElementById('filterFormalizador');
+  formalizadores.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; fF.appendChild(o); });
+
+  const fB = document.getElementById('filterBanco');
+  bancos.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; fB.appendChild(o); });
+
+  const fM = document.getElementById('filterModelo');
+  modelos.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; fM.appendChild(o); });
+}
+
+function applyFilters() {
+  const f = document.getElementById('filterFormalizador').value;
+  const s = document.getElementById('filterSemana').value;
+  const b = document.getElementById('filterBanco').value;
+  const m = document.getElementById('filterModelo').value;
+
+  filteredData = casas.filter(c => {
+    // Month filter (always active)
+    if (getMonthNumber(c.fecha) !== selectedMonth) return false;
+    if (f && c.formalizador !== f) return false;
+    if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
+    if (b && c.banco !== b) return false;
+    if (m && c.modeloBase !== m) return false;
+    return true;
+  });
+
+  renderAll();
+}
+
+function clearFilters() {
+  document.getElementById('filterFormalizador').value = '';
+  document.getElementById('filterSemana').value = '';
+  document.getElementById('filterBanco').value = '';
+  document.getElementById('filterModelo').value = '';
+  applyFilters();
+}
+
+// View switching
+function switchView(view) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+}
+
+// KPIs
+function renderKPIs() {
+  const total = filteredData.length;
+  const terminadas = filteredData.filter(c => c.terminada).length;
+  const totalDesembolso = filteredData.reduce((s, c) => s + c.montoCasa, 0);
+  const totalLotes = filteredData.reduce((s, c) => s + c.montoLote, 0);
+
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-card-label">Total Casas</div>
+      <div class="kpi-card-value">${total}</div>
+      <div class="kpi-card-sub">${terminadas} terminadas</div>
+    </div>
+    <div class="kpi-card kpi-highlight">
+      <div class="kpi-card-label">Total Desembolso Casas</div>
+      <div class="kpi-card-value">${fmt(totalDesembolso)}</div>
+      <div class="kpi-card-sub">Monto acumulado</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Total Lotes</div>
+      <div class="kpi-card-value">${fmt(totalLotes)}</div>
+      <div class="kpi-card-sub">Monto acumulado</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Casas Terminadas</div>
+      <div class="kpi-card-value" style="color:var(--success)">${terminadas} <span style="font-size:14px;color:var(--text-tertiary)">/ ${total}</span></div>
+      <div class="kpi-card-sub">${total > 0 ? Math.round(terminadas / total * 100) : 0}% completado</div>
+    </div>
+  `;
+
+  document.getElementById('headerStats').innerHTML = `
+    <div class="header-stat">
+      <div class="header-stat-value">${total}</div>
+      <div class="header-stat-label">Casas</div>
+    </div>
+    <div class="header-stat">
+      <div class="header-stat-value">${terminadas}</div>
+      <div class="header-stat-label">Terminadas</div>
+    </div>
+    <div class="header-stat">
+      <div class="header-stat-value">${fmt(totalDesembolso)}</div>
+      <div class="header-stat-label">Desembolso Total</div>
+    </div>
+  `;
+}
+
+// TABLE VIEW
+function renderTable() {
+  const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  let rows = sorted.map(c => `
+    <tr class="${c.terminada ? 'casa-terminada' : ''}">
+      <td data-label="Lote"><span class="lote-badge">${c.lote}</span>${c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : ''}</td>
+      <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
+      <td data-label="Cliente"><strong>${c.cliente}</strong></td>
+      <td data-label="💰 Desembolso">
+        <div class="monto-highlight">${fmt(c.montoCasa)}</div>
+        <div class="monto-lote">Lote: ${fmt(c.montoLote)}</div>
+      </td>
+      <td data-label="Fecha Est.">${formatDate(c.fecha)}</td>
+      <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
+      <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
+      <td data-label="Traspaso / Permisos">
+        ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
+        ${c.permisos ? '<span class="status-check"> ✅</span>' : '<span class="status-pending"> ⏳</span>'}
+      </td>
+      <td data-label="Pendientes"><div class="pendientes-text">${c.pendientes}</div></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('viewTabla').innerHTML = `
+    <div class="table-container">
+      <div class="table-header-bar">
+        <div class="table-title">Tabla General de Casas</div>
+        <span class="table-count">${filteredData.length} registros</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Lote</th>
+              <th>Modelo</th>
+              <th>Cliente</th>
+              <th>💰 Desembolso</th>
+              <th>Fecha Est.</th>
+              <th>Banco</th>
+              <th>Formalizador</th>
+              <th>Trasp. / Perm.</th>
+              <th>Pendientes</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// FLOW VIEW
+function renderFlow() {
+  const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  const weeks = {};
+  sorted.forEach(c => {
+    const wk = getWeekLabel(c.fecha);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(c);
+  });
+
+  let html = '<div class="flow-grid">';
+  for (const [wk, items] of Object.entries(weeks)) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const totalLote = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalGlobal = totalCasa + totalLote;
+
+    html += `
+      <div class="flow-week">
+        <div class="flow-week-header">
+          <div>
+            <div class="flow-week-title">📅 ${wk}</div>
+            <div class="kanban-col-total">Total semana: ${fmt(totalGlobal)}</div>
+          </div>
+          <div class="flow-week-totals">
+            <div class="flow-total-item">Casas: <strong>${fmt(totalCasa)}</strong></div>
+            <div class="flow-total-item">Lotes: <strong>${fmt(totalLote)}</strong></div>
+            <div class="flow-total-item" style="font-weight:700;color:var(--text-primary)">${items.length} casos</div>
+          </div>
+        </div>
+        <div class="flow-week-body">
+    `;
+
+    items.forEach(c => {
+      html += `
+        <div class="flow-card ${c.terminada ? 'terminada' : ''}">
+          <div class="flow-date">${formatDate(c.fecha)}</div>
+          <div class="flow-info">
+            <div class="flow-info-top">
+              <span class="lote-badge">${c.lote}</span>
+              <span class="flow-info-client">${c.cliente}</span>
+              ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
+            </div>
+            <div class="flow-info-modelo">${c.modelo} · <span class="bank-tag">${c.banco}</span> · <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="display:inline;padding:2px 6px">${c.formalizador}</span></div>
+          </div>
+          <div class="flow-monto">
+            <div class="monto-highlight">${fmt(c.montoCasa)}</div>
+            <div class="monto-lote">Lote: ${fmt(c.montoLote)}</div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += '</div></div>';
+  }
+
+  // Grand totals
+  const grandCasa = filteredData.reduce((s, c) => s + c.montoCasa, 0);
+  const grandLote = filteredData.reduce((s, c) => s + c.montoLote, 0);
+  html += `
+    <div style="background:linear-gradient(135deg,#2D2014,#4A3728);border-radius:var(--radius-md);padding:20px 24px;color:#F5E6D3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+      <div style="font-size:16px;font-weight:700">📊 Totales Generales</div>
+      <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Casas</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Lotes</div><div style="font-size:22px;font-weight:700">${fmt(grandLote)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Total Global</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa + grandLote)}</div></div>
+      </div>
+    </div>
+  `;
+  html += '</div>';
+  document.getElementById('viewFlujo').innerHTML = html;
+}
+
+// KANBAN VIEW
+function renderKanban() {
+  const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  const weeks = {};
+  sorted.forEach(c => {
+    const wk = getWeekLabel(c.fecha);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(c);
+  });
+
+  let html = '<div class="kanban-container">';
+  for (const [wk, items] of Object.entries(weeks)) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    html += `
+      <div class="kanban-column">
+        <div class="kanban-col-header">
+          <div>
+            <div class="kanban-col-title">${wk}</div>
+            <div class="kanban-col-total">${fmt(totalCasa)}</div>
+          </div>
+          <span class="kanban-col-count">${items.length}</span>
+        </div>
+        <div class="kanban-col-body">
+    `;
+    items.forEach(c => {
+      html += `
+        <div class="kanban-card ${c.terminada ? 'terminada' : ''}">
+          <div class="kanban-card-header">
+            <span class="kanban-card-lote">${c.lote}</span>
+            <span class="kanban-card-banco">${c.banco}</span>
+          </div>
+          <div class="kanban-card-client">${c.cliente}</div>
+          <div class="kanban-card-monto">${fmt(c.montoCasa)}</div>
+          <div class="kanban-card-modelo">${c.modeloBase}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+            <span class="kanban-card-form ${getFormClass(c.formalizador)}">${c.formalizador}</span>
+            ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div></div>';
+  }
+  html += '</div>';
+  document.getElementById('viewKanban').innerHTML = html;
+}
+
+// FORMALIZADOR VIEW
+function renderFormalizador() {
+  const groups = {};
+  filteredData.forEach(c => {
+    if (!groups[c.formalizador]) groups[c.formalizador] = [];
+    groups[c.formalizador].push(c);
+  });
+
+  let html = '<div class="form-grid">';
+  for (const [name, items] of Object.entries(groups)) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const terminadas = items.filter(c => c.terminada).length;
+
+    html += `
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-name formalizador-tag ${getFormClass(name)}" style="font-size:16px;padding:6px 14px">${name}</span>
+          <div class="form-section-stats">
+            <span>${items.length} casos</span>
+            <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
+            <span style="color:var(--claude-dark);font-weight:700">${fmt(totalCasa)}</span>
+          </div>
+        </div>
+        <div class="form-section-body">
+    `;
+
+    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    items.forEach(c => {
+      html += `
+        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+          <div class="form-case-header">
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="monto-highlight">${fmt(c.montoCasa)}</span>
+          </div>
+          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
+          <div class="form-case-row">
+            <span class="bank-tag">${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
+            <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+          </div>
+          <div class="form-case-row" style="margin-top:4px">
+            <span style="font-size:11px;color:var(--text-secondary)">💳 Lote: ${fmt(c.montoLote)}</span>
+          </div>
+          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+        </div>
+      `;
+    });
+
+    html += '</div></div>';
+  }
+  html += '</div>';
+  document.getElementById('viewFormalizador').innerHTML = html;
+}
+
+function renderAll() {
+  renderKPIs();
+  renderTable();
+  renderFlow();
+  renderKanban();
+  renderFormalizador();
+}
+
+// EXPORT TO EXCEL
+function exportToExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // ===== HOJA 1: Tabla General =====
+  const tableData = filteredData.map(c => ({
+    'Lote': c.lote,
+    'Modelo': c.modelo,
+    'Modelo Base': c.modeloBase,
+    'Cliente': c.cliente,
+    'Desembolso Casa (₡)': c.montoCasa,
+    'Desembolso Lote (₡)': c.montoLote,
+    'Desembolso Total (₡)': c.montoCasa + c.montoLote,
+    'Fecha Estimada': c.fecha,
+    'Banco': c.banco,
+    'Formalizador': c.formalizador,
+    'Traspaso': c.traspaso ? '✅' : '⏳ Pendiente',
+    'Permisos': c.permisos ? '✅' : '⏳ Pendiente',
+    'Capacidad de Pago': c.capacidad,
+    'Pendientes': c.pendientes,
+    'Casa Terminada': c.terminada ? '✅ TERMINADA' : 'En proceso'
+  }));
+
+  const ws1 = XLSX.utils.json_to_sheet(tableData);
+
+  // Column widths
+  ws1['!cols'] = [
+    { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 32 },
+    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 14 },
+    { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
+    { wch: 40 }, { wch: 50 }, { wch: 16 }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Tabla General');
+
+  // ===== HOJA 2: Flujo por Semana =====
+  const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+  const weeks = {};
+  sorted.forEach(c => {
+    const wk = getWeekLabel(c.fecha);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(c);
+  });
+
+  const flowRows = [];
+  let grandTotalCasa = 0, grandTotalLote = 0;
+
+  for (const [wk, items] of Object.entries(weeks)) {
+    const weekTotalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const weekTotalLote = items.reduce((s, c) => s + c.montoLote, 0);
+    grandTotalCasa += weekTotalCasa;
+    grandTotalLote += weekTotalLote;
+
+    items.forEach(c => {
+      flowRows.push({
+        'Semana': wk,
+        'Fecha': c.fecha,
+        'Lote': c.lote,
+        'Cliente': c.cliente,
+        'Modelo': c.modeloBase,
+        'Banco': c.banco,
+        'Formalizador': c.formalizador,
+        'Desembolso Casa (₡)': c.montoCasa,
+        'Desembolso Lote (₡)': c.montoLote,
+        'Total (₡)': c.montoCasa + c.montoLote,
+        'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
+      });
+    });
+
+    // Subtotal row
+    flowRows.push({
+      'Semana': '',
+      'Fecha': '',
+      'Lote': '',
+      'Cliente': `TOTAL ${wk}`,
+      'Modelo': '',
+      'Banco': '',
+      'Formalizador': `${items.length} casos`,
+      'Desembolso Casa (₡)': weekTotalCasa,
+      'Desembolso Lote (₡)': weekTotalLote,
+      'Total (₡)': weekTotalCasa + weekTotalLote,
+      'Casa Terminada': ''
+    });
+
+    // Empty separator
+    flowRows.push({});
+  }
+
+  // Grand total
+  flowRows.push({
+    'Semana': '',
+    'Fecha': '',
+    'Lote': '',
+    'Cliente': 'GRAN TOTAL',
+    'Modelo': '',
+    'Banco': '',
+    'Formalizador': `${filteredData.length} casos`,
+    'Desembolso Casa (₡)': grandTotalCasa,
+    'Desembolso Lote (₡)': grandTotalLote,
+    'Total (₡)': grandTotalCasa + grandTotalLote,
+    'Casa Terminada': ''
+  });
+
+  const ws2 = XLSX.utils.json_to_sheet(flowRows);
+  ws2['!cols'] = [
+    { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 32 },
+    { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 20 },
+    { wch: 20 }, { wch: 20 }, { wch: 16 }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Flujo por Semana');
+
+  // ===== HOJA 3: Por Formalizador =====
+  const formRows = [];
+  const groups = {};
+  filteredData.forEach(c => {
+    if (!groups[c.formalizador]) groups[c.formalizador] = [];
+    groups[c.formalizador].push(c);
+  });
+
+  for (const [name, items] of Object.entries(groups)) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const terminadas = items.filter(c => c.terminada).length;
+
+    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    items.forEach(c => {
+      formRows.push({
+        'Formalizador': name,
+        'Lote': c.lote,
+        'Cliente': c.cliente,
+        'Modelo': c.modelo,
+        'Desembolso Casa (₡)': c.montoCasa,
+        'Desembolso Lote (₡)': c.montoLote,
+        'Fecha': c.fecha,
+        'Banco': c.banco,
+        'Traspaso': c.traspaso ? '✅' : '⏳',
+        'Permisos': c.permisos ? '✅' : '⏳',
+        'Capacidad': c.capacidad,
+        'Pendientes': c.pendientes,
+        'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
+      });
+    });
+
+    formRows.push({
+      'Formalizador': `TOTAL ${name}`,
+      'Lote': `${items.length} casos (${terminadas} term.)`,
+      'Cliente': '',
+      'Modelo': '',
+      'Desembolso Casa (₡)': totalCasa,
+      'Desembolso Lote (₡)': items.reduce((s, c) => s + c.montoLote, 0),
+      'Fecha': '', 'Banco': '', 'Traspaso': '', 'Permisos': '',
+      'Capacidad': '', 'Pendientes': '', 'Casa Terminada': ''
+    });
+
+    formRows.push({});
+  }
+
+  const ws3 = XLSX.utils.json_to_sheet(formRows);
+  ws3['!cols'] = [
+    { wch: 16 }, { wch: 14 }, { wch: 32 }, { wch: 30 },
+    { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 },
+    { wch: 10 }, { wch: 10 }, { wch: 40 }, { wch: 50 }, { wch: 16 }
+  ];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Por Formalizador');
+
+  // ===== HOJA 4: Resumen =====
+  const summaryData = [
+    { 'Métrica': 'Total de Casas', 'Valor': filteredData.length },
+    { 'Métrica': 'Casas Terminadas', 'Valor': filteredData.filter(c => c.terminada).length },
+    { 'Métrica': 'Casas en Proceso', 'Valor': filteredData.filter(c => !c.terminada).length },
+    { 'Métrica': '% Completado', 'Valor': Math.round(filteredData.filter(c => c.terminada).length / filteredData.length * 100) + '%' },
+    { 'Métrica': 'Total Desembolso Casas (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa, 0) },
+    { 'Métrica': 'Total Desembolso Lotes (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoLote, 0) },
+    { 'Métrica': 'Total Global (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + c.montoLote, 0) },
+    { 'Métrica': '', 'Valor': '' },
+    { 'Métrica': 'Formalizadores', 'Valor': '' },
+  ];
+
+  for (const [name, items] of Object.entries(groups)) {
+    summaryData.push({
+      'Métrica': `  ${name}`,
+      'Valor': `${items.length} casos — ${fmt(items.reduce((s, c) => s + c.montoCasa, 0))}`
+    });
+  }
+
+  const ws4 = XLSX.utils.json_to_sheet(summaryData);
+  ws4['!cols'] = [{ wch: 30 }, { wch: 40 }];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Resumen');
+
+  // Download
+  XLSX.writeFile(wb, 'Ciudad_del_Valle_Formalizacion.xlsx');
+}
+
+// Init
+populateFilters();
+applyFilters(); // This will filter by default month (March) and render
+</script>
+</body>
+</html>
