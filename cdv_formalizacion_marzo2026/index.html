@@ -1125,7 +1125,7 @@ const casas = [
   },
   {
     lote: "K.25", modelo: "Tebas A 3D 2B WC", modeloBase: "Tebas",
-    cliente: "Josue David Montoya Chavarría", montoCasa: 65500000, loteAD: 8839195, loteQFI: 9261982.8,
+    cliente: "Josue David Montoya Chavarría", montoCasa: 36000000, loteAD: 8839195, loteQFI: 9261982.8,
     fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel",
     traspaso: true, permisos: true, capacidad: "Cliente asalariado, de acuerdo con las colillas y sugef si tiene capacidad de pago",
     pendientes: "Constancia y sicere del cliente",
@@ -1241,7 +1241,7 @@ const casas = [
   {
     lote: "1-01 Barani", modelo: "Santorini A", modeloBase: "Santorini",
     cliente: "Jose Arturo Campos", montoCasa: 105000000, loteAD: 0, loteQFI: 11430493.2,
-    fecha: "2026-03-27", banco: "Mucap", formalizador: "Esteban",
+    fecha: "2026-04-08", banco: "Mucap", formalizador: "Esteban",
     traspaso: false, permisos: false, capacidad: "✅",
     pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, opción de compra en dólares.",
     terminada: true
@@ -1430,7 +1430,9 @@ function renderTable() {
         <div class="monto-lote">Lote AD: ${fmt(c.loteAD || 0)}</div>
         <div class="monto-lote">Lote QFI: ${fmt(c.loteQFI || 0)}</div>
       </td>
-      <td data-label="Fecha Est.">${formatDate(c.fecha)}</td>
+      <td data-label="Fecha Est.">
+        <input type="date" value="${c.fecha}" data-lote="${c.lote}" class="fecha-input">
+      </td>
       <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
       <td data-label="Traspaso / Permisos">
@@ -1654,6 +1656,20 @@ function renderAll() {
 }
 
 // EXPORT TO EXCEL
+
+// Handle inline date edits
+ document.addEventListener('change', function(event) {
+   if (!event.target.classList.contains('fecha-input')) return;
+   const newValue = event.target.value;
+   const loteId = event.target.dataset.lote;
+   if (!newValue || !loteId) return;
+   const casa = casas.find(c => c.lote === loteId);
+   if (casa) {
+     casa.fecha = newValue;
+     applyFilters();
+   }
+ });
+
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
 
