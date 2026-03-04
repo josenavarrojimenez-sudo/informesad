@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe de Formalización de Casas</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); padding: 30px 20px; text-align: center; border-bottom: 3px solid #3b82f6; }
+.header h1 { font-size: 1.8rem; color: #fff; margin-bottom: 5px; }
+.header p { color: #94a3b8; font-size: 0.9rem; }
+
+.stats-bar { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; justify-content: center; }
+.stat-card { background: #1e293b; border-radius: 12px; padding: 16px 24px; text-align: center; min-width: 140px; border: 1px solid #334155; }
+.stat-card .num { font-size: 2rem; font-weight: 700; color: #3b82f6; }
+.stat-card .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+.filters { padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #475569; background: transparent; color: #94a3b8; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+.filter-btn:hover, .filter-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+.search-box { padding: 0 20px 15px; text-align: center; }
+.search-box input { padding: 10px 20px; border-radius: 25px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; width: 100%; max-width: 500px; font-size: 0.9rem; outline: none; }
+.search-box input:focus { border-color: #3b82f6; }
+
+.container { padding: 0 20px 40px; max-width: 1200px; margin: 0 auto; }
+
+.form-group { margin-bottom: 30px; }
+.form-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; cursor: pointer; }
+.form-header h2 { font-size: 1.2rem; color: #3b82f6; }
+.form-badge { background: #3b82f6; color: #fff; border-radius: 20px; padding: 3px 12px; font-size: 0.75rem; font-weight: 600; }
+
+.case-card { background: #1e293b; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; overflow: hidden; transition: all 0.3s; }
+.case-card:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59,130,246,0.15); }
+.case-card.terminada { border-left: 4px solid #22c55e; }
+.case-card.complicado { border-left: 4px solid #f59e0b; }
+.case-card.pendiente-info { border-left: 4px solid #ef4444; }
+
+.case-top { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; flex-wrap: wrap; gap: 8px; }
+.case-top .lote { font-weight: 700; color: #fff; font-size: 1rem; }
+.case-top .modelo { color: #94a3b8; font-size: 0.8rem; }
+.case-top .cliente { color: #60a5fa; font-size: 0.9rem; }
+.case-top .fecha { background: #334155; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; color: #fbbf24; white-space: nowrap; }
+
+.case-body { padding: 0 20px 16px; display: none; }
+.case-body.open { display: block; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+@media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+
+.info-item { background: #0f172a; border-radius: 8px; padding: 10px 14px; }
+.info-item .info-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.info-item .info-value { font-size: 0.85rem; color: #e2e8f0; }
+
+.montos { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.monto-tag { background: #064e3b; color: #34d399; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; }
+
+.status-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.status-pill { padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+.status-pill.ok { background: #064e3b; color: #34d399; }
+.status-pill.pending { background: #78350f; color: #fbbf24; }
+.status-pill.issue { background: #7f1d1d; color: #fca5a5; }
+
+.pendientes-box { background: #1a1a2e; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #fde68a; }
+
+.toggle-arrow { transition: transform 0.3s; font-size: 1.2rem; color: #64748b; }
+.toggle-arrow.open { transform: rotate(180deg); }
+
+.summary-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.summary-table th { background: #1e3a5f; padding: 10px; text-align: left; font-size: 0.8rem; color: #94a3b8; }
+.summary-table td { padding: 10px; border-bottom: 1px solid #334155; font-size: 0.85rem; }
+
+.total-bar { background: linear-gradient(90deg, #1e3a5f, #0f172a); padding: 20px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 15px; border: 1px solid #3b82f6; }
+.total-item { text-align: center; }
+.total-item .t-num { font-size: 1.5rem; font-weight: 700; color: #34d399; }
+.total-item .t-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 Informe de Formalización por Formalizador</h1>
+  <p>Actualizado: 4 de marzo 2026</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card"><div class="num">22</div><div class="label">Casos Totales</div></div>
+  <div class="stat-card"><div class="num">4</div><div class="label">Formalizadores</div></div>
+  <div class="stat-card"><div class="num" style="color:#34d399">3</div><div class="label">Casas Terminadas</div></div>
+  <div class="stat-card"><div class="num" style="color:#fbbf24">₡461.8M</div><div class="label">Desembolso Casas</div></div>
+  <div class="stat-card"><div class="num" style="color:#fbbf24">₡195.2M</div><div class="label">Desembolso Lotes</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filterBy('all')">Todos</button>
+  <button class="filter-btn" onclick="filterBy('HAZEL')">Hazel (8)</button>
+  <button class="filter-btn" onclick="filterBy('WILLEM')">Willem (6)</button>
+  <button class="filter-btn" onclick="filterBy('LUIS CARLOS')">Luis Carlos (6)</button>
+  <button class="filter-btn" onclick="filterBy('ESTEBAN')">Esteban (2)</button>
+  <button class="filter-btn" onclick="filterBy('terminada')">🏠 Terminadas</button>
+  <button class="filter-btn" onclick="filterBy('marzo')">📅 Marzo</button>
+</div>
+
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="🔍 Buscar por cliente, lote, modelo, banco..." oninput="searchCases()">
+</div>
+
+<div class="container" id="casesContainer">
+
+<!-- HAZEL -->
+<div class="form-group" data-formalizador="HAZEL">
+  <div class="form-header" onclick="toggleGroup(this)">
+    <h2>👤 Formalizador: HAZEL</h2>
+    <span class="form-badge">8 casos</span>
+  </div>
+
+  <div class="case-card" data-search="M.23 Stella Hernan Nuñez Fioravantti BCR marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">M.23</span> <span class="modelo">Stella A 2D 2.5B WC L(PA)</span></div>
+      <div class="cliente">Hernan Nuñez Fioravantti</div>
+      <div class="fecha">📅 23 marzo — BCR</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡17,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡10,026,955</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad de pago</span>
+      </div>
+      <div class="pendientes-box">⚠️ Avalúo solicitado. En proceso pago de bono vivienda. Para proceder con venta de casa y que el cliente tenga capacidad.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="K.14 Neo Tripoli Jean Monge Bonilla Coopeande marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K.14</span> <span class="modelo">Neo Tripoli A 3D 2B WC OF</span></div>
+      <div class="cliente">Jean Monge Bonilla</div>
+      <div class="fecha">📅 16 marzo — Coopeande</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,926,156</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: ¢80M, diferencia a financiar, préstamo ¢6M</span>
+      </div>
+      <div class="pendientes-box">⚠️ Avalúo solicitado. A espera de que Victor confirme revisión legal.</div>
+    </div>
+  </div>
+
+  <div class="case-card terminada" data-search="D.21 Ikaria Mauricio Valverde Céspedes BN marzo terminada" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">D.21</span> <span class="modelo">Ikaria A 2D 2B WC</span></div>
+      <div class="cliente">Mauricio Valverde Céspedes</div>
+      <div class="fecha">📅 23 marzo — BN 🏠✅</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡73,800,000</span>
+        <span class="monto-tag">📐 Lote: ₡10,605,988</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: A espera de cancelar deuda</span>
+      </div>
+      <div class="pendientes-box">⚠️ Documentación actualizada. 🏠 Casa terminada.</div>
+    </div>
+  </div>
+
+  <div class="case-card complicado" data-search="L.53 Zante Karen Vizcaino Vargas Coopenae marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">L.53</span> <span class="modelo">Zante T 4D 2.5B WC (PA)</span></div>
+      <div class="cliente">Karen Vizcaino Vargas</div>
+      <div class="fecha">📅 28 marzo — Coopenae ⚠️</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill issue">❌ Capacidad: Revisándose info</span>
+      </div>
+      <div class="pendientes-box">⚠️ CASO COMPLICADO: Cliente independiente, no factura, declara en cero. Estados no reflejan ingresos. Se vio con Coopenae.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="M.07 Santorini Andres Ureña Abarca Mucap marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">M.07</span> <span class="modelo">Santorini T 3D 2.5B WC OF F30</span></div>
+      <div class="cliente">Andres Ureña Abarca</div>
+      <div class="fecha">📅 23 marzo — Mucap</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡24,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,563,362</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: A espera de info</span>
+      </div>
+      <div class="pendientes-box">⚠️ Estados de cuenta pendientes, CPA y carta de referencia.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="K.26 Tebas Juan Carlos Peña Ramirez BP marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K.26</span> <span class="modelo">Tebas A 3D 2B WC (18)</span></div>
+      <div class="cliente">Juan Carlos Peña Ramirez</div>
+      <div class="fecha">📅 23 marzo — BP</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡16,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡6,926,156</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill pending">⚠️ Permisos: En trámite, boleta CFIA</span>
+        <span class="status-pill pending">⚠️ Capacidad: Transportista independiente</span>
+      </div>
+      <div class="pendientes-box">⚠️ A espera de información del cliente. Contador preparando información.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="F.18 Ikaria Maria Auxiliadora Araya Céspedes Caja de Ande marzo" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">F.18</span> <span class="modelo">Ikaria A 2D 2B WC</span></div>
+      <div class="cliente">Maria Auxiliadora Araya Céspedes</div>
+      <div class="fecha">📅 23 marzo — Caja de Ande</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡7,310,057</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: Maestra MEP, solo Caja de Ande</span>
+      </div>
+      <div class="pendientes-box">⚠️ Cliente quiere esperar condiciones de Expo. No ha enviado información.</div>
+    </div>
+  </div>
+
+  <div class="case-card terminada" data-search="K.25 Tebas Josue David Montoya Chavarría marzo terminada" data-form="HAZEL">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K.25</span> <span class="modelo">Tebas A 3D 2B WC</span></div>
+      <div class="cliente">Josue David Montoya Chavarría</div>
+      <div class="fecha">📅 23 marzo — Por definir 🏠✅</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,839,195</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad: Asalariado con capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Constancia y SICERE del cliente. 🏠 Casa Terminada.</div>
+    </div>
+  </div>
+</div>
+
+<!-- WILLEM -->
+<div class="form-group" data-formalizador="WILLEM">
+  <div class="form-header" onclick="toggleGroup(this)">
+    <h2>👤 Formalizador: WILLEM</h2>
+    <span class="form-badge">6 casos</span>
+  </div>
+
+  <div class="case-card terminada" data-search="M.05 Santorini Silvia Salazar Sanchez BN marzo terminada" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">M.05</span> <span class="modelo">Santorini A 3D 2.5B WC</span></div>
+      <div class="cliente">Silvia Salazar Sanchez</div>
+      <div class="fecha">📅 19 marzo — BN 🏠✅</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡91,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡6,561,241</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Pendientes: FINALIZADO</span>
+      </div>
+      <div class="pendientes-box">⚠️ Pagar y cerrar Promerica ¢8,000,000. 🏠 Casa Terminada.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="L.32 Zante Mario Alexander Mena Barboza BN marzo" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">L.32</span> <span class="modelo">Zante A 4D 2.5B WC (PA)</span></div>
+      <div class="cliente">Mario Alexander Mena Barboza</div>
+      <div class="fecha">📅 12 marzo — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡10,839,195</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: Puede variar según banco</span>
+      </div>
+      <div class="pendientes-box">⚠️ Esperar que cliente se decida de banco. No ha querido firmar contratos para pedir avalúo. Ya salió permiso, pedir presupuesto.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="I.13 Zante Cristian Hidalgo Avila BN abril" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">I.13</span> <span class="modelo">Zante T 2D 3.5B WC OF</span></div>
+      <div class="cliente">Cristian Hidalgo Avila</div>
+      <div class="fecha">📅 10 abril — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Contrato laboral indefinido plazo — se lo dan hasta 1 de abril.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="M.16 Stellita Daniel Quiros Soto BN marzo" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">M.16</span> <span class="modelo">Stellita A 2D 1.5B WC</span></div>
+      <div class="cliente">Daniel Quiros Soto</div>
+      <div class="fecha">📅 12 marzo — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,605,988</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Avalúo pendiente (cambio de modelo). Hoy en cambio de láminas, espera miércoles para pedir avalúo.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="L-31 Stella Elizabeth Cano Promerica marzo" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">L-31</span> <span class="modelo">Stella A</span></div>
+      <div class="cliente">Elizabeth Cano</div>
+      <div class="fecha">📅 31 marzo — Promerica</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill pending">⚠️ Permisos: En CFIA</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Esperando tasas Expo (según vendedora Mery).</div>
+    </div>
+  </div>
+
+  <div class="case-card complicado" data-search="K-19 Stella Valeria Acosta BN marzo" data-form="WILLEM">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K-19</span> <span class="modelo">Stella A</span></div>
+      <div class="cliente">Valeria Acosta</div>
+      <div class="fecha">📅 31 marzo — BN ⚠️</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill pending">⚠️ Traspaso: Hoy se solicita</span>
+        <span class="status-pill pending">⚠️ Permisos: Por tramitar</span>
+        <span class="status-pill issue">❌ Capacidad: Renunció, nuevo trabajo 16/marzo, ¢1.4M brutos, deuda ¢120K, se ve ajustado</span>
+      </div>
+      <div class="pendientes-box">⚠️ CASO AJUSTADO: Clienta renunció, entra nuevo trabajo el 16. Casa de ¢92M, ingreso bruto ¢1.4M. Esperar información para confirmar.</div>
+    </div>
+  </div>
+</div>
+
+<!-- LUIS CARLOS -->
+<div class="form-group" data-formalizador="LUIS CARLOS">
+  <div class="form-header" onclick="toggleGroup(this)">
+    <h2>👤 Formalizador: LUIS CARLOS</h2>
+    <span class="form-badge">6 casos</span>
+  </div>
+
+  <div class="case-card" data-search="L.33 Tebas Marcelly Alvarado Chaves Caja de Ande marzo" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">L.33</span> <span class="modelo">Tebas T 3D 2D (17)</span></div>
+      <div class="cliente">Marcelly Alvarado Chaves</div>
+      <div class="fecha">📅 6 marzo — Caja de Ande</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,839,195</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box" style="border-left-color:#22c55e; color:#86efac;">✅ Sin pendientes.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="K.18 Ikaria Rafael Antonio Porras Castro BN marzo" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K.18</span> <span class="modelo">Ikaria T 2D 2B</span></div>
+      <div class="cliente">Rafael Antonio Porras Castro</div>
+      <div class="fecha">📅 12 marzo — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡14,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡6,926,156</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad (BN)</span>
+      </div>
+      <div class="pendientes-box">⚠️ Valores de avalúo pendientes.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="I.30 Stella Isabel Jara Marín BN marzo Expo" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">I.30</span> <span class="modelo">Stella T 2D 2.5B WC L</span></div>
+      <div class="cliente">Isabel Jara Marín</div>
+      <div class="fecha">📅 S3 marzo — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,560,335</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Contratos y formularios. Suegra de Joser (perito BN). Quiere esperar Expo.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="I.36 Zante Geiner Ulises Naranjo Romero BCR Mucap marzo Expo" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">I.36</span> <span class="modelo">Zante T 4D 2.5B WC (PA)</span></div>
+      <div class="cliente">Geiner Ulises Naranjo Romero</div>
+      <div class="fecha">📅 27 marzo — BCR/Mucap</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡20,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,019,480</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad: Positiva</span>
+      </div>
+      <div class="pendientes-box">⚠️ Actualizar información, contratos, formularios. Quiere esperar Expo.</div>
+    </div>
+  </div>
+
+  <div class="case-card pendiente-info" data-search="L.01 Stella Juan Daniel Arias Pérez BN BCR BP abril" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">L.01</span> <span class="modelo">Stella A 3D 3.5B WC (PA)</span></div>
+      <div class="cliente">Juan Daniel Arias Pérez</div>
+      <div class="fecha">📅 14 abril — BN/BCR/BP ❌</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill issue">❌ Traspaso: No hay folios ni catastros</span>
+        <span class="status-pill issue">❌ Permisos: No hay folios ni catastros</span>
+        <span class="status-pill issue">❌ Capacidad: Debe aumentar salario y reportar CCSS</span>
+      </div>
+      <div class="pendientes-box">⚠️ Trabaja para empresa del papá. Constancia, contratos, formularios pendientes.</div>
+    </div>
+  </div>
+
+  <div class="case-card" data-search="I.39 Santorini Lohr Campbell Arguello BN marzo" data-form="LUIS CARLOS">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">I.39</span> <span class="modelo">Santorini T</span></div>
+      <div class="cliente">Lohr Campbell Arguello</div>
+      <div class="fecha">📅 27 marzo — BN</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡24,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡9,226,278</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill pending">⚠️ Capacidad: No se ha realizado</span>
+      </div>
+      <div class="pendientes-box">⚠️ Recopilando información.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTEBAN -->
+<div class="form-group" data-formalizador="ESTEBAN">
+  <div class="form-header" onclick="toggleGroup(this)">
+    <h2>👤 Formalizador: ESTEBAN</h2>
+    <span class="form-badge">2 casos</span>
+  </div>
+
+  <div class="case-card" data-search="K.05 Santorini Joaquin Marin Promerica marzo" data-form="ESTEBAN">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">K.05</span> <span class="modelo">Santorini A</span></div>
+      <div class="cliente">Joaquin Marin</div>
+      <div class="fecha">📅 12 marzo — Promerica</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡22,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡8,618,508</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill ok">✅ Traspaso</span>
+        <span class="status-pill ok">✅ Permisos</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Caso en aprobación. Pendiente avalúo. Contra avalúo se pasa opción de compra en dólares.</div>
+    </div>
+  </div>
+
+  <div class="case-card terminada" data-search="1-01 Barani Santorini Jose Arturo Campos Mucap marzo terminada" data-form="ESTEBAN">
+    <div class="case-top" onclick="toggleCard(this)">
+      <div><span class="lote">1-01 Barani</span> <span class="modelo">Santorini A</span></div>
+      <div class="cliente">Jose Arturo Campos</div>
+      <div class="fecha">📅 27 marzo — Mucap 🏠✅</div>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="case-body">
+      <div class="montos">
+        <span class="monto-tag">🏠 Casa: ₡105,000,000</span>
+        <span class="monto-tag">📐 Lote: ₡0</span>
+      </div>
+      <div class="status-row">
+        <span class="status-pill issue">❌ Traspaso: Pendiente</span>
+        <span class="status-pill issue">❌ Permisos: Pendiente</span>
+        <span class="status-pill ok">✅ Capacidad</span>
+      </div>
+      <div class="pendientes-box">⚠️ Escritura, Catastro, Traspaso, Permisos, Avalúo. Pasar opción de compra en dólares (precio real en adenda con extras). 🏠 Casa Terminada.</div>
+    </div>
+  </div>
+</div>
+
+<!-- I.40 Carolina - LUIS CARLOS -->
+<div class="form-group" data-formalizador="LUIS CARLOS" style="display:none;">
+</div>
+
+</div>
+
+<!-- Extra case for I.40 injected into Luis Carlos -->
+
+<div class="container">
+<div class="total-bar">
+  <div class="total-item"><div class="t-num">₡461.8M</div><div class="t-label">Total Casas</div></div>
+  <div class="total-item"><div class="t-num">₡195.2M</div><div class="t-label">Total Lotes</div></div>
+  <div class="total-item"><div class="t-num">₡657.0M</div><div class="t-label">Gran Total</div></div>
+  <div class="total-item"><div class="t-num">22</div><div class="t-label">Casos</div></div>
+  <div class="total-item"><div class="t-num" style="color:#22c55e">3</div><div class="t-label">Casas Listas</div></div>
+</div>
+</div>
+
+<script>
+// I need to add I.40 Carolina case to Luis Carlos group
+(function(){
+  const lcGroup = document.querySelector('[data-formalizador="LUIS CARLOS"]');
+  if(lcGroup) {
+    const extraCard = document.createElement('div');
+    extraCard.className = 'case-card';
+    extraCard.setAttribute('data-search', 'I.40 Santorini Carolina Ureña Jimenez Mucap marzo');
+    extraCard.setAttribute('data-form', 'LUIS CARLOS');
+    extraCard.innerHTML = `
+      <div class="case-top" onclick="toggleCard(this)">
+        <div><span class="lote">I.40</span> <span class="modelo">Santorini A 3D 2.5B WC</span></div>
+        <div class="cliente">Carolina Ureña Jimenez</div>
+        <div class="fecha">📅 28 marzo — Mucap</div>
+        <span class="toggle-arrow">▼</span>
+      </div>
+      <div class="case-body">
+        <div class="montos">
+          <span class="monto-tag">🏠 Casa: ₡25,000,000</span>
+          <span class="monto-tag">📐 Lote: ₡9,563,362</span>
+        </div>
+        <div class="status-row">
+          <span class="status-pill ok">✅ Traspaso</span>
+          <span class="status-pill pending">⚠️ Permisos: En proceso</span>
+          <span class="status-pill pending">⚠️ Capacidad: A espera de info</span>
+        </div>
+        <div class="pendientes-box">⚠️ Caso con Mucap. Estados de cuenta pendientes, CPA y carta de referencia.</div>
+      </div>`;
+    const lastChild = lcGroup.querySelector('.case-card:last-of-type');
+    if(lastChild) lastChild.after(extraCard);
+    else lcGroup.appendChild(extraCard);
+  }
+})();
+
+function toggleCard(el) {
+  const body = el.parentElement.querySelector('.case-body');
+  const arrow = el.querySelector('.toggle-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function toggleGroup(el) {
+  const group = el.closest('.form-group');
+  const cards = group.querySelectorAll('.case-card');
+  cards.forEach(c => c.style.display = c.style.display === 'none' ? '' : 'none');
+}
+
+function filterBy(type) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  
+  const cards = document.querySelectorAll('.case-card');
+  const groups = document.querySelectorAll('.form-group');
+  
+  if(type === 'all') {
+    cards.forEach(c => c.style.display = '');
+    groups.forEach(g => g.style.display = '');
+    return;
+  }
+  
+  if(type === 'terminada') {
+    groups.forEach(g => g.style.display = '');
+    cards.forEach(c => {
+      c.style.display = c.dataset.search.includes('terminada') ? '' : 'none';
+    });
+    return;
+  }
+  
+  if(type === 'marzo') {
+    groups.forEach(g => g.style.display = '');
+    cards.forEach(c => {
+      c.style.display = c.dataset.search.toLowerCase().includes('marzo') ? '' : 'none';
+    });
+    return;
+  }
+  
+  // Filter by formalizador
+  groups.forEach(g => {
+    g.style.display = g.dataset.formalizador === type ? '' : 'none';
+  });
+  cards.forEach(c => {
+    c.style.display = c.dataset.form === type ? '' : 'none';
+  });
+}
+
+function searchCases() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cards = document.querySelectorAll('.case-card');
+  cards.forEach(c => {
+    const text = (c.dataset.search + ' ' + c.textContent).toLowerCase();
+    c.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
+
+</body>
+</html>
