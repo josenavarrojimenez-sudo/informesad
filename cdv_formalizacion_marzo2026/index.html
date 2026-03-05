@@ -463,6 +463,7 @@ tbody td {
 .form-luis { background: #D1FAE5; color: #065F46; }
 .form-esteban { background: #FEF3C7; color: #92400E; }
 .form-navarro { background: #E0E7FF; color: #3730A3; }
+.vendedor-tag { background: #E5E7EB; color: #374151; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
 
 .casa-terminada {
   background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%) !important;
@@ -1024,12 +1025,16 @@ tbody td {
     <div class="nav-tab" data-view="flujo" onclick="switchView('flujo')">💰 Flujo de Desembolsos</div>
     <div class="nav-tab" data-view="kanban" onclick="switchView('kanban')">📅 Kanban por Fecha</div>
     <div class="nav-tab" data-view="formalizador" onclick="switchView('formalizador')">👤 Por Formalizador</div>
+    <div class="nav-tab" data-view="vendedor" onclick="switchView('vendedor')">🤝 Por Vendedor</div>
   </div>
 </div>
 
 <div class="filters-bar">
   <div class="filters-inner">
     <span class="filter-label">Filtros:</span>
+    <select class="filter-select" id="filterVendedor" onchange="applyFilters()">
+      <option value="">Todos los vendedores</option>
+    </select>
     <select class="filter-select" id="filterFormalizador" onchange="applyFilters()">
       <option value="">Todos los formalizadores</option>
     </select>
@@ -1063,6 +1068,7 @@ tbody td {
   <div id="viewFlujo" class="view-panel"></div>
   <div id="viewKanban" class="view-panel"></div>
   <div id="viewFormalizador" class="view-panel"></div>
+  <div id="viewVendedor" class="view-panel"></div>
 </div>
 
 <script>
@@ -1070,190 +1076,186 @@ const casas = [
   {
     lote: "M.23", modelo: "Stella A 2D 2.5B WC L(PA)", modeloBase: "Stella",
     cliente: "Hernan Nuñez Fioravantti", montoCasa: 17000000, loteAD: 10026955, loteQFI: 7183827,
-    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel",
+    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel", vendedor: "Olman",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa.",
-    terminada: false
+    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa y con esto el cliente tenga capacidad",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.14", modelo: "Neo Tripoli A 3D 2B WC OF", modeloBase: "Neo Tripoli",
     cliente: "Jean Monge Bonilla", montoCasa: 14000000, loteAD: 8926156, loteQFI: 7844306.4,
-    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Parcial - capacidad ¢80MM, diferencia a financiar",
-    pendientes: "Avalúo solicitado, espera de confirmación de revisión legal por Victor.",
-    terminada: false
+    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "Cliente con capacidad para ¢80.0MM, la diferencia hay que financiarla, cliente ya tiene préstamo por ¢6.0MM",
+    pendientes: "Avalúo solicitado, a la espera de que Victor confirme que paso la revisión legal.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "D.21", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
     cliente: "Mauricio Valverde Céspedes", montoCasa: 73800000, loteAD: 10605988, loteQFI: 6836407.2,
-    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Espera cancelación de deuda",
-    pendientes: "Documentación actualizada.",
-    terminada: true
+    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel", vendedor: "Hannia",
+    traspaso: true, permisos: true, capacidad: "A espera de que cancele deuda para tener capacidad de pago",
+    pendientes: "Documentación actualizada",
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
     lote: "L.53", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
     cliente: "Karen Vizcaino Vargas", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "En revisión",
-    pendientes: "Información en revisión, cliente independiente no factura y declara en cero.",
-    terminada: false
+    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Cliente hoy paso parte de la información, se esta revisando.",
+    pendientes: "revisandose información, cliente independiente no factura y declara en cero, se vio el caso con Coopenae. Caso un poco complicado ya que los estados no reflejan los ingresos.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "M.07", modelo: "Santorini T 3D 2.5B WC OF F30", modeloBase: "Santorini",
     cliente: "Andres Ureña Abarca", montoCasa: 24000000, loteAD: 8563362, loteQFI: 9261982.8,
-    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Espera información del cliente",
-    pendientes: "Estados de cuenta pendientes, CPA y carta de referencia.",
-    terminada: false
+    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel", vendedor: "Xinia",
+    traspaso: true, permisos: true, capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.26", modelo: "Tebas A 3D 2B WC (18)", modeloBase: "Tebas",
     cliente: "Juan Carlos Peña Ramirez", montoCasa: 16000000, loteAD: 6926156, loteQFI: 7844306.4,
-    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel",
-    traspaso: true, permisos: false, capacidad: "Cliente transportista independiente",
+    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel", vendedor: "Daniela",
+    traspaso: true, permisos: "En trámite (boleta CFIA)", capacidad: "Cliente transportista independiente",
     pendientes: "A espera de información del cliente, ya envió una parte, se hablo con el contador y dice esta preparando la información.",
-    terminada: false
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "F.18", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
     cliente: "Maria Auxiliadora Araya Céspedes", montoCasa: 14000000, loteAD: 7310057, loteQFI: 7613965.8,
-    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Maestra MEP, posible sin capacidad fuera de Caja de Ande",
+    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Maestra MEP, quiere el trámite con Caja de Ande",
     pendientes: "Cliente quiere esperar condiciones de Expo, no ha enviado información.",
-    terminada: false
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.25", modelo: "Tebas A 3D 2B WC", modeloBase: "Tebas",
     cliente: "Josue David Montoya Chavarría", montoCasa: 36000000, loteAD: 8839195, loteQFI: 9261982.8,
-    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Cliente asalariado, de acuerdo con las colillas y sugef si tiene capacidad de pago",
+    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel", vendedor: "Mery",
+    traspaso: true, permisos: true, capacidad: "cliente asalariado, tiene capacidad de pago",
     pendientes: "Constancia y sicere del cliente",
-    terminada: true
+    terminada: true, estadoCasa: "Casa terminada"
   },
-  // WILLEM
   {
     lote: "M.05", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
     cliente: "Silvia Salazar Sanchez", montoCasa: 91000000, loteAD: 6561241, loteQFI: 9263255.4,
-    fecha: "2026-03-19", banco: "BN", formalizador: "Willem",
-    traspaso: true, permisos: true, capacidad: "Pagar y cerrar Promerica ¢8MM",
+    fecha: "2026-03-19", banco: "BN", formalizador: "Willem", vendedor: "Marco",
+    traspaso: true, permisos: true, capacidad: "PAGAR Y CERRAR PROMERICA ¢8.000.000",
     pendientes: "Finalizado ✅",
-    terminada: true
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
     lote: "L.32", modelo: "Zante A 4D 2.5B WC (PA)", modeloBase: "Zante",
     cliente: "Mario Alexander Mena Barboza", montoCasa: 22000000, loteAD: 10839195, loteQFI: 7896483,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
-    traspaso: true, permisos: true, capacidad: "Puede variar según banco",
-    pendientes: "Cliente no se decide de banco, no ha firmado contratos para avalúo.",
-    terminada: false
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: true, permisos: true, capacidad: "PUEDE VARIAR DEPENDIENDO BANCO",
+    pendientes: "ESPERAR CLIENTE SE DECIDA DE BANCO/ NO HA QUERIDO FIRMAR CONTRATOS PARA PEDIR AVALUO. Hoy ya me salio permiso, vamos a pedir presupuesto.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.13", modelo: "Zante T 2D 3.5B WC OF", modeloBase: "Zante",
     cliente: "Cristian Hidalgo Avila", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-04-10", banco: "BN", formalizador: "Willem",
+    fecha: "2026-04-10", banco: "BN", formalizador: "Willem", vendedor: "Hannia",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Contrato laboral indefinido plazo, disponible a partir del 1 abril.",
-    terminada: false
+    pendientes: "CONTRATO LABORAL INDEFINIDO PLAZO, se lo dan hasta 1 abril",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "M.16", modelo: "Stellita A 2D 1.5B WC", modeloBase: "Stellita",
     cliente: "Daniel Quiros Soto", montoCasa: 14000000, loteAD: 8605988, loteQFI: 6836407.2,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Olman",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Avalúo pendiente por cambio de modelo, en cambio de láminas.",
-    terminada: false
+    pendientes: "AVALUO (cambio modelo ) hoy en cambio de laminas, espero miércoles ya poder pedir avalúo",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "L.31", modelo: "Stella A", modeloBase: "Stella",
     cliente: "Elizabeth Cano", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem",
-    traspaso: true, permisos: false, capacidad: "✅",
-    pendientes: "Permisos en CFIA, esperando tasas Expo.",
-    terminada: false
+    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem", vendedor: "Mery",
+    traspaso: true, permisos: "En CFIA", capacidad: "okMery",
+    pendientes: "cliente esperando tasas expo, según me dice la vendedora Mery",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.19", modelo: "Stella A", modeloBase: "Stella",
     cliente: "Valeria Acosta", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-31", banco: "BN", formalizador: "Willem",
-    traspaso: false, permisos: false, capacidad: "En evaluación - renunció, nuevo empleo 16 marzo",
-    pendientes: "Traspaso pendiente, permisos por tramitar, espera información laboral.",
-    terminada: false
+    fecha: "2026-03-31", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: "Hoy se solicita", permisos: "Tramitando", capacidad: "Ajustada (deudas)",
+    pendientes: "Clienta acaba de renunciar al trabajo, entra al nuevo el 16 de este mes, vamos a ver que dice contrato laboral.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
-  // LUIS CARLOS
   {
     lote: "L.33", modelo: "Tebas T 3D 2D (17)", modeloBase: "Tebas",
     cliente: "Marcelly Alvarado Chaves", montoCasa: 14000000, loteAD: 8839195, loteQFI: 7896483,
-    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos",
-    traspaso: true, permisos: true, capacidad: "✅ Positiva",
-    pendientes: "No hay pendientes.",
-    terminada: false
+    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Positiva ✅",
+    pendientes: "No hay",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.18", modelo: "Ikaria T 2D 2B", modeloBase: "Ikaria",
     cliente: "Rafael Antonio Porras Castro", montoCasa: 14000000, loteAD: 6926156, loteQFI: 7844306.4,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos",
-    traspaso: true, permisos: true, capacidad: "✅ Positiva BN",
-    pendientes: "Valores de avalúo pendientes.",
-    terminada: false
+    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos", vendedor: "Xinia",
+    traspaso: true, permisos: true, capacidad: "Positiva ✅ BN",
+    pendientes: "valores avalúo",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.30", modelo: "Stella T 2D 2.5B WC L", modeloBase: "Stella",
     cliente: "Isabel Jara Marín", montoCasa: 22000000, loteAD: 9560335, loteQFI: 7463799,
-    fecha: "2026-03-21", banco: "BN", formalizador: "Luis Carlos",
+    fecha: "2026-03-23", banco: "BN", formalizador: "Luis Carlos", vendedor: "Hannia",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Contratos, formularios. Quiere esperar Expo.",
-    terminada: false
+    pendientes: "Contratos, formularios. Suegra de Joser (perito BN), quiere esperar Expo",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.36", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
     cliente: "Geiner Ulises Naranjo Romero", montoCasa: 20000000, loteAD: 9019480, loteQFI: 7788312,
-    fecha: "2026-03-27", banco: "BCR/Mucap", formalizador: "Luis Carlos",
+    fecha: "2026-03-27", banco: "BCR-MUCAP", formalizador: "Luis Carlos", vendedor: "Randall",
     traspaso: true, permisos: true, capacidad: "Positiva",
-    pendientes: "Actualizar información, contratos, formularios. Quiere esperar Expo.",
-    terminada: false
+    pendientes: "Actualizar información, contratos, formularios. Cliente quiere esperar Expo",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "L.01", modelo: "Stella A 3D 3.5B WC (PA)", modeloBase: "Stella",
     cliente: "Juan Daniel Arias Pérez", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-04-14", banco: "BN/BCR/BP", formalizador: "Luis Carlos",
-    traspaso: false, permisos: false, capacidad: "Debe aumentar salario y reportar CCSS",
-    pendientes: "Sin folios ni catastros. Constancia, contratos, formularios.",
-    terminada: false
+    fecha: "2026-04-14", banco: "BN-BCR-BP", formalizador: "Luis Carlos", vendedor: "Daniela",
+    traspaso: "Sin folios/catastros", permisos: "Sin folios/catastros", capacidad: "Debe aumentar salario",
+    pendientes: "Constancia, contratos, formularios. Trabaja para empresa del papá.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.39", modelo: "Santorini T", modeloBase: "Santorini",
     cliente: "Lohr Campbell Arguello", montoCasa: 24000000, loteAD: 8563362, loteQFI: 9261982.8,
-    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos",
-    traspaso: true, permisos: true, capacidad: "No realizada",
-    pendientes: "Recopilando información.",
-    terminada: false
+    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "no se ha realizado",
+    pendientes: "Recopilando información",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
-  // ESTEBAN
+  {
+    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, loteAD: 9563362, loteQFI: 7964233.5,
+    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: "En proceso", capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
+  },
   {
     lote: "K.05", modelo: "Santorini A", modeloBase: "Santorini",
     cliente: "Joaquin Marin", montoCasa: 22000000, loteAD: 8618508, loteQFI: 9228895.2,
-    fecha: "2026-03-12", banco: "Promerica", formalizador: "Esteban",
+    fecha: "2026-03-12", banco: "PROMERICA", formalizador: "Esteban", vendedor: "Randall",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Caso en aprobación, avalúo pendiente, opción de compra en dólares.",
-    terminada: false
+    pendientes: "caso se encuentra en aprobación, pendiente avalúo, contra avalúo se pasa opción de compra, para cuadrar el número, en dólares.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "1-01 Barani", modelo: "Santorini A", modeloBase: "Santorini",
     cliente: "Jose Arturo Campos", montoCasa: 105000000, loteAD: 0, loteQFI: 11430493.2,
-    fecha: "2026-04-08", banco: "Mucap", formalizador: "Esteban",
-    traspaso: false, permisos: false, capacidad: "✅",
-    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, opción de compra en dólares.",
-    terminada: true
-  },
-  // JOSE NAVARRO
-  {
-    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
-    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, loteAD: 9563362, loteQFI: 7964233.5,
-    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos",
-    traspaso: true, permisos: false, capacidad: "Espera información del cliente",
-    pendientes: "Caso con Mucap, estados de cuenta pendientes, CPA y carta de referencia.",
-    terminada: false
+    fecha: "2026-04-08", banco: "MUCAP", formalizador: "Esteban", vendedor: "Hannia",
+    traspaso: "Pendiente", permisos: "Pendiente", capacidad: "✅",
+    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dolares. El precio real es con extras.",
+    terminada: true, estadoCasa: "Casa terminada"
   }
 ];
 
@@ -1318,11 +1320,14 @@ let filteredData = [...casas];
 
 function populateFilters() {
   const formalizadores = [...new Set(casas.map(c => c.formalizador))].sort();
+  const vendedores = [...new Set(casas.map(c => c.vendedor))].filter(Boolean).sort();
   const bancos = [...new Set(casas.map(c => c.banco))].sort();
   const modelos = [...new Set(casas.map(c => c.modeloBase))].sort();
 
   const fF = document.getElementById('filterFormalizador');
   formalizadores.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; fF.appendChild(o); });
+  const fV = document.getElementById('filterVendedor');
+  vendedores.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; fV.appendChild(o); });
 
   const fB = document.getElementById('filterBanco');
   bancos.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; fB.appendChild(o); });
@@ -1332,6 +1337,7 @@ function populateFilters() {
 }
 
 function applyFilters() {
+  const v = document.getElementById('filterVendedor').value;
   const f = document.getElementById('filterFormalizador').value;
   const s = document.getElementById('filterSemana').value;
   const b = document.getElementById('filterBanco').value;
@@ -1340,6 +1346,7 @@ function applyFilters() {
   filteredData = casas.filter(c => {
     // Month filter (always active)
     if (getMonthNumber(c.fecha) !== selectedMonth) return false;
+    if (v && c.vendedor !== v) return false;
     if (f && c.formalizador !== f) return false;
     if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
     if (b && c.banco !== b) return false;
@@ -1434,6 +1441,15 @@ function renderTable() {
         <input type="date" value="${c.fecha}" data-lote="${c.lote}" class="fecha-input">
       </td>
       <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
+      <td data-label="Vendedor"><span class="vendedor-tag" style="background:#E5E7EB;color:#374151;padding:4px 10px;border-radius:6px;font-size:12px">${c.vendedor || ''}</span></td>
+      <td data-label="Estado Casa">
+        <select class="filter-select" style="width:auto" onchange="updateEstadoCasa('${c.lote}', this.value)">
+          <option value="Sin reunion de inicio" ${c.estadoCasa === 'Sin reunion de inicio' ? 'selected' : ''}>Sin reunión de inicio</option>
+          <option value="Reunion de inicio" ${c.estadoCasa === 'Reunion de inicio' ? 'selected' : ''}>Reunión de inicio</option>
+          <option value="Casa iniciada" ${c.estadoCasa === 'Casa iniciada' ? 'selected' : ''}>Casa iniciada</option>
+          <option value="Casa terminada" ${c.estadoCasa === 'Casa terminada' ? 'selected' : ''}>Casa terminada</option>
+        </select>
+      </td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
       <td data-label="Traspaso / Permisos">
         ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
@@ -1459,6 +1475,8 @@ function renderTable() {
               <th>💰 Desembolso</th>
               <th>Fecha Est.</th>
               <th>Banco</th>
+              <th>Vendedor</th>
+              <th>Estado Casa</th>
               <th>Formalizador</th>
               <th>Trasp. / Perm.</th>
               <th>Pendientes</th>
@@ -1647,28 +1665,106 @@ function renderFormalizador() {
   document.getElementById('viewFormalizador').innerHTML = html;
 }
 
+
+function getVendClass(name) {
+  return 'vendedor-tag';
+}
+
+function renderVendedor() {
+  const groups = {};
+  filteredData.forEach(c => {
+    if (!groups[c.vendedor]) groups[c.vendedor] = [];
+    groups[c.vendedor].push(c);
+  });
+
+  let html = '<div class="form-grid">';
+  for (const [name, items] of Object.entries(groups)) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const terminadas = items.filter(c => c.terminada).length;
+
+    html += `
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="form-section-name vendedor-tag" style="font-size:16px;padding:6px 14px;background:#E5E7EB;color:#374151">${name || 'Sin Vendedor'}</span>
+          <div class="form-section-stats">
+            <span>${items.length} casos</span>
+            <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
+            <span style="color:var(--claude-dark);font-weight:700">${fmt(totalCasa)}</span>
+          </div>
+        </div>
+        <div class="form-section-body">
+    `;
+
+    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    items.forEach(c => {
+      html += `
+        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+          <div class="form-case-header">
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="monto-highlight">${fmt(c.montoCasa)}</span>
+          </div>
+          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
+          <div class="form-case-row">
+            <span class="bank-tag">${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
+            <span class="form-status-item">${c.traspaso === true ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">${c.permisos === true ? '✅ Permisos' : '⏳ Permisos'}</span>
+          </div>
+          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+        </div>
+      `;
+    });
+
+    html += '</div></div>';
+  }
+  html += '</div>';
+  document.getElementById('viewVendedor').innerHTML = html;
+}
+
 function renderAll() {
   renderKPIs();
   renderTable();
   renderFlow();
   renderKanban();
   renderFormalizador();
+  renderVendedor();
 }
 
 // EXPORT TO EXCEL
 
-// Handle inline date edits
- document.addEventListener('change', function(event) {
-   if (!event.target.classList.contains('fecha-input')) return;
-   const newValue = event.target.value;
-   const loteId = event.target.dataset.lote;
-   if (!newValue || !loteId) return;
-   const casa = casas.find(c => c.lote === loteId);
-   if (casa) {
-     casa.fecha = newValue;
-     applyFilters();
-   }
- });
+
+// Password protected date edit and status update
+function updateEstadoCasa(lote, val) {
+  const c = casas.find(x => x.lote === lote);
+  if (c) {
+    c.estadoCasa = val;
+    // Auto-update 'terminada' flag for UI consistency if needed
+    if (val === 'Casa terminada') c.terminada = true;
+    else if (val === 'Sin reunion de inicio') c.terminada = false;
+    applyFilters();
+  }
+}
+
+document.addEventListener('change', function(event) {
+  if (!event.target.classList.contains('fecha-input')) return;
+  const newValue = event.target.value;
+  const loteId = event.target.dataset.lote;
+  if (!newValue || !loteId) return;
+  
+  const pass = prompt("Ingrese la clave para modificar la fecha:");
+  if (pass === "Adelante2025") {
+    const casa = casas.find(c => c.lote === loteId);
+    if (casa) {
+      casa.fecha = newValue;
+      applyFilters();
+      alert("Fecha actualizada correctamente.");
+    }
+  } else {
+    alert("Clave incorrecta. Los cambios no se guardarán.");
+    applyFilters(); // Reset UI
+  }
+});
+
 
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
