@@ -416,6 +416,117 @@ tbody td {
   margin-top: 3px;
 }
 
+/* DESEMBOLSO BLOCK */
+.desembolso-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 180px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.desembolso-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  gap: 12px;
+}
+
+.desembolso-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.desembolso-amount {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.desembolso-casa {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  border-bottom: 1px solid #FCD34D;
+}
+.desembolso-casa .desembolso-label { color: #92400E; }
+.desembolso-casa .desembolso-amount { color: #B45309; }
+
+.desembolso-ad {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  border-bottom: 1px solid #93C5FD;
+}
+.desembolso-ad .desembolso-label { color: #1E40AF; }
+.desembolso-ad .desembolso-amount { color: #1E40AF; }
+
+.desembolso-qfi {
+  background: linear-gradient(135deg, #EDE9FE 0%, #DDD6FE 100%);
+}
+.desembolso-qfi .desembolso-label { color: #5B21B6; }
+.desembolso-qfi .desembolso-amount { color: #5B21B6; }
+
+.desembolso-total {
+  padding: 5px 12px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border);
+}
+
+.desembolso-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.desembolso-total-row strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+/* DESEMBOLSO COMPACT (for cards) */
+.desembolso-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.desembolso-compact .desembolso-row {
+  padding: 4px 10px;
+}
+
+.desembolso-compact .desembolso-label {
+  font-size: 9px;
+}
+
+.desembolso-compact .desembolso-amount {
+  font-size: 12px;
+}
+
+.desembolso-compact .desembolso-total {
+  padding: 4px 10px;
+}
+
+.desembolso-compact .desembolso-total-row {
+  font-size: 10px;
+}
+
+.desembolso-compact .desembolso-total-row strong {
+  font-size: 11px;
+}
+
 .status-check {
   color: var(--success);
   font-weight: 600;
@@ -1024,6 +1135,7 @@ tbody td {
     <div class="nav-tab" data-view="flujo" onclick="switchView('flujo')">💰 Flujo de Desembolsos</div>
     <div class="nav-tab" data-view="kanban" onclick="switchView('kanban')">📅 Kanban por Fecha</div>
     <div class="nav-tab" data-view="formalizador" onclick="switchView('formalizador')">👤 Por Formalizador</div>
+    <div class="nav-tab" data-view="vendedor" onclick="switchView('vendedor')">🏷️ Por Vendedor</div>
   </div>
 </div>
 
@@ -1047,6 +1159,16 @@ tbody td {
     <select class="filter-select" id="filterModelo" onchange="applyFilters()">
       <option value="">Todos los modelos</option>
     </select>
+    <select class="filter-select" id="filterVendedor" onchange="applyFilters()">
+      <option value="">Todos los vendedores</option>
+    </select>
+    <select class="filter-select" id="filterEstado" onchange="applyFilters()">
+      <option value="">Todos los estados</option>
+      <option value="Sin reunion de inicio">Sin reunión de inicio</option>
+      <option value="Reunion de inicio">Reunión de inicio</option>
+      <option value="Casa iniciada">Casa iniciada</option>
+      <option value="Casa terminada">Casa terminada</option>
+    </select>
     <button class="filter-clear" onclick="clearFilters()">✕ Limpiar filtros</button>
     <div style="flex:1"></div>
     <button class="btn-export" onclick="exportToExcel()">
@@ -1063,246 +1185,206 @@ tbody td {
   <div id="viewFlujo" class="view-panel"></div>
   <div id="viewKanban" class="view-panel"></div>
   <div id="viewFormalizador" class="view-panel"></div>
+  <div id="viewVendedor" class="view-panel"></div>
 </div>
 
 <script>
 const casas = [
+  // HAZEL
   {
     lote: "M.23", modelo: "Stella A 2D 2.5B WC L(PA)", modeloBase: "Stella",
-    cliente: "Hernan Nuñez Fioravantti", montoCasa: 17000000, loteAD: 10026955, loteQFI: 7183827,
-    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel",
+    cliente: "Hernan Nuñez Fioravantti", montoCasa: 17000000, montoLote: 10026955, montoLoteQFI: 7183827,
+    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel", vendedor: "Olman",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa.",
+    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa y con esto el cliente tenga capacidad.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.14", modelo: "Neo Tripoli A 3D 2B WC OF", modeloBase: "Neo Tripoli",
-    cliente: "Jean Monge Bonilla", montoCasa: 14000000, loteAD: 8926156, loteQFI: 7844306.4,
-    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Parcial - capacidad ¢80MM, diferencia a financiar",
-    pendientes: "Avalúo solicitado, espera de confirmación de revisión legal por Victor.",
+    cliente: "Jean Monge Bonilla", montoCasa: 14000000, montoLote: 8926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "Cliente con capacidad para ¢80.0MM, la diferencia hay que financiarla, cliente ya tiene préstamo por ¢6.0MM",
+    pendientes: "Avalúo solicitado, a la espera de que Victor confirme que pasó la revisión legal.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "D.21", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
-    cliente: "Mauricio Valverde Céspedes", montoCasa: 73800000, loteAD: 10605988, loteQFI: 6836407.2,
-    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Espera cancelación de deuda",
+    cliente: "Mauricio Valverde Céspedes", montoCasa: 73800000, montoLote: 10605988, montoLoteQFI: 6836407.2,
+    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel", vendedor: "Hannia",
+    traspaso: true, permisos: true, capacidad: "A espera de que cancele deuda para tener capacidad de pago",
     pendientes: "Documentación actualizada.",
-    terminada: true, estadoCasa: "Casa Terminada"
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
     lote: "L.53", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
-    cliente: "Karen Vizcaino Vargas", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "En revisión",
-    pendientes: "Información en revisión, cliente independiente no factura y declara en cero.",
+    cliente: "Karen Vizcaino Vargas", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Cliente hoy pasó parte de la información, se está revisando.",
+    pendientes: "Revisándose información, cliente independiente no factura y declara en cero, se vio el caso con Coopenae. Caso complicado, estados no reflejan los ingresos.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "M.07", modelo: "Santorini T 3D 2.5B WC OF F30", modeloBase: "Santorini",
-    cliente: "Andres Ureña Abarca", montoCasa: 24000000, loteAD: 8563362, loteQFI: 9261982.8,
-    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Espera información del cliente",
-    pendientes: "Estados de cuenta pendientes, CPA y carta de referencia.",
+    cliente: "Andres Ureña Abarca", montoCasa: 24000000, montoLote: 8563362, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel", vendedor: "Xinia",
+    traspaso: true, permisos: true, capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.26", modelo: "Tebas A 3D 2B WC (18)", modeloBase: "Tebas",
-    cliente: "Juan Carlos Peña Ramirez", montoCasa: 16000000, loteAD: 6926156, loteQFI: 7844306.4,
-    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel",
+    cliente: "Juan Carlos Peña Ramirez", montoCasa: 16000000, montoLote: 6926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel", vendedor: "Daniela",
     traspaso: true, permisos: false, capacidad: "Cliente transportista independiente",
-    pendientes: "A espera de información del cliente, ya envió una parte, se hablo con el contador y dice esta preparando la información.",
+    pendientes: "A espera de información del cliente, ya envió una parte, se habló con el contador y dice está preparando la información. En revisión de boleta electrónica en CFIA.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "F.18", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
-    cliente: "Maria Auxiliadora Araya Céspedes", montoCasa: 14000000, loteAD: 7310057, loteQFI: 7613965.8,
-    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Maestra MEP, posible sin capacidad fuera de Caja de Ande",
+    cliente: "Maria Auxiliadora Araya Céspedes", montoCasa: 14000000, montoLote: 7310057, montoLoteQFI: 7613965.8,
+    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Maestra MEP, quiere el trámite con Caja de Ande, con otras entidades posiblemente sin capacidad",
     pendientes: "Cliente quiere esperar condiciones de Expo, no ha enviado información.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.25", modelo: "Tebas A 3D 2B WC", modeloBase: "Tebas",
-    cliente: "Josue David Montoya Chavarría", montoCasa: 36000000, loteAD: 8839195, loteQFI: 9261982.8,
-    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel",
-    traspaso: true, permisos: true, capacidad: "Cliente asalariado, de acuerdo con las colillas y sugef si tiene capacidad de pago",
-    pendientes: "Constancia y sicere del cliente",
-    terminada: true, estadoCasa: "Casa Terminada"
+    cliente: "Josue David Montoya Chavarría", montoCasa: 36000000, montoLote: 8839195, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel", vendedor: "Mery",
+    traspaso: true, permisos: true, capacidad: "✅ Asalariado, de acuerdo con las colillas y SUGEF sí tiene capacidad de pago",
+    pendientes: "Constancia y SICERE del cliente.",
+    terminada: true, estadoCasa: "Casa terminada"
   },
   // WILLEM
   {
     lote: "M.05", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
-    cliente: "Silvia Salazar Sanchez", montoCasa: 91000000, loteAD: 6561241, loteQFI: 9263255.4,
-    fecha: "2026-03-19", banco: "BN", formalizador: "Willem",
-    traspaso: true, permisos: true, capacidad: "Pagar y cerrar Promerica ¢8MM",
+    cliente: "Silvia Salazar Sanchez", montoCasa: 91000000, montoLote: 6561241, montoLoteQFI: 9263255.4,
+    fecha: "2026-03-19", banco: "BN", formalizador: "Willem", vendedor: "Marco",
+    traspaso: true, permisos: true, capacidad: "Pagar y cerrar Promerica ¢8.000.000",
     pendientes: "Finalizado ✅",
-    terminada: true, estadoCasa: "Casa Terminada"
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
     lote: "L.32", modelo: "Zante A 4D 2.5B WC (PA)", modeloBase: "Zante",
-    cliente: "Mario Alexander Mena Barboza", montoCasa: 22000000, loteAD: 10839195, loteQFI: 7896483,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
-    traspaso: true, permisos: true, capacidad: "Puede variar según banco",
-    pendientes: "Cliente no se decide de banco, no ha firmado contratos para avalúo.",
+    cliente: "Mario Alexander Mena Barboza", montoCasa: 22000000, montoLote: 10839195, montoLoteQFI: 7896483,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: true, permisos: true, capacidad: "Puede variar dependiendo banco",
+    pendientes: "Esperar que cliente se decida de banco, no ha querido firmar contratos para pedir avalúo. Hoy ya salió permiso, vamos a pedir presupuesto.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.13", modelo: "Zante T 2D 3.5B WC OF", modeloBase: "Zante",
-    cliente: "Cristian Hidalgo Avila", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-04-10", banco: "BN", formalizador: "Willem",
+    cliente: "Cristian Hidalgo Avila", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-04-10", banco: "BN", formalizador: "Willem", vendedor: "Hannia",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Contrato laboral indefinido plazo, disponible a partir del 1 abril.",
+    pendientes: "Contrato laboral indefinido plazo, se lo dan hasta 1 abril.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "M.16", modelo: "Stellita A 2D 1.5B WC", modeloBase: "Stellita",
-    cliente: "Daniel Quiros Soto", montoCasa: 14000000, loteAD: 8605988, loteQFI: 6836407.2,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Willem",
+    cliente: "Daniel Quiros Soto", montoCasa: 14000000, montoLote: 8605988, montoLoteQFI: 6836407.2,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Olman",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Avalúo pendiente por cambio de modelo, en cambio de láminas.",
+    pendientes: "Avalúo pendiente (cambio modelo), hoy en cambio de láminas, espero miércoles ya poder pedir avalúo.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "L.31", modelo: "Stella A", modeloBase: "Stella",
-    cliente: "Elizabeth Cano", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem",
+    cliente: "Elizabeth Cano", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem", vendedor: "Mery",
     traspaso: true, permisos: false, capacidad: "✅",
-    pendientes: "Permisos en CFIA, esperando tasas Expo.",
+    pendientes: "Permisos en CFIA, cliente esperando tasas Expo.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.19", modelo: "Stella A", modeloBase: "Stella",
-    cliente: "Valeria Acosta", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-03-31", banco: "BN", formalizador: "Willem",
-    traspaso: false, permisos: false, capacidad: "En evaluación - renunció, nuevo empleo 16 marzo",
-    pendientes: "Traspaso pendiente, permisos por tramitar, espera información laboral.",
+    cliente: "Valeria Acosta", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-31", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: false, permisos: false, capacidad: "Clienta acaba de renunciar al trabajo, entra al nuevo el 16 de este mes. Gana ¢1.400.000 brutos, tiene deuda ¢120.000, se le vendió casa de ¢92.000.000, se ve ajustado. Esperar información para confirmar.",
+    pendientes: "Traspaso hoy se solicita, permisos por tramitar, espera información laboral.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   // LUIS CARLOS
   {
     lote: "L.33", modelo: "Tebas T 3D 2D (17)", modeloBase: "Tebas",
-    cliente: "Marcelly Alvarado Chaves", montoCasa: 14000000, loteAD: 8839195, loteQFI: 7896483,
-    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos",
+    cliente: "Marcelly Alvarado Chaves", montoCasa: 14000000, montoLote: 8839195, montoLoteQFI: 7896483,
+    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos", vendedor: "Randall",
     traspaso: true, permisos: true, capacidad: "✅ Positiva",
     pendientes: "No hay pendientes.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "K.18", modelo: "Ikaria T 2D 2B", modeloBase: "Ikaria",
-    cliente: "Rafael Antonio Porras Castro", montoCasa: 14000000, loteAD: 6926156, loteQFI: 7844306.4,
-    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos",
+    cliente: "Rafael Antonio Porras Castro", montoCasa: 14000000, montoLote: 6926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos", vendedor: "Xinia",
     traspaso: true, permisos: true, capacidad: "✅ Positiva BN",
     pendientes: "Valores de avalúo pendientes.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.30", modelo: "Stella T 2D 2.5B WC L", modeloBase: "Stella",
-    cliente: "Isabel Jara Marín", montoCasa: 22000000, loteAD: 9560335, loteQFI: 7463799,
-    fecha: "2026-03-21", banco: "BN", formalizador: "Luis Carlos",
+    cliente: "Isabel Jara Marín", montoCasa: 22000000, montoLote: 9560335, montoLoteQFI: 7463799,
+    fecha: "2026-03-21", banco: "BN", formalizador: "Luis Carlos", vendedor: "Hannia",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Contratos, formularios. Quiere esperar Expo.",
+    pendientes: "Contratos, formularios. Cliente BN, suegra de Joser (perito asignado del BN), quiere esperar Expo.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.36", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
-    cliente: "Geiner Ulises Naranjo Romero", montoCasa: 20000000, loteAD: 9019480, loteQFI: 7788312,
-    fecha: "2026-03-27", banco: "BCR/Mucap", formalizador: "Luis Carlos",
+    cliente: "Geiner Ulises Naranjo Romero", montoCasa: 20000000, montoLote: 9019480, montoLoteQFI: 7788312,
+    fecha: "2026-03-27", banco: "BCR/Mucap", formalizador: "Luis Carlos", vendedor: "Randall",
     traspaso: true, permisos: true, capacidad: "Positiva",
-    pendientes: "Actualizar información, contratos, formularios. Quiere esperar Expo.",
+    pendientes: "Actualizar información, contratos, formularios. Cliente quiere esperar Expo.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "L.01", modelo: "Stella A 3D 3.5B WC (PA)", modeloBase: "Stella",
-    cliente: "Juan Daniel Arias Pérez", montoCasa: 22000000, loteAD: 9226277.5, loteQFI: 7664233.5,
-    fecha: "2026-04-14", banco: "BN/BCR/BP", formalizador: "Luis Carlos",
-    traspaso: false, permisos: false, capacidad: "Debe aumentar salario y reportar CCSS",
+    cliente: "Juan Daniel Arias Pérez", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-04-14", banco: "BN/BCR/BP", formalizador: "Luis Carlos", vendedor: "Daniela",
+    traspaso: false, permisos: false, capacidad: "Trabaja para empresa del papá, debe aumentar salario y reportar a la CCSS",
     pendientes: "Sin folios ni catastros. Constancia, contratos, formularios.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "I.39", modelo: "Santorini T", modeloBase: "Santorini",
-    cliente: "Lohr Campbell Arguello", montoCasa: 24000000, loteAD: 8563362, loteQFI: 9261982.8,
-    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos",
-    traspaso: true, permisos: true, capacidad: "No realizada",
+    cliente: "Lohr Campbell Arguello", montoCasa: 24000000, montoLote: 8563362, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "No se ha realizado",
     pendientes: "Recopilando información.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
+  },
+  {
+    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, montoLote: 9563362, montoLoteQFI: 7964233.5,
+    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: false, capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   // ESTEBAN
   {
     lote: "K.05", modelo: "Santorini A", modeloBase: "Santorini",
-    cliente: "Joaquin Marin", montoCasa: 22000000, loteAD: 8618508, loteQFI: 9228895.2,
-    fecha: "2026-03-12", banco: "Promerica", formalizador: "Esteban",
+    cliente: "Joaquin Marin", montoCasa: 22000000, montoLote: 8618508, montoLoteQFI: 9228895.2,
+    fecha: "2026-03-12", banco: "Promerica", formalizador: "Esteban", vendedor: "Randall",
     traspaso: true, permisos: true, capacidad: "✅",
-    pendientes: "Caso en aprobación, avalúo pendiente, opción de compra en dólares.",
+    pendientes: "Caso en aprobación, avalúo pendiente, contra avalúo se pasa opción de compra, para cuadrar el número, en dólares.",
     terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
     lote: "1-01 Barani", modelo: "Santorini A", modeloBase: "Santorini",
-    cliente: "Jose Arturo Campos", montoCasa: 105000000, loteAD: 0, loteQFI: 11430493.2,
-    fecha: "2026-04-08", banco: "Mucap", formalizador: "Esteban",
+    cliente: "Jose Arturo Campos", montoCasa: 105000000, montoLote: 0, montoLoteQFI: 11430493.2,
+    fecha: "2026-04-08", banco: "Mucap", formalizador: "Esteban", vendedor: "Hannia",
     traspaso: false, permisos: false, capacidad: "✅",
-    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, opción de compra en dólares.",
-    terminada: true, estadoCasa: "Casa Terminada"
-  },
-  // JOSE NAVARRO
-  {
-    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
-    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, loteAD: 9563362, loteQFI: 7964233.5,
-    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos",
-    traspaso: true, permisos: false, capacidad: "Espera información del cliente",
-    pendientes: "Caso con Mucap, estados de cuenta pendientes, CPA y carta de referencia.",
-    terminada: false, estadoCasa: "Sin reunion de inicio"
+    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dólares, el precio real que se vendió es el que dice la adenda en el file, ya que tiene extras.",
+    terminada: true, estadoCasa: "Casa terminada"
   }
 ];
 
 // Helpers
 let selectedMonth = 3; // Default: March
-const CLAVE_MODIFICACION = "Adelante2025";
 
-function saveToLocal() {
-  localStorage.setItem('cdv_data_v2', JSON.stringify(casas));
-}
-
-function loadFromLocal() {
-  const saved = localStorage.getItem('cdv_data_v2');
-  if (saved) {
-    try {
-      const savedData = JSON.parse(saved);
-      savedData.forEach(s => {
-        const idx = casas.findIndex(c => c.lote === s.lote);
-        if (idx !== -1) casas[idx] = s;
-      });
-    } catch(e) {}
-  }
-}
-
-function updateEstadoCasa(lote, estado) {
-  const c = casas.find(x => x.lote === lote);
-  if (!c) return;
-
-  const clave = prompt("Ingrese la clave para cambiar el estado:");
-  if (clave !== CLAVE_MODIFICACION) {
-    alert("Clave incorrecta.");
-    renderAll();
-    return;
-  }
-
-  c.estadoCasa = estado;
-  c.terminada = (estado === "Casa Terminada");
-  saveToLocal();
-  applyFilters();
-}
-
-function renderEstadoSelect(c) {
-  const options = ["Sin reunion de inicio", "Reunion de inicio", "Casa iniciada", "Casa Terminada"];
-  const current = c.estadoCasa || "Sin reunion de inicio";
-  return `
-    <select class="filter-select" style="width:auto;font-size:11px;padding:4px 20px 4px 8px" onchange="updateEstadoCasa('${c.lote}', this.value)">
-      ${options.map(o => `<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('')}
-    </select>
-  `;
+function fmt(n) {
+  return '₡' + n.toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 function getMonthName(m) {
@@ -1361,6 +1443,7 @@ function populateFilters() {
   const formalizadores = [...new Set(casas.map(c => c.formalizador))].sort();
   const bancos = [...new Set(casas.map(c => c.banco))].sort();
   const modelos = [...new Set(casas.map(c => c.modeloBase))].sort();
+  const vendedores = [...new Set(casas.map(c => c.vendedor))].sort();
 
   const fF = document.getElementById('filterFormalizador');
   formalizadores.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; fF.appendChild(o); });
@@ -1370,6 +1453,9 @@ function populateFilters() {
 
   const fM = document.getElementById('filterModelo');
   modelos.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; fM.appendChild(o); });
+
+  const fV = document.getElementById('filterVendedor');
+  vendedores.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; fV.appendChild(o); });
 }
 
 function applyFilters() {
@@ -1377,6 +1463,8 @@ function applyFilters() {
   const s = document.getElementById('filterSemana').value;
   const b = document.getElementById('filterBanco').value;
   const m = document.getElementById('filterModelo').value;
+  const v = document.getElementById('filterVendedor').value;
+  const e = document.getElementById('filterEstado').value;
 
   filteredData = casas.filter(c => {
     // Month filter (always active)
@@ -1385,6 +1473,8 @@ function applyFilters() {
     if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
     if (b && c.banco !== b) return false;
     if (m && c.modeloBase !== m) return false;
+    if (v && c.vendedor !== v) return false;
+    if (e && c.estadoCasa !== e) return false;
     return true;
   });
 
@@ -1396,6 +1486,8 @@ function clearFilters() {
   document.getElementById('filterSemana').value = '';
   document.getElementById('filterBanco').value = '';
   document.getElementById('filterModelo').value = '';
+  document.getElementById('filterVendedor').value = '';
+  document.getElementById('filterEstado').value = '';
   applyFilters();
 }
 
@@ -1412,8 +1504,8 @@ function renderKPIs() {
   const total = filteredData.length;
   const terminadas = filteredData.filter(c => c.terminada).length;
   const totalDesembolso = filteredData.reduce((s, c) => s + c.montoCasa, 0);
-  const totalLotesAD = filteredData.reduce((s, c) => s + (c.loteAD || 0), 0);
-  const totalLotesQFI = filteredData.reduce((s, c) => s + (c.loteQFI || 0), 0);
+  const totalLotesAD = filteredData.reduce((s, c) => s + c.montoLote, 0);
+  const totalLotesQFI = filteredData.reduce((s, c) => s + c.montoLoteQFI, 0);
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi-card">
@@ -1422,12 +1514,12 @@ function renderKPIs() {
       <div class="kpi-card-sub">${terminadas} terminadas</div>
     </div>
     <div class="kpi-card kpi-highlight">
-      <div class="kpi-card-label">Ingreso: Casas + Lotes AD</div>
+      <div class="kpi-card-label">Casas + Lotes AD</div>
       <div class="kpi-card-value">${fmt(totalDesembolso + totalLotesAD)}</div>
-      <div class="kpi-card-sub">Desembolso acumulado</div>
+      <div class="kpi-card-sub">Casas: ${fmt(totalDesembolso)} · Lotes AD: ${fmt(totalLotesAD)}</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-card-label">Ingreso: Lotes QFI</div>
+      <div class="kpi-card-label">Total Lotes QFI</div>
       <div class="kpi-card-value">${fmt(totalLotesQFI)}</div>
       <div class="kpi-card-sub">Monto acumulado</div>
     </div>
@@ -1449,54 +1541,155 @@ function renderKPIs() {
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalDesembolso + totalLotesAD)}</div>
-      <div class="header-stat-label">Ingreso: Casas + Lotes AD</div>
+      <div class="header-stat-label">Casas + Lotes AD</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalLotesQFI)}</div>
-      <div class="header-stat-label">Ingreso: Lotes QFI</div>
+      <div class="header-stat-label">Lotes QFI</div>
     </div>
   `;
+}
+
+// PASSWORD for fecha editing
+const EDIT_PASSWORD = 'Adelante2025';
+let isAuthenticated = false;
+
+// PERSISTENCE - Save/Load edits from localStorage
+const STORAGE_KEY = 'cdv_formalizacion_edits';
+
+function loadEdits() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+    const edits = JSON.parse(saved);
+    // Apply saved edits to casas array
+    edits.forEach(edit => {
+      const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
+      if (casa) {
+        if (edit.fecha) casa.fecha = edit.fecha;
+        if (edit.estadoCasa) {
+          casa.estadoCasa = edit.estadoCasa;
+          casa.terminada = (edit.estadoCasa === 'Casa terminada');
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('Error cargando edits:', e);
+  }
+}
+
+function saveEdits() {
+  try {
+    // Build edits array with only modified fields
+    const edits = casas.map(c => ({
+      lote: c.lote,
+      cliente: c.cliente,
+      fecha: c.fecha,
+      estadoCasa: c.estadoCasa
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+  } catch (e) {
+    console.warn('Error guardando edits:', e);
+  }
+}
+
+function promptPassword(callback) {
+  if (isAuthenticated) { callback(); return; }
+  const pw = prompt('Ingrese la clave para modificar:');
+  if (pw === EDIT_PASSWORD) {
+    isAuthenticated = true;
+    callback();
+  } else if (pw !== null) {
+    alert('Clave incorrecta.');
+  }
+}
+
+function editFecha(index) {
+  promptPassword(() => {
+    const casa = casas[index];
+    const newFecha = prompt(`Fecha actual: ${casa.fecha}\nIngrese nueva fecha (YYYY-MM-DD):`, casa.fecha);
+    if (newFecha && /^\d{4}-\d{2}-\d{2}$/.test(newFecha)) {
+      casas[index].fecha = newFecha;
+      saveEdits();
+      applyFilters();
+    } else if (newFecha !== null) {
+      alert('Formato inválido. Use YYYY-MM-DD (ej: 2026-03-25)');
+    }
+  });
+}
+
+function changeEstadoCasa(index) {
+  promptPassword(() => {
+    const casa = casas[index];
+    const estados = ['Sin reunion de inicio', 'Reunion de inicio', 'Casa iniciada', 'Casa terminada'];
+    const currentIdx = estados.indexOf(casa.estadoCasa);
+    const nextIdx = (currentIdx + 1) % estados.length;
+    casas[index].estadoCasa = estados[nextIdx];
+    // Sync terminada flag with estado
+    casas[index].terminada = (estados[nextIdx] === 'Casa terminada');
+    saveEdits();
+    applyFilters();
+  });
+}
+
+function getEstadoBadge(estado) {
+  if (estado === 'Casa terminada') return '<span class="terminada-badge">✓ TERMINADA</span>';
+  if (estado === 'Casa iniciada') return '<span class="status-pill pill-green">🏗️ Casa iniciada</span>';
+  if (estado === 'Reunion de inicio') return '<span class="status-pill pill-yellow">📋 Reunión de inicio</span>';
+  return '<span class="status-pill" style="background:#F3F4F6;color:#6B7280">⏳ Sin reunión de inicio</span>';
+}
+
+function desembolsoBlock(c, compact) {
+  const cls = compact ? 'desembolso-compact' : 'desembolso-block';
+  return `
+    <div class="${cls}">
+      <div class="desembolso-row desembolso-casa">
+        <span class="desembolso-label">Casa</span>
+        <span class="desembolso-amount">${fmt(c.montoCasa)}</span>
+      </div>
+      <div class="desembolso-row desembolso-ad">
+        <span class="desembolso-label">Lote AD</span>
+        <span class="desembolso-amount">${fmt(c.montoLote)}</span>
+      </div>
+      <div class="desembolso-row desembolso-qfi">
+        <span class="desembolso-label">Lote QFI</span>
+        <span class="desembolso-amount">${fmt(c.montoLoteQFI)}</span>
+      </div>
+      <div class="desembolso-total">
+        <div class="desembolso-total-row"><span>Casa + AD</span><strong>${fmt(c.montoCasa + c.montoLote)}</strong></div>
+      </div>
+    </div>`;
 }
 
 // TABLE VIEW
 function renderTable() {
   const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  let rows = sorted.map(c => `
+  let rows = sorted.map(c => {
+    const idx = casas.indexOf(c);
+    return `
     <tr class="${c.terminada ? 'casa-terminada' : ''}">
       <td data-label="Lote"><span class="lote-badge">${c.lote}</span>${c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : ''}</td>
       <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
       <td data-label="Cliente"><strong>${c.cliente}</strong></td>
-      <td data-label="💰 Ingresos">
-        <div style="margin-bottom:8px">
-          <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase;font-weight:600">Total Casa + Lote AD</div>
-          <div class="monto-highlight" style="font-size:15px;background:linear-gradient(135deg, #2D2014 0%, #4A3728 100%);color:#FCD34D;border:none">${fmt(c.montoCasa + (c.loteAD || 0))}</div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>
-            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Casa</div>
-            <div style="font-size:12px;font-weight:600">${fmt(c.montoCasa)}</div>
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Lote AD</div>
-            <div style="font-size:12px;font-weight:600">${fmt(c.loteAD || 0)}</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light)">
-          <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Lote QFI</div>
-          <div class="monto-highlight" style="background:var(--bg-tertiary);color:var(--text-primary);border-color:var(--border)">${fmt(c.loteQFI || 0)}</div>
-        </div>
+      <td data-label="💰 Desembolso">
+        ${desembolsoBlock(c, false)}
       </td>
-      <td data-label="Fecha Est.">${formatDate(c.fecha)}</td>
+      <td data-label="Fecha Est.">
+        <span style="cursor:pointer;text-decoration:underline dotted;color:var(--claude-dark)" onclick="editFecha(${idx})" title="Click para editar">${formatDate(c.fecha)}</span>
+      </td>
       <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
-      <td data-label="Estado">${renderEstadoSelect(c)}</td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
+      <td data-label="Vendedor"><span style="font-size:12px;font-weight:500;color:var(--text-primary)">${c.vendedor}</span></td>
       <td data-label="Traspaso / Permisos">
         ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
         ${c.permisos ? '<span class="status-check"> ✅</span>' : '<span class="status-pending"> ⏳</span>'}
       </td>
+      <td data-label="Estado Casa">
+        <span style="cursor:pointer" onclick="changeEstadoCasa(${idx})" title="Click para cambiar estado">${getEstadoBadge(c.estadoCasa)}</span>
+      </td>
       <td data-label="Pendientes"><div class="pendientes-text">${c.pendientes}</div></td>
     </tr>
-  `).join('');
+  `;}).join('');
 
   document.getElementById('viewTabla').innerHTML = `
     <div class="table-container">
@@ -1511,12 +1704,13 @@ function renderTable() {
               <th>Lote</th>
               <th>Modelo</th>
               <th>Cliente</th>
-              <th>💰 Ingresos</th>
+              <th>💰 Desembolso</th>
               <th>Fecha Est.</th>
               <th>Banco</th>
-              <th>Estado</th>
               <th>Formalizador</th>
+              <th>Vendedor</th>
               <th>Trasp. / Perm.</th>
+              <th>Estado Casa</th>
               <th>Pendientes</th>
             </tr>
           </thead>
@@ -1540,16 +1734,15 @@ function renderFlow() {
   let html = '<div class="flow-grid">';
   for (const [wk, items] of Object.entries(weeks)) {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalLoteAD = items.reduce((s, c) => s + (c.loteAD || 0), 0);
-    const totalLoteQFI = items.reduce((s, c) => s + (c.loteQFI || 0), 0);
-    const totalGlobal = totalCasa + totalLoteAD;
+    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
 
     html += `
       <div class="flow-week">
         <div class="flow-week-header">
           <div>
             <div class="flow-week-title">📅 ${wk}</div>
-            <div class="kanban-col-total">Semana (Casa + Lote AD): ${fmt(totalGlobal)}</div>
+            <div class="kanban-col-total">Casas + Lotes AD: ${fmt(totalCasa + totalLoteAD)}</div>
           </div>
           <div class="flow-week-totals">
             <div class="flow-total-item">Casas: <strong>${fmt(totalCasa)}</strong></div>
@@ -1574,10 +1767,7 @@ function renderFlow() {
             <div class="flow-info-modelo">${c.modelo} · <span class="bank-tag">${c.banco}</span> · <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="display:inline;padding:2px 6px">${c.formalizador}</span></div>
           </div>
           <div class="flow-monto">
-            <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase">Total Casa + Lote AD</div>
-            <div class="monto-highlight" style="background:#2D2014;color:#FCD34D;border:none;margin-bottom:4px">${fmt(c.montoCasa + (c.loteAD || 0))}</div>
-            <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Lote QFI</div>
-            <div style="font-size:12px;font-weight:600">${fmt(c.loteQFI || 0)}</div>
+            ${desembolsoBlock(c, true)}
           </div>
         </div>
       `;
@@ -1588,16 +1778,16 @@ function renderFlow() {
 
   // Grand totals
   const grandCasa = filteredData.reduce((s, c) => s + c.montoCasa, 0);
-  const grandLoteAD = filteredData.reduce((s, c) => s + (c.loteAD || 0), 0);
-  const grandLoteQFI = filteredData.reduce((s, c) => s + (c.loteQFI || 0), 0);
+  const grandLoteAD = filteredData.reduce((s, c) => s + c.montoLote, 0);
+  const grandLoteQFI = filteredData.reduce((s, c) => s + c.montoLoteQFI, 0);
   html += `
     <div style="background:linear-gradient(135deg,#2D2014,#4A3728);border-radius:var(--radius-md);padding:20px 24px;color:#F5E6D3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
       <div style="font-size:16px;font-weight:700">📊 Totales Generales</div>
       <div style="display:flex;gap:24px;flex-wrap:wrap">
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Total Casas</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa)}</div></div>
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Total Lotes AD</div><div style="font-size:22px;font-weight:700">${fmt(grandLoteAD)}</div></div>
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Total Lotes QFI</div><div style="font-size:22px;font-weight:700">${fmt(grandLoteQFI)}</div></div>
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Gran Total (Casa + Lote AD)</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa + grandLoteAD)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Casas</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Lotes AD</div><div style="font-size:22px;font-weight:700">${fmt(grandLoteAD)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Casas + Lotes AD</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa + grandLoteAD)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Lotes QFI</div><div style="font-size:22px;font-weight:700;color:#A5B4FC">${fmt(grandLoteQFI)}</div></div>
       </div>
     </div>
   `;
@@ -1618,13 +1808,15 @@ function renderKanban() {
   let html = '<div class="kanban-container">';
   for (const [wk, items] of Object.entries(weeks)) {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalLoteAD = items.reduce((s, c) => s + (c.loteAD || 0), 0);
+    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
     html += `
       <div class="kanban-column">
         <div class="kanban-col-header">
           <div>
             <div class="kanban-col-title">${wk}</div>
-            <div class="kanban-col-total" title="Casa + Lote AD">${fmt(totalCasa + totalLoteAD)}</div>
+            <div class="kanban-col-total">Casas+AD: ${fmt(totalCasa + totalLoteAD)}</div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:2px">QFI: ${fmt(totalLoteQFI)}</div>
           </div>
           <span class="kanban-col-count">${items.length}</span>
         </div>
@@ -1638,11 +1830,11 @@ function renderKanban() {
             <span class="kanban-card-banco">${c.banco}</span>
           </div>
           <div class="kanban-card-client">${c.cliente}</div>
-          <div class="kanban-card-monto" style="font-size:15px;color:var(--text-primary)">${fmt(c.montoCasa + (c.loteAD || 0))}</div>
-          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:4px">Total Casa + Lote AD</div>
+          <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
           <div class="kanban-card-modelo">${c.modeloBase}</div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
             <span class="kanban-card-form ${getFormClass(c.formalizador)}">${c.formalizador}</span>
+            <span style="font-size:10px;color:var(--text-secondary)">🏷️ ${c.vendedor}</span>
             ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
           </div>
         </div>
@@ -1665,7 +1857,8 @@ function renderFormalizador() {
   let html = '<div class="form-grid">';
   for (const [name, items] of Object.entries(groups)) {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalLoteAD = items.reduce((s, c) => s + (c.loteAD || 0), 0);
+    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
     const terminadas = items.filter(c => c.terminada).length;
 
     html += `
@@ -1675,7 +1868,8 @@ function renderFormalizador() {
           <div class="form-section-stats">
             <span>${items.length} casos</span>
             <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
-            <span style="color:var(--claude-dark);font-weight:700" title="Casa + Lote AD">${fmt(totalCasa + totalLoteAD)}</span>
+            <span style="color:var(--claude-dark);font-weight:700">Casas+AD: ${fmt(totalCasa + totalLoteAD)}</span>
+            <span style="color:#3730A3;font-weight:600">QFI: ${fmt(totalLoteQFI)}</span>
           </div>
         </div>
         <div class="form-section-body">
@@ -1687,31 +1881,15 @@ function renderFormalizador() {
         <div class="form-case ${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
             <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
-            <div style="text-align:right">
-               <div style="font-size:10px;color:var(--text-tertiary);text-transform:uppercase">Total Casa + Lote AD</div>
-               <div class="monto-highlight" style="background:#2D2014;color:#FCD34D;border:none">${fmt(c.montoCasa + (c.loteAD || 0))}</div>
-            </div>
           </div>
           <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
-          <div class="form-case-row">
+          <div style="margin-top:8px">${desembolsoBlock(c, true)}</div>
+          <div class="form-case-row" style="margin-top:8px">
             <span class="bank-tag">${c.banco}</span>
             <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
+            <span style="font-size:11px;font-weight:500;color:var(--text-secondary)">🏷️ ${c.vendedor}</span>
             <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
             <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
-          </div>
-          <div class="form-case-row" style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)">
-            <div style="flex:1">
-               <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Casa</div>
-               <div style="font-size:12px;font-weight:600">${fmt(c.montoCasa)}</div>
-            </div>
-            <div style="flex:1">
-               <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Lote AD</div>
-               <div style="font-size:12px;font-weight:600">${fmt(c.loteAD || 0)}</div>
-            </div>
-            <div style="flex:1">
-               <div style="font-size:9px;color:var(--text-tertiary);text-transform:uppercase">Lote QFI</div>
-               <div class="monto-highlight" style="background:var(--bg-tertiary);color:var(--text-primary);border-color:var(--border);font-size:12px;padding:2px 6px">${fmt(c.loteQFI || 0)}</div>
-            </div>
           </div>
           <div class="form-case-pendientes">📌 ${c.pendientes}</div>
         </div>
@@ -1724,13 +1902,81 @@ function renderFormalizador() {
   document.getElementById('viewFormalizador').innerHTML = html;
 }
 
+// VENDEDOR VIEW
+function renderVendedor() {
+  const groups = {};
+  filteredData.forEach(c => {
+    if (!groups[c.vendedor]) groups[c.vendedor] = [];
+    groups[c.vendedor].push(c);
+  });
+
+  const vendedorColors = {
+    'Olman': 'background:#DBEAFE;color:#1E40AF',
+    'Irving': 'background:#FDE7F3;color:#9D174D',
+    'Hannia': 'background:#D1FAE5;color:#065F46',
+    'Randall': 'background:#FEF3C7;color:#92400E',
+    'Xinia': 'background:#E0E7FF;color:#3730A3',
+    'Daniela': 'background:#FCE7F3;color:#BE185D',
+    'Mery': 'background:#FEE2E2;color:#991B1B',
+    'Marco': 'background:#CCFBF1;color:#115E59'
+  };
+
+  let html = '<div class="form-grid">';
+  for (const [name, items] of Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
+    const terminadas = items.filter(c => c.terminada).length;
+    const colorStyle = vendedorColors[name] || 'background:#F3F4F6;color:#374151';
+
+    html += `
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="formalizador-tag" style="font-size:16px;padding:6px 14px;${colorStyle}">${name}</span>
+          <div class="form-section-stats">
+            <span>${items.length} casos</span>
+            <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
+            <span style="color:var(--claude-dark);font-weight:700">Casas+AD: ${fmt(totalCasa + totalLoteAD)}</span>
+            <span style="color:#3730A3;font-weight:600">QFI: ${fmt(totalLoteQFI)}</span>
+          </div>
+        </div>
+        <div class="form-section-body">
+    `;
+
+    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    items.forEach(c => {
+      html += `
+        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+          <div class="form-case-header">
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+          </div>
+          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
+          <div style="margin-top:8px">${desembolsoBlock(c, true)}</div>
+          <div class="form-case-row" style="margin-top:8px">
+            <span class="bank-tag">${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
+            <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="font-size:11px;padding:2px 8px">${c.formalizador}</span>
+            <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+          </div>
+          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+        </div>
+      `;
+    });
+
+    html += '</div></div>';
+  }
+  html += '</div>';
+  document.getElementById('viewVendedor').innerHTML = html;
+}
+
 function renderAll() {
-  loadFromLocal();
   renderKPIs();
   renderTable();
   renderFlow();
   renderKanban();
   renderFormalizador();
+  renderVendedor();
 }
 
 // EXPORT TO EXCEL
@@ -1744,14 +1990,16 @@ function exportToExcel() {
     'Modelo Base': c.modeloBase,
     'Cliente': c.cliente,
     'Desembolso Casa (₡)': c.montoCasa,
-    'Desembolso Lote AD (₡)': c.loteAD,
-    'Desembolso Lote QFI (₡)': c.loteQFI,
-    'Desembolso Total (Casa + Lote AD) (₡)': c.montoCasa + (c.loteAD || 0),
+    'Desembolso Lote AD (₡)': c.montoLote,
+    'Desembolso Lote QFI (₡)': c.montoLoteQFI,
+    'Desembolso Total (₡)': c.montoCasa + c.montoLote + c.montoLoteQFI,
     'Fecha Estimada': c.fecha,
     'Banco': c.banco,
     'Formalizador': c.formalizador,
+    'Vendedor': c.vendedor,
     'Traspaso': c.traspaso ? '✅' : '⏳ Pendiente',
     'Permisos': c.permisos ? '✅' : '⏳ Pendiente',
+    'Estado Casa': c.estadoCasa,
     'Capacidad de Pago': c.capacidad,
     'Pendientes': c.pendientes,
     'Casa Terminada': c.terminada ? '✅ TERMINADA' : 'En proceso'
@@ -1762,9 +2010,9 @@ function exportToExcel() {
   // Column widths
   ws1['!cols'] = [
     { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 32 },
-    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 14 },
-    { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
-    { wch: 40 }, { wch: 50 }, { wch: 16 }
+    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 14 },
+    { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
+    { wch: 22 }, { wch: 40 }, { wch: 50 }, { wch: 16 }
   ];
   XLSX.utils.book_append_sheet(wb, ws1, 'Tabla General');
 
@@ -1782,10 +2030,9 @@ function exportToExcel() {
 
   for (const [wk, items] of Object.entries(weeks)) {
     const weekTotalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const weekTotalLoteAD = items.reduce((s, c) => s + (c.loteAD || 0), 0);
-    const weekTotalLoteQFI = items.reduce((s, c) => s + (c.loteQFI || 0), 0);
+    const weekTotalLote = items.reduce((s, c) => s + c.montoLote, 0);
     grandTotalCasa += weekTotalCasa;
-    grandTotalLote += weekTotalLoteAD;
+    grandTotalLote += weekTotalLote;
 
     items.forEach(c => {
       flowRows.push({
@@ -1796,10 +2043,10 @@ function exportToExcel() {
         'Modelo': c.modeloBase,
         'Banco': c.banco,
         'Formalizador': c.formalizador,
+        'Vendedor': c.vendedor,
         'Desembolso Casa (₡)': c.montoCasa,
-        'Desembolso Lote AD (₡)': c.loteAD,
-        'Desembolso Lote QFI (₡)': c.loteQFI,
-        'Total (Casa + Lote AD) (₡)': c.montoCasa + (c.loteAD || 0),
+        'Desembolso Lote AD (₡)': c.montoLote,
+        'Desembolso Lote QFI (₡)': c.montoLoteQFI,
         'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
       });
     });
@@ -1814,9 +2061,8 @@ function exportToExcel() {
       'Banco': '',
       'Formalizador': `${items.length} casos`,
       'Desembolso Casa (₡)': weekTotalCasa,
-      'Desembolso Lote AD (₡)': weekTotalLoteAD,
-      'Desembolso Lote QFI (₡)': weekTotalLoteQFI,
-      'Total (Casa + Lote AD) (₡)': weekTotalCasa + weekTotalLoteAD,
+      'Desembolso Lote (₡)': weekTotalLote,
+      'Total (₡)': weekTotalCasa + weekTotalLote,
       'Casa Terminada': ''
     });
 
@@ -1834,8 +2080,8 @@ function exportToExcel() {
     'Banco': '',
     'Formalizador': `${filteredData.length} casos`,
     'Desembolso Casa (₡)': grandTotalCasa,
-    'Desembolso Lote AD (₡)': grandTotalLote,
-    'Total (Casa + Lote AD) (₡)': grandTotalCasa + grandTotalLote,
+    'Desembolso Lote (₡)': grandTotalLote,
+    'Total (₡)': grandTotalCasa + grandTotalLote,
     'Casa Terminada': ''
   });
 
@@ -1843,7 +2089,7 @@ function exportToExcel() {
   ws2['!cols'] = [
     { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 32 },
     { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 20 },
-    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 16 }
+    { wch: 20 }, { wch: 20 }, { wch: 16 }
   ];
   XLSX.utils.book_append_sheet(wb, ws2, 'Flujo por Semana');
 
@@ -1866,13 +2112,15 @@ function exportToExcel() {
         'Lote': c.lote,
         'Cliente': c.cliente,
         'Modelo': c.modelo,
+        'Vendedor': c.vendedor,
         'Desembolso Casa (₡)': c.montoCasa,
-        'Desembolso Lote AD (₡)': c.loteAD,
-        'Desembolso Lote QFI (₡)': c.loteQFI,
+        'Desembolso Lote AD (₡)': c.montoLote,
+        'Desembolso Lote QFI (₡)': c.montoLoteQFI,
         'Fecha': c.fecha,
         'Banco': c.banco,
         'Traspaso': c.traspaso ? '✅' : '⏳',
         'Permisos': c.permisos ? '✅' : '⏳',
+        'Estado Casa': c.estadoCasa,
         'Capacidad': c.capacidad,
         'Pendientes': c.pendientes,
         'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
@@ -1882,13 +2130,12 @@ function exportToExcel() {
     formRows.push({
       'Formalizador': `TOTAL ${name}`,
       'Lote': `${items.length} casos (${terminadas} term.)`,
-      'Cliente': '',
-      'Modelo': '',
+      'Cliente': '', 'Modelo': '', 'Vendedor': '',
       'Desembolso Casa (₡)': totalCasa,
-      'Desembolso Lote AD (₡)': items.reduce((s, c) => s + (c.loteAD || 0), 0),
-      'Desembolso Lote QFI (₡)': items.reduce((s, c) => s + (c.loteQFI || 0), 0),
+      'Desembolso Lote AD (₡)': items.reduce((s, c) => s + c.montoLote, 0),
+      'Desembolso Lote QFI (₡)': items.reduce((s, c) => s + c.montoLoteQFI, 0),
       'Fecha': '', 'Banco': '', 'Traspaso': '', 'Permisos': '',
-      'Capacidad': '', 'Pendientes': '', 'Casa Terminada': ''
+      'Estado Casa': '', 'Capacidad': '', 'Pendientes': '', 'Casa Terminada': ''
     });
 
     formRows.push({});
@@ -1909,9 +2156,8 @@ function exportToExcel() {
     { 'Métrica': 'Casas en Proceso', 'Valor': filteredData.filter(c => !c.terminada).length },
     { 'Métrica': '% Completado', 'Valor': Math.round(filteredData.filter(c => c.terminada).length / filteredData.length * 100) + '%' },
     { 'Métrica': 'Total Desembolso Casas (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa, 0) },
-    { 'Métrica': 'Total Desembolso Lotes AD (₡)', 'Valor': filteredData.reduce((s, c) => s + (c.loteAD || 0), 0) },
-    { 'Métrica': 'Total Ingresos Lotes QFI (₡)', 'Valor': filteredData.reduce((s, c) => s + (c.loteQFI || 0), 0) },
-    { 'Métrica': 'Total Global (Casa + Lote AD) (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + (c.loteAD || 0), 0) },
+    { 'Métrica': 'Total Desembolso Lotes (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoLote, 0) },
+    { 'Métrica': 'Total Global (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + c.montoLote, 0) },
     { 'Métrica': '', 'Valor': '' },
     { 'Métrica': 'Formalizadores', 'Valor': '' },
   ];
@@ -1932,6 +2178,7 @@ function exportToExcel() {
 }
 
 // Init
+loadEdits(); // Load any saved fecha/estado changes
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
 </script>
