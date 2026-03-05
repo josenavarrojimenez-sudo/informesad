@@ -187,6 +187,32 @@ body {
   border-bottom: 1px solid var(--border-light);
 }
 
+/* Mobile filters toggle (defaults hidden on desktop) */
+.filters-toggle-row {
+  display: none;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.filters-toggle {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--claude-dark);
+  background: var(--accent-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: inherit;
+}
+
+.filters-toggle:hover {
+  border-color: var(--claude-primary);
+  background: #FFF7ED;
+}
+
+
 .filters-inner {
   max-width: 1440px;
   margin: 0 auto;
@@ -833,7 +859,14 @@ tbody td {
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .header { padding: 16px; position: relative; }
+  /* Sticky header + sticky view tabs (mobile only) */
+  .header {
+    padding: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 120;
+  }
+
   .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
   .header-inner > div:last-child { 
     display: flex !important; 
@@ -862,8 +895,9 @@ tbody td {
     padding: 0 8px; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
-    top: auto;
-    position: relative;
+    position: sticky;
+    top: var(--mobile-header-height, 0px);
+    z-index: 119;
   }
   .nav-inner { gap: 0; }
   .nav-tab { 
@@ -872,11 +906,17 @@ tbody td {
     flex-shrink: 0;
   }
 
+  /* Mobile filters: collapsed by default + button to expand */
   .filters-bar { padding: 12px 12px; }
+  .filters-bar.collapsed .filters-inner { display: none; }
+  .filters-toggle-row { display: flex; }
+  .filters-toggle { width: 100%; text-align: center; padding: 10px 14px; }
+
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
     align-items: stretch;
+    margin-top: 10px;
   }
   .filter-label { margin-bottom: -4px; }
   .filter-select { width: 100%; font-size: 14px; padding: 10px 32px 10px 12px; }
@@ -1027,8 +1067,11 @@ tbody td {
   </div>
 </div>
 
-<div class="filters-bar">
-  <div class="filters-inner">
+<div class="filters-bar collapsed" id="filtersBar">
+  <div class="filters-toggle-row">
+    <button class="filters-toggle" id="filtersToggleBtn" type="button" onclick="toggleMobileFilters()">🔎 Filtros</button>
+  </div>
+  <div class="filters-inner" id="filtersInner">
     <span class="filter-label">Filtros:</span>
     <select class="filter-select" id="filterFormalizador" onchange="applyFilters()">
       <option value="">Todos los formalizadores</option>
@@ -1827,6 +1870,48 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
 }
 
+// ===== Mobile UX helpers (filters collapse + sticky offsets) =====
+function isMobile() {
+  return window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+}
+
+function updateMobileStickyOffsets() {
+  if (!isMobile()) return;
+  const header = document.querySelector('.header');
+  if (!header) return;
+  // Used by .nav-bar { top: var(--mobile-header-height) }
+  document.documentElement.style.setProperty('--mobile-header-height', header.offsetHeight + 'px');
+}
+
+function setMobileFiltersCollapsed(collapsed) {
+  const bar = document.getElementById('filtersBar');
+  if (!bar) return;
+  const btn = document.getElementById('filtersToggleBtn');
+
+  if (collapsed) bar.classList.add('collapsed');
+  else bar.classList.remove('collapsed');
+
+  if (btn) btn.textContent = collapsed ? '🔎 Filtros' : '✕ Ocultar filtros';
+}
+
+function toggleMobileFilters() {
+  const bar = document.getElementById('filtersBar');
+  if (!bar) return;
+  const collapsed = bar.classList.contains('collapsed');
+  setMobileFiltersCollapsed(!collapsed);
+  updateMobileStickyOffsets();
+}
+
+window.addEventListener('load', () => {
+  if (isMobile()) setMobileFiltersCollapsed(true);
+  updateMobileStickyOffsets();
+});
+
+window.addEventListener('resize', () => {
+  // Keep sticky offsets correct when rotating / resizing
+  updateMobileStickyOffsets();
+});
+
 // Month switching
 function switchMonth(month) {
   selectedMonth = month;
@@ -2190,6 +2275,8 @@ function renderAll() {
   renderFlow();
   renderKanban();
   renderFormalizador();
+  // Header stats size can change; keep sticky offsets in sync on mobile.
+  updateMobileStickyOffsets();
 }
 
 // EXPORT TO EXCEL
@@ -2388,9 +2475,74 @@ function exportToExcel() {
   XLSX.writeFile(wb, 'Ciudad_del_Valle_Formalizacion.xlsx');
 }
 
+// ===== Mobile helpers (filters + sticky tabs offset) =====
+function isMobile() {
+  return window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+}
+
+function setMobileHeaderHeightVar() {
+  if (!isMobile()) {
+    document.documentElement.style.removeProperty('--mobile-header-height');
+    return;
+  }
+  const header = document.querySelector('.header');
+  if (!header) return;
+  // nav-bar will stick below the header
+  document.documentElement.style.setProperty('--mobile-header-height', header.offsetHeight + 'px');
+}
+
+function toggleMobileFilters(force) {
+  const bar = document.getElementById('filtersBar');
+  const btn = document.getElementById('filtersToggleBtn');
+  if (!bar || !btn) return;
+
+  // Only collapse/expand behavior on mobile
+  if (!isMobile()) {
+    bar.classList.remove('collapsed');
+    btn.textContent = '🔎 Filtros';
+    return;
+  }
+
+  if (force === 'open') bar.classList.remove('collapsed');
+  else if (force === 'close') bar.classList.add('collapsed');
+  else bar.classList.toggle('collapsed');
+
+  const isCollapsed = bar.classList.contains('collapsed');
+  btn.textContent = isCollapsed ? '🔎 Filtros' : '✕ Ocultar filtros';
+
+  try { localStorage.setItem('cdv_filters_collapsed', isCollapsed ? '1' : '0'); } catch (e) {}
+
+  // layout changed → update sticky offset
+  setMobileHeaderHeightVar();
+}
+
+function initMobileUI() {
+  // Default: collapsed on mobile (per requirement)
+  let collapsed = true;
+  try {
+    const saved = localStorage.getItem('cdv_filters_collapsed');
+    if (saved === '0') collapsed = false;
+    if (saved === '1') collapsed = true;
+  } catch (e) {}
+
+  if (isMobile()) {
+    toggleMobileFilters(collapsed ? 'close' : 'open');
+  } else {
+    // Desktop: always expanded
+    toggleMobileFilters('open');
+  }
+
+  setMobileHeaderHeightVar();
+}
+
+window.addEventListener('resize', () => {
+  initMobileUI();
+});
+
 // Init
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
+initMobileUI();
 </script>
 </body>
 </html>
