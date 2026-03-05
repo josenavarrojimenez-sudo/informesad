@@ -1579,15 +1579,24 @@ function loadEdits() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return;
     const edits = JSON.parse(saved);
-    // Apply saved edits to casas array
     edits.forEach(edit => {
       const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
-      if (casa) {
-        if (edit.fecha) casa.fecha = edit.fecha;
-        if (edit.estadoCasa) {
-          casa.estadoCasa = edit.estadoCasa;
-          casa.terminada = (edit.estadoCasa === 'Casa terminada');
-        }
+      if (!casa) return;
+
+      if (edit.fecha) casa.fecha = edit.fecha;
+      if (typeof edit.montoCasa === 'number') casa.montoCasa = edit.montoCasa;
+      if (typeof edit.montoLote === 'number') casa.montoLote = edit.montoLote;
+      if (typeof edit.montoLoteQFI === 'number') casa.montoLoteQFI = edit.montoLoteQFI;
+
+      if (typeof edit.banco === 'string') casa.banco = edit.banco;
+      if (typeof edit.traspaso === 'boolean') casa.traspaso = edit.traspaso;
+      if (typeof edit.permisos === 'boolean') casa.permisos = edit.permisos;
+      if (typeof edit.pendientes === 'string') casa.pendientes = edit.pendientes;
+      if (typeof edit.capacidad === 'string') casa.capacidad = edit.capacidad;
+
+      if (typeof edit.estadoCasa === 'string') {
+        casa.estadoCasa = edit.estadoCasa;
+        casa.terminada = (edit.estadoCasa === 'Casa terminada');
       }
     });
   } catch (e) {
@@ -1597,12 +1606,19 @@ function loadEdits() {
 
 function saveEdits() {
   try {
-    // Build edits array with only modified fields
     const edits = casas.map(c => ({
       lote: c.lote,
       cliente: c.cliente,
       fecha: c.fecha,
-      estadoCasa: c.estadoCasa
+      estadoCasa: c.estadoCasa,
+      montoCasa: c.montoCasa,
+      montoLote: c.montoLote,
+      montoLoteQFI: c.montoLoteQFI,
+      banco: c.banco,
+      traspaso: c.traspaso,
+      permisos: c.permisos,
+      pendientes: c.pendientes,
+      capacidad: c.capacidad
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
   } catch (e) {
@@ -1619,6 +1635,94 @@ function promptPassword(callback) {
   } else if (pw !== null) {
     alert('Clave incorrecta.');
   }
+}
+
+function parseMoneyInput(input, fallback) {
+  if (input === null || input === undefined) return fallback;
+  const s = String(input).replace(/[^0-9.-]/g, '');
+  if (s.trim() === '') return fallback;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function editMontos(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    const casaIn = prompt(`Monto CASA actual: ${fmt(c.montoCasa)}
+Ingrese nuevo monto (solo número):`, c.montoCasa);
+    if (casaIn === null) return;
+    const adIn = prompt(`Monto LOTE AD actual: ${fmt(c.montoLote)}
+Ingrese nuevo monto (solo número):`, c.montoLote);
+    if (adIn === null) return;
+    const qfiIn = prompt(`Monto LOTE QFI actual: ${fmt(c.montoLoteQFI)}
+Ingrese nuevo monto (solo número):`, c.montoLoteQFI);
+    if (qfiIn === null) return;
+
+    c.montoCasa = parseMoneyInput(casaIn, c.montoCasa);
+    c.montoLote = parseMoneyInput(adIn, c.montoLote);
+    c.montoLoteQFI = parseMoneyInput(qfiIn, c.montoLoteQFI);
+
+    saveEdits();
+    applyFilters();
+  });
+}
+
+function editBanco(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    const newBanco = prompt(`Banco actual: ${c.banco}
+Ingrese nuevo banco:`, c.banco);
+    if (newBanco === null) return;
+    const val = newBanco.trim();
+    if (!val) return;
+    c.banco = val;
+    saveEdits();
+    populateBankFilterFresh();
+    applyFilters();
+  });
+}
+
+function toggleTraspaso(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    c.traspaso = !c.traspaso;
+    saveEdits();
+    applyFilters();
+  });
+}
+
+function togglePermisos(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    c.permisos = !c.permisos;
+    saveEdits();
+    applyFilters();
+  });
+}
+
+function editPendientes(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    const newText = prompt('Pendientes (puede pegar texto):', c.pendientes || '');
+    if (newText === null) return;
+    c.pendientes = newText;
+    saveEdits();
+    applyFilters();
+  });
+}
+
+function populateBankFilterFresh() {
+  // rebuild bank filter options in case bank names changed
+  const fB = document.getElementById('filterBanco');
+  if (!fB) return;
+  const current = fB.value;
+  // keep the first option ("Todos los bancos")
+  while (fB.options.length > 1) fB.remove(1);
+  const bancos = [...new Set(casas.map(c => c.banco))].sort();
+  bancos.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; fB.appendChild(o); });
+  // restore selection if still exists
+  const exists = [...fB.options].some(o => o.value === current);
+  fB.value = exists ? current : '';
 }
 
 function editFecha(index) {
@@ -1689,22 +1793,22 @@ function renderTable() {
       <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
       <td data-label="Cliente"><strong>${c.cliente}</strong></td>
       <td data-label="💰 Desembolso">
-        ${desembolsoBlock(c, false)}
+        <div style="cursor:pointer" onclick="editMontos(${idx})" title="Click para editar montos">${desembolsoBlock(c, false)}</div>
       </td>
       <td data-label="Fecha Est.">
         <span style="cursor:pointer;text-decoration:underline dotted;color:var(--claude-dark)" onclick="editFecha(${idx})" title="Click para editar">${formatDate(c.fecha)}</span>
       </td>
-      <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
+      <td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(${idx})" title="Click para editar banco">${c.banco}</span></td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
       <td data-label="Vendedor"><span style="font-size:12px;font-weight:500;color:var(--text-primary)">${c.vendedor}</span></td>
       <td data-label="Traspaso / Permisos">
-        ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
-        ${c.permisos ? '<span class="status-check"> ✅</span>' : '<span class="status-pending"> ⏳</span>'}
+        <span style="cursor:pointer" onclick="toggleTraspaso(${idx})" title="Click para cambiar Traspaso">${c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>'}</span>
+        <span style="margin-left:6px;cursor:pointer" onclick="togglePermisos(${idx})" title="Click para cambiar Permisos">${c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>'}</span>
       </td>
       <td data-label="Estado Casa">
         <span style="cursor:pointer" onclick="changeEstadoCasa(${idx})" title="Click para cambiar estado">${getEstadoBadge(c.estadoCasa)}</span>
       </td>
-      <td data-label="Pendientes"><div class="pendientes-text">${c.pendientes}</div></td>
+      <td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(${idx})" title="Click para editar">${c.pendientes}</div></td>
     </tr>
   `;}).join('');
 
