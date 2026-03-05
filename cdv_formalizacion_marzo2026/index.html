@@ -1392,14 +1392,28 @@ function getMonthName(m) {
   return names[m] || `Mes ${m}`;
 }
 
+function parseYMD(dateStr) {
+  // Robust parsing across browsers (avoid Date parsing quirks of YYYY-MM-DD)
+  const [y, m, d] = (dateStr || '').split('-').map(n => parseInt(n, 10));
+  if (!y || !m || !d) return null;
+  return { y, m, d };
+}
+
 function getMonthNumber(dateStr) {
-  return new Date(dateStr + 'T12:00:00').getMonth() + 1;
+  const p = parseYMD(dateStr);
+  return p ? p.m : NaN;
+}
+
+function monthNameES(monthNum) {
+  const names = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return names[(monthNum || 0) - 1] || '';
 }
 
 function getWeekLabel(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const day = d.getDate();
-  const m = d.toLocaleDateString('es-CR', { month: 'long' });
+  const p = parseYMD(dateStr);
+  if (!p) return '';
+  const day = p.d;
+  const m = monthNameES(p.m);
   if (day <= 7) return `S1 ${m} (1-7)`;
   if (day <= 14) return `S2 ${m} (8-14)`;
   if (day <= 21) return `S3 ${m} (15-21)`;
@@ -1408,8 +1422,9 @@ function getWeekLabel(dateStr) {
 }
 
 function getWeekNumber(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
-  const day = d.getDate();
+  const p = parseYMD(dateStr);
+  if (!p) return NaN;
+  const day = p.d;
   if (day <= 7) return 1;
   if (day <= 14) return 2;
   if (day <= 21) return 3;
@@ -1423,7 +1438,9 @@ function getFormClass(name) {
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T12:00:00');
+  const p = parseYMD(dateStr);
+  if (!p) return dateStr;
+  const d = new Date(p.y, p.m - 1, p.d);
   return d.toLocaleDateString('es-CR', { day: 'numeric', month: 'short' });
 }
 
