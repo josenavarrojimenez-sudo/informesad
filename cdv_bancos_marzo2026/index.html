@@ -2,1123 +2,552 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Informe Comparativo Hipotecario – Elizabeth | 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Informe Comparativo de Hipotecas – Adelante</title>
 <style>
-  /* ── Claude-inspired design system ── */
   :root {
-    --bg:         #F9F8F5;
-    --surface:    #FFFFFF;
-    --border:     #E8E4DC;
-    --border-lt:  #F0EDE8;
-    --text:       #1A1610;
-    --text-2:     #5A5040;
-    --text-3:     #8A7D6A;
-    --accent:     #A0522D;
-    --accent-lt:  #FBF3EC;
-    --accent-md:  #E8D5C4;
-    --green:      #2E6B4F;
-    --green-lt:   #EBF5EF;
-    --red:        #8B2525;
-    --red-lt:     #FAEAEA;
-    --amber:      #7A5C1A;
-    --amber-lt:   #FDF6E3;
-    --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-    --shadow:     0 4px 12px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
-    --radius:     8px;
-    --radius-sm:  5px;
+    --bg-primary: #F5F0E8;
+    --bg-secondary: #FFFCF5;
+    --bg-card: #FFFFFF;
+    --bg-hover: #EDE8DD;
+    --bg-input: #F7F3EC;
+    --text-primary: #1A1612;
+    --text-secondary: #5D5448;
+    --text-tertiary: #8C8278;
+    --accent-primary: #D97A3E;
+    --accent-hover: #C4642D;
+    --border-light: #E5DFD5;
+    --border-medium: #D4CFC5;
+    --green-bg: #F0F7EE;
+    --green-border: #8CB88A;
+    --green-text: #3D6E3A;
+    --green-accent: #5A8F57;
+    --orange-bg: #FFF4EB;
+    --orange-border: #E8A872;
+    --orange-text: #9C5A20;
+    --blue-bg: #EFF4F9;
+    --blue-text: #3B6FA0;
+    --rank-gold: #D4A843;
+    --rank-silver: #8C8278;
+    --rank-bronze: #A67C5B;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --shadow-sm: 0 1px 3px rgba(26,22,18,0.06);
+    --shadow-md: 0 2px 8px rgba(26,22,18,0.08);
+    --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
+  html { scroll-behavior: smooth; }
   body {
-    font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-size: 14px;
-    line-height: 1.65;
-    padding: 0 0 60px;
-  }
-
-  /* ── Header ── */
-  .page-header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 32px 40px 24px;
-    max-width: 1080px;
-    margin: 0 auto;
-  }
-  .header-eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  .header-title {
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -.3px;
-  }
-  .header-sub {
-    font-size: 14px;
-    color: var(--text-2);
-    margin-top: 6px;
-  }
-  .header-meta {
-    display: flex;
-    gap: 20px;
-    margin-top: 16px;
-    flex-wrap: wrap;
-  }
-  .meta-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-lt);
-    border: 1px solid var(--accent-md);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--accent);
-  }
-
-  /* ── Layout ── */
-  .main {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 28px 40px 0;
-  }
-
-  /* ── Rates bar ── */
-  .rates-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 24px;
-    margin-bottom: 28px;
-    box-shadow: var(--shadow-sm);
-  }
-  .rates-bar-title {
-    width: 100%;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    color: var(--text-3);
-    margin-bottom: 4px;
-  }
-  .rate-item {
-    display: flex;
-    align-items: baseline;
-    gap: 5px;
-  }
-  .rate-label { font-size: 12px; color: var(--text-2); }
-  .rate-val {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
-  .rate-sep { color: var(--border); font-size: 18px; }
-
-  /* ── Section ── */
-  .section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 22px;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .section-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border-lt);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .section-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    background: var(--accent-lt);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
-  .section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .section-desc {
-    font-size: 12px;
-    color: var(--text-3);
-    margin-top: 1px;
-  }
-  .section-body { padding: 0; }
-
-  /* ── Tables ── */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  thead th {
-    background: var(--bg);
-    padding: 9px 14px;
-    text-align: left;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--text-3);
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  thead th.num { text-align: right; }
-  tbody tr { transition: background .1s; }
-  tbody tr:hover { background: var(--accent-lt); }
-  tbody tr:nth-child(even) { background: #FDFCFA; }
-  tbody tr:nth-child(even):hover { background: var(--accent-lt); }
-  tbody td {
-    padding: 9px 14px;
-    border-bottom: 1px solid var(--border-lt);
-    vertical-align: middle;
-  }
-  tbody tr:last-child td { border-bottom: none; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-  td.muted { color: var(--text-3); font-size: 12px; }
-
-  /* ── Rank badge ── */
-  .rank {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .rank-1 { background: #FEF3C7; color: #92400E; }
-  .rank-2 { background: #F3F4F6; color: #374151; }
-  .rank-3 { background: #FEF3C7; color: #78350F; opacity:.75; }
-  .rank-n { background: var(--border-lt); color: var(--text-3); }
-
-  .bank-cell { display: flex; align-items: center; gap: 8px; }
-  .bank-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  }
-  .bank-name { font-weight: 600; color: var(--text); }
-  .bank-curr { font-size: 11px; color: var(--text-3); }
-
-  /* ── Currency tag ── */
-  .tag {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .04em;
-  }
-  .tag-usd { background: #DBEAFE; color: #1E40AF; }
-  .tag-crc { background: #D1FAE5; color: #065F46; }
-
-  /* ── Rate pill ── */
-  .pill {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .pill-fixed { background: var(--green-lt); color: var(--green); }
-  .pill-var   { background: var(--amber-lt); color: var(--amber); }
-
-  /* ── Amount cell ── */
-  .amt-main { font-weight: 700; font-size: 14px; }
-  .amt-sub  { font-size: 11px; color: var(--text-3); font-weight: 400; }
-
-  /* ── Detail card ── */
-  .detail-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 14px;
-  }
-  .detail-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-lt);
-    background: var(--bg);
-  }
-  .detail-card-bank { font-weight: 700; font-size: 14px; }
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0;
-  }
-  .detail-item {
-    padding: 12px 16px;
-    border-right: 1px solid var(--border-lt);
-    border-bottom: 1px solid var(--border-lt);
-  }
-  .detail-item:last-child { border-right: none; }
-  .detail-lbl { font-size: 11px; color: var(--text-3); margin-bottom: 3px; font-weight: 500; text-transform: uppercase; letter-spacing:.04em; }
-  .detail-val { font-size: 13px; font-weight: 600; color: var(--text); }
-  .detail-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
-
-  /* ── Timeline rate ── */
-  .timeline { display: flex; gap: 0; margin: 0 16px 12px; }
-  .tl-seg {
-    flex: 1;
-    padding: 6px 10px;
-    background: var(--accent-lt);
-    border: 1px solid var(--accent-md);
-    border-right: none;
-    font-size: 11px;
-    text-align: center;
-  }
-  .tl-seg:first-child { border-radius: 6px 0 0 6px; }
-  .tl-seg:last-child  { border-radius: 0 6px 6px 0; border-right: 1px solid var(--accent-md); }
-  .tl-yr  { font-size: 10px; color: var(--text-3); margin-bottom: 2px; }
-  .tl-rate { font-weight: 700; color: var(--accent); font-size: 13px; }
-
-  /* ── Recommendation box ── */
-  .rec-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    margin-bottom: 22px;
-  }
-  .rec-header {
-    background: linear-gradient(135deg, #2A1F14 0%, #3D2B1A 100%);
-    padding: 18px 22px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .rec-header-icon { font-size: 20px; }
-  .rec-header-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #FAF6F0;
-  }
-  .rec-header-sub { font-size: 12px; color: #C4A882; margin-top: 2px; }
-  .rec-body { padding: 20px 22px; }
-
-  .rec-section { margin-bottom: 20px; }
-  .rec-section:last-child { margin-bottom: 0; }
-  .rec-section-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .rec-item {
-    display: flex;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    border: 1px solid var(--border-lt);
-    margin-bottom: 8px;
-  }
-  .rec-item:last-child { margin-bottom: 0; }
-  .rec-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-  .rec-item-text { font-size: 13px; color: var(--text); line-height: 1.55; }
-  .rec-item-text strong { color: var(--text); font-weight: 700; }
-  .rec-item-text em { font-style: normal; color: var(--accent); font-weight: 600; }
-
-  .alert-box {
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    display: flex;
-    gap: 10px;
-    font-size: 13px;
     line-height: 1.55;
-    border: 1px solid;
-  }
-  .alert-green  { background: var(--green-lt); border-color: #A7D4BA; color: #1A4A30; }
-  .alert-amber  { background: var(--amber-lt); border-color: #D4C07A; color: #5A4010; }
-  .alert-blue   { background: #EFF6FF;          border-color: #BAD5F7; color: #1E3A5F; }
-
-  /* ── Macro section ── */
-  .macro-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    padding: 16px 20px;
-  }
-  .macro-card {
-    background: var(--bg);
-    border: 1px solid var(--border-lt);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-  }
-  .macro-lbl { font-size: 11px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing:.04em; margin-bottom: 4px; }
-  .macro-val { font-size: 20px; font-weight: 800; color: var(--text); line-height:1.1; font-variant-numeric: tabular-nums; }
-  .macro-val.green { color: var(--green); }
-  .macro-val.accent { color: var(--accent); }
-  .macro-note { font-size: 11px; color: var(--text-3); margin-top: 3px; }
-
-  /* ── Footer ── */
-  .page-footer {
-    max-width: 1080px;
-    margin: 30px auto 0;
-    padding: 0 40px;
-    font-size: 11px;
-    color: var(--text-3);
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: calc(60px + var(--safe-bottom));
   }
 
-  /* Responsive */
-  @media(max-width:700px){
-    .main,.page-header,.page-footer{ padding-left:16px; padding-right:16px; }
-    .macro-grid,.detail-grid{ grid-template-columns:1fr 1fr; }
-    .timeline{ flex-wrap:wrap; }
-    .tl-seg{ border-right: 1px solid var(--accent-md) !important; border-radius:6px !important; margin-bottom:4px; }
+  /* ═══════ HEADER ═══════ */
+  #header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .header-top { display: flex; align-items: center; gap: 8px; }
+  .header-top .logo-wrap img { height: 36px; object-fit: contain; flex-shrink: 0; }
+  .header-top .title-info { flex: 1; min-width: 0; }
+  .header-top .title-info h1 { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header-top .title-info p { font-size: 0.65rem; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-claude {
+    display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px;
+    background: var(--accent-primary); color: #fff; border: none; border-radius: var(--radius-xl);
+    font-size: 0.7rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+  }
+  .btn-claude:active { transform: scale(0.96); background: var(--accent-hover); }
+  .btn-claude svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  /* ═══════ BOTTOM NAV ═══════ */
+  #bottomNav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--bg-secondary); border-top: 1px solid var(--border-light);
+    display: flex; z-index: 200; padding-bottom: var(--safe-bottom);
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 6px 2px 8px; font-size: 0.55rem; color: var(--text-tertiary);
+    -webkit-tap-highlight-color: transparent; cursor: pointer; border: none; background: none;
+    gap: 2px; font-family: var(--font-body); letter-spacing: 0.02em;
+  }
+  .nav-tab svg { width: 18px; height: 18px; stroke-width: 1.8; }
+  .nav-tab.active { color: var(--accent-primary); font-weight: 700; }
+
+  /* ═══════ SECTIONS & CARDS ═══════ */
+  .section { padding: 8px 10px; }
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm);
+  }
+  .card h2 { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-bottom: 10px; }
+
+  /* ═══════ COLLAPSIBLE ═══════ */
+  .collapse-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; cursor: pointer; padding: 0; -webkit-tap-highlight-color: transparent; font-family: var(--font-body); }
+  .collapse-toggle h2 { border: none; padding: 0; margin: 0; pointer-events: none; flex: 1; }
+  .collapse-chevron { width: 18px; height: 18px; color: var(--text-tertiary); transition: transform 0.3s ease; flex-shrink: 0; margin-left: 8px; }
+  .collapse-toggle.open .collapse-chevron { transform: rotate(180deg); }
+  .collapse-divider { height: 1px; background: var(--border-light); margin: 8px 0 10px; }
+  .collapse-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .collapse-body.open { max-height: 50000px; }
+
+  /* ═══════ PANEL DE CONTROL ═══════ */
+  #panelSection { display: none; }
+  .field-row { display: flex; flex-direction: column; margin-bottom: 14px; }
+  .field-row label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+  .field-row .field-desc { font-size: 0.64rem; color: var(--text-tertiary); margin-bottom: 5px; }
+  .field-row input[type=text], .field-row input[type=number] {
+    padding: 12px 14px; border: 1px solid var(--border-medium); border-radius: var(--radius-md);
+    font-size: 16px; width: 100%; background: var(--bg-card); color: var(--text-primary);
+    font-family: var(--font-body); outline: none; -webkit-appearance: none;
+  }
+  .field-row input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(217,122,62,0.15); }
+  .field-row input:disabled { background: var(--bg-input); color: var(--text-tertiary); border-color: var(--border-light); }
+  .badge-edit { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 0.58rem; font-weight: 600; background: var(--green-bg); color: var(--green-text); margin-left: 4px; }
+  .badge-fixed { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 0.58rem; font-weight: 600; background: var(--bg-hover); color: var(--text-tertiary); margin-left: 4px; }
+  .info-box { background: var(--bg-input); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 12px; margin-top: 10px; }
+  .info-box .label { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 3px; }
+  .info-box .sublabel { font-size: 0.62rem; color: var(--text-tertiary); margin-bottom: 4px; }
+  .info-box .big-val { font-size: 1.1rem; font-weight: 800; color: var(--accent-primary); }
+  .rates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .rate-item { background: var(--bg-input); border-radius: var(--radius-sm); padding: 8px; border: 1px solid var(--border-light); }
+  .rate-item .name { font-size: 0.62rem; color: var(--text-tertiary); }
+  .rate-item .val { font-size: 0.88rem; font-weight: 700; color: var(--accent-primary); }
+
+  /* ═══════ RESUMEN ═══════ */
+  #resumen-wrap .best-card { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px; }
+  #resumen-wrap .best-card h3 { font-size: 0.76rem; color: var(--green-text); margin-bottom: 4px; font-weight: 600; }
+  #resumen-wrap .best-card .bank-name { font-size: 1.05rem; font-weight: 800; color: var(--green-accent); }
+  #resumen-wrap .best-card .cuota-val { font-size: 0.88rem; font-weight: 700; color: var(--green-accent); margin-top: 4px; word-break: break-word; }
+  #resumen-wrap .savings { background: var(--orange-bg); border: 1px solid var(--orange-border); border-radius: var(--radius-md); padding: 10px; font-size: 0.76rem; color: var(--orange-text); line-height: 1.6; }
+
+  /* ═══════ TABLE ═══════ */
+  .scroll-hint-text { font-size: 0.66rem; color: var(--text-tertiary); text-align: center; padding: 4px 0; }
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: var(--radius-sm); margin: 0 -14px; padding: 0 14px; scrollbar-width: thin; }
+  .tbl-wrap table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 0.7rem; }
+  th { background: var(--text-primary); color: var(--bg-secondary); padding: 8px 8px; text-align: center; white-space: nowrap; font-weight: 600; font-size: 0.62rem; letter-spacing: 0.02em; text-transform: uppercase; }
+  th:first-child { border-radius: var(--radius-sm) 0 0 0; position: sticky; left: 0; z-index: 2; }
+  th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+  td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--border-light); color: var(--text-secondary); white-space: nowrap; }
+  td:first-child { text-align: left; font-weight: 600; color: var(--text-primary); position: sticky; left: 0; background: var(--bg-card); z-index: 1; min-width: 100px; box-shadow: 2px 0 4px rgba(0,0,0,0.04); }
+  tr:hover td { background: var(--bg-hover); }
+  tr:hover td:first-child { background: var(--bg-hover); }
+  tr.rank-1 td { background: var(--green-bg); }
+  tr.rank-1 td:first-child { background: var(--green-bg); }
+  tr.rank-2 td { background: #FFFBE8; }
+  tr.rank-2 td:first-child { background: #FFFBE8; }
+  .cond-badge { display: inline-block; font-size: 0.55rem; padding: 1px 5px; border-radius: 20px; background: var(--orange-bg); color: var(--orange-text); margin-left: 2px; font-weight: 600; vertical-align: middle; }
+  .dual-val { font-size: 0.62rem; color: var(--text-tertiary); display: block; font-weight: 400; }
+
+  /* ═══════ RANKINGS ═══════ */
+  .rankings-container { display: flex; flex-direction: column; gap: 14px; }
+  .ranking-block h3 { font-size: 0.76rem; color: var(--accent-primary); margin-bottom: 6px; font-weight: 700; }
+  .ranking-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+  .ranking-table td, .ranking-table th { text-align: center; padding: 6px 5px; }
+  .ranking-table td:first-child { text-align: center; position: static; background: transparent; min-width: auto; box-shadow: none; }
+  .ranking-table td:nth-child(2) { text-align: left; }
+  .rank-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--text-tertiary); color: #fff; font-weight: 700; font-size: 0.65rem; }
+  .rank-num.gold { background: var(--rank-gold); }
+  .rank-num.silver { background: var(--rank-silver); }
+  .rank-num.bronze { background: var(--rank-bronze); }
+
+  /* ═══════ BANK DETAIL ═══════ */
+  .bank-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .bank-card { background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-light); padding: 12px; border-left: 4px solid var(--accent-primary); }
+  .bank-card.usd-card { border-left-color: var(--blue-text); }
+  .bank-card.crc-card { border-left-color: var(--green-accent); }
+  .bank-card h3 { font-size: 0.82rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; line-height: 1.3; }
+  .bank-card .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border-light); font-size: 0.73rem; gap: 6px; }
+  .bank-card .row .lbl { color: var(--text-tertiary); flex-shrink: 0; }
+  .bank-card .row .val { font-weight: 600; color: var(--text-primary); text-align: right; word-break: break-all; }
+  .bank-card .cuota-highlight { background: var(--bg-input); border-radius: var(--radius-sm); padding: 10px; margin-top: 8px; text-align: center; border: 1px solid var(--border-light); }
+  .bank-card .cuota-highlight .cuota-total { font-size: 1.1rem; font-weight: 800; color: var(--accent-primary); }
+
+  /* ═══════ MACRO ═══════ */
+  .macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  .macro-item { background: var(--bg-card); border-radius: var(--radius-sm); padding: 10px; border: 1px solid var(--border-light); }
+  .macro-item .macro-title { font-size: 0.6rem; color: var(--text-tertiary); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; }
+  .macro-item .macro-val { font-size: 0.9rem; font-weight: 700; color: var(--accent-primary); }
+  .macro-item .macro-sub { font-size: 0.6rem; color: var(--text-tertiary); margin-top: 1px; }
+  .context-box { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: var(--radius-md); padding: 12px; margin-top: 8px; }
+  .context-box .ctx-title { font-size: 0.78rem; font-weight: 700; color: var(--green-text); margin-bottom: 6px; }
+  .context-box ul { list-style: none; margin: 0; font-size: 0.74rem; color: var(--green-accent); line-height: 1.65; }
+  .context-box ul li { padding: 2px 0 2px 16px; position: relative; }
+  .context-box ul li::before { content: "→"; position: absolute; left: 0; color: var(--green-border); font-weight: 700; }
+
+
+  /* ═══════ DESKTOP ═══════ */
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    #bottomNav { display: none; }
+    #header { padding: 14px 24px; }
+    .header-top .logo-wrap img { height: 44px; }
+    .header-top .title-info h1 { font-size: 1rem; }
+    .header-top .title-info p { font-size: 0.75rem; }
+    .btn-claude { padding: 8px 18px; font-size: 0.78rem; }
+    .section { padding: 12px 24px; }
+    .card { padding: 20px; margin-bottom: 14px; }
+    .bank-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .macro-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .collapse-chevron { display: none; }
+    .collapse-body { max-height: none !important; overflow: visible; }
+    .scroll-hint-text { display: none; }
+    .tbl-wrap { margin: 0; padding: 0; }
+    td:first-child { position: static; box-shadow: none; }
+    th:first-child { position: static; }
+    #panelSection { display: block !important; }
+    .field-row input[type=text], .field-row input[type=number] { font-size: 0.85rem; padding: 8px 12px; }
+  }
+  @media (min-width: 1024px) {
+    /* Desktop 2-column: content left, panel right */
+    #desktopWrap {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 20px;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      align-items: start;
+    }
+    #desktopWrap > #contentCol > .section { padding: 0; }
+    #desktopWrap > #panelSection { padding: 0 !important; position: sticky; top: 76px; }
+    .rankings-container { flex-direction: row; gap: 20px; }
+    .ranking-block { flex: 1; }
+  }
+  @media (max-width: 1023px) {
+    #desktopWrap { display: block; }
+  }
+  @media print {
+    body { padding-bottom: 0; background: #fff; }
+    #bottomNav { display: none !important; }
+    .btn-claude { display: none !important; }
+    .card { page-break-inside: avoid; }
+    #header { position: static; }
+    .collapse-body { max-height: none !important; overflow: visible; }
+    .collapse-chevron { display: none; }
+    td:first-child, th:first-child { position: static; box-shadow: none; }
+    #panelSection { display: block !important; }
   }
 </style>
 </head>
 <body>
-
-<!-- ───────────────── HEADER ───────────────── -->
-<div class="page-header">
-  <div class="header-eyebrow">Análisis de Financiamiento Hipotecario</div>
-  <div class="header-title">Comparativo Hipotecario — Elizabeth</div>
-  <div class="header-sub">9 opciones bancarias · Plazo 30 años · Actualizado 05 mar 2026</div>
-  <div class="header-meta">
-    <div class="meta-chip">📅 05/03/2026</div>
-    <div class="meta-chip">🏦 9 bancos</div>
-    <div class="meta-chip">⏱ 30 años</div>
-    <div class="meta-chip">💱 CRC + USD</div>
+<div id="header"><div class="header-top"><div class="logo-wrap"><img src="data:image/png;base64,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fa9otVqsWbNm5FKnPAdz0qf5fOQjHxFuILsTLSkl73vf+45YZIIgYG5ujg0bNjA/P18I2Pz8PH/5l3+5bET5yiuv5MEHHyyGS5XLZYQQtFotPv/5z7Nz506bZVlRF37PPfcUiciVSqXwebqcOueLPFQ1jGtM4BKe4zgu0pq+8IUv8E//9E92amqqGFIVx/FhO7Skacof/dEfcdlll/W7I/je9763qH57amqKbrfL7bffzq/+6q9a1+n7cLh+he9///u55pprjlr43Y1r/fr11Ov1oow0iiI+85nP8NWvfvWgv7n00kt58skni0YUri7d9Z88HH/4h3/Ipz71qeJ7cjdfV9/ff54dDVdffbUol8u20WjgUtP6B7cdbU7tW9/6Vj772c/S6XRYv3493W63aFBy//3380u/9Ev20KsciVT5TcaaLpaUMAx43etexx989BPLHijLC/aJF77P7PyLqADGK1NcfOYVwEVDeVM/6QUS8mXR2972tuJCOFrn+rvf/W4ef/xxXnzxxcJymJmZYc2aNXznO99Z9m9+//d/n3/zb/4NnU6H6elpms0mURQVVRj/+I//SKVSKebMzM7OMjU1RblcLgIPbvzs+vXrOXDgAB/4wAcOuZ9f+9rXxBlnnGHn5+eZnp4uLFBrLbOzszz++OOFdeUCSIcTsSAI+MpXvsJll11W/OxDH/qQuOuuu+z999+PtZb169ezf/9+qtUq1lq++93vYq1dJPSDcGL+pje9iWuuueaQr12O973vfezcuZOXX36ZiYmJwnc8OzvLo48+uuzf3HLLLfzLf/kvi2YX7hhVq9Ujcov8zu/8jvjc5z5n3Y0mDENqtVrRYENrvagz0tHwjne8gy9+8YuF9au1LnpVHi2XXHKJePOb32y///3vF2N0naXd7XZ56KGHDrMFSaZBCFAyI9NtglACg4X6sefuYvf+R+nqXWA09fopBEpw7mmhlZw7dCJ5Ui+xHVu3bhWuj2OpVOJDH/rQUf39jh07xK5du3BpN247s7OzCCF46KGHDroStm/fLm6++eYi0OL6MUZRxJo1awjDsGg71m632bBhQ9GGzQVmtNasWbOGPXv28PWvf52PfvSjhz3Bfud3fofp6ekiZ9C1unIWiRtC5X5mjDnkI03TZd0Rv/u7v0utVqNarbJ//35qtRqdTqeo/W21WszNzR12+65r90qXq9u3bxd79+5l48aNJElSpGWdcsopdDodHnvssYO+m0svvVS8853vLFp4uTk4rtPRkfC+970PrXVh2bsBcK7pRxiGK2o4/MlPflLs2LGj2JYT/Pn5+RX5nt/znvewb9++wrV06qmnkiRJ0Rz40N9PBmgy3UGbBITBWk2aLX/T0/zEPvfi92mlT2Gjn2DjF+ikL7Nn788wDKc7wgtkj/e85z3iuuuuo9ForOjv3/KWtxSi5kQAYGxsjD/8wz9c9m/e//73ize/+c1FiaArdXzppZeKbthKKaIoIk1T3MjTqampYjbLli1b+Pu//3uuuOKKI7r73nzzzeLKK69cVHfulmqwUOGjtT4iq2RQSeUNN9wgfv3Xf73oMZimKRMTE0XZ3mmnnXZE3dedKB1LRcrb3vY29u/fz9jYWDFvaH5+nizL+PjHP77s33z84x8XO3bsoNPpYK1lamrqqCLTH/zgB4X7Dl19dhzHxWdut9vMz8+v6PP83u/9HlprqtUqjUaDWq3GxMTEihLTt2/fLm655RaiKCLLMl5++WVgoXn04YhLIUoJpGRhVAmDymwNMrBYlZLaFkKmvV6kVSxDZzwCXiAX8dGPfpQ4jnn/+99/1N9WmqY0m83CJ5RlGbVarUjeHsS///f/nrGxMXbv3l0Eh1xupWuA4Gq+a7UaUkpmZ2cJw5D3vve9/O3f/q04Wt/cH/zBHxTLa2ehKaWI45gwDItWb0diLbnBZcvxsY99TFx22WVMT08jhODAgQPF0nLPnj1HZBWWSqWiQmmluLr3mZkZJicnC+v4cKWAv/Ebv7Gojrvff3gkfOADHyhuPk4sO50OzWaTWq1WpJQdLVu3bhWf/OQni0h5vV5fdFM+Wv7dv/t34rrrrisGwAkh2L179xHdwDqtLkoERFGJQEXoTNDpLP+9agJO3XgBgVhPu16j25lCmCk2rD0Pa4cz88ILZB9bt24VH/zgB1f0t3/wB39QON3dsmpubo44jnnyyScHNmq98cYbxTvf+U42bdqE1rpYKrlltGtosWXLFq699lq2bNnCV7/6VV566SVx8803r+i2u2XLFvHhD394UXMFZ6m5BhhumX24hqm1Wu2Q6Sz/5//8H6GUotVqMTY2VgzBiqKoaP5wqMfc3FwR3Fgp7373uwt/bqPRoNFoUK/XqdVq/PjHPx7Yeektb3mL+K3f+i02b97M7OwsSZIc1cwhZ0UCxRAxF1CrVqu88sorK/5M733ve4XLaOh2u5RKpRXN3HG8+93vRilVFB2MjY0Vvu7BD4E1giwzzM+1SRLN2Ngk69dtXPY9Is4R5226hs2n7eD09W/irI03cPaZ2zl9zcVEYvNQmpDCZ/t7PJ7jzb70KVsOI6psGkphdHiB9Hg8ngH4JbbH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDMALpMfj8QzAC6TH4/EMwAukx+PxDOD/B5FAZk+DPTJnAAAAAElFTkSuQmCC" alt="Adelante"></div>
+    <div class="title-info">
+      <h1>Informe Comparativo de Hipotecas</h1>
+      <p id="headerSub">Cargando...</p>
+    </div>
+    <button class="btn-claude" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      PDF
+    </button>
   </div>
 </div>
 
-<div class="main">
+<!-- DESKTOP: 2-column grid. Panel is SIBLING of content, not child -->
+<div id="desktopWrap">
+  <div id="contentCol">
 
-  <!-- ───────────────── RATES BAR ───────────────── -->
-  <div class="rates-bar">
-    <div class="rates-bar-title">Tasas de referencia al 05/03/2026</div>
-    <div class="rate-item"><span class="rate-label">TBP</span><span class="rate-val">3.70%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">TRI 6m CRC</span><span class="rate-val">4.69%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">TRI 6m USD</span><span class="rate-val">3.26%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">TRI 12m USD</span><span class="rate-val">4.15%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">SOFR</span><span class="rate-val">3.70%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">Prime USA</span><span class="rate-val">6.75%</span></div>
-    <span class="rate-sep">·</span>
-    <div class="rate-item"><span class="rate-label">T/C</span><span class="rate-val">₡475/$</span></div>
-  </div>
-
-  <!-- ───────────────── RANKING AÑO 1 ───────────────── -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon">📊</div>
-      <div>
-        <div class="section-title">Cuota mensual — Año 1</div>
-        <div class="section-desc">Ordenado de menor a mayor · Incluye seguro donde aplica</div>
+    <!-- Resumen -->
+    <div class="section" id="secResumen">
+      <div class="card" id="resumen-wrap">
+        <h2>📊 Resumen Ejecutivo</h2>
+        <div id="execContent">Calculando...</div>
       </div>
     </div>
-    <div class="section-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:34px">#</th>
-            <th>Banco / Opción</th>
-            <th>Moneda</th>
-            <th class="num">Cuota Año 1</th>
-            <th class="num">Equiv. USD</th>
-            <th>Tasa aplicada</th>
-            <th>Seguro</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="rank rank-1">1</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#2E6B4F"></span><span class="bank-name">Lafise</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,251.79</div></td>
-            <td class="num">$1,251.79</td>
-            <td><span class="pill pill-fixed">5.95% fijo</span></td>
-            <td class="muted">$75/mes</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-2">2</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#4B5563"></span><span class="bank-name">Promerica</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,439.25</div></td>
-            <td class="num">$1,439.25</td>
-            <td><span class="pill pill-fixed">6.25% fijo</span></td>
-            <td class="muted">—</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-3">3</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#1E40AF"></span><span class="bank-name">Popular USD</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,492.23</div></td>
-            <td class="num">$1,492.23</td>
-            <td><span class="pill pill-var">TRI 6m+4% = 7.26%</span></td>
-            <td class="muted">—</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">4</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#D97706"></span><span class="bank-name">Davibank</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,510.06</div></td>
-            <td class="num">$1,510.06</td>
-            <td><span class="pill pill-fixed">7.35% fijo</span></td>
-            <td class="muted">$150/mes</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">5</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#7C3AED"></span><span class="bank-name">Mucap</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,538.04</div></td>
-            <td class="num">$1,538.04</td>
-            <td><span class="pill pill-fixed">7.25% fijo</span></td>
-            <td class="muted">₡75k/mes</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">6</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#059669"></span><span class="bank-name">Banco Nacional</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡739,440</div><div class="amt-sub">~$1,557</div></td>
-            <td class="num">~$1,557</td>
-            <td><span class="pill pill-var">TBP+4% = 7.70%</span></td>
-            <td class="muted">—</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">7</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#DC2626"></span><span class="bank-name">CoopeAnde</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡788,737</div><div class="amt-sub">~$1,660</div></td>
-            <td class="num">~$1,660</td>
-            <td><span class="pill pill-fixed">7.50% fijo</span></td>
-            <td class="muted">$150/mes</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">8</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#0891B2"></span><span class="bank-name">BCR</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡816,896</div><div class="amt-sub">~$1,720</div></td>
-            <td class="num">~$1,720</td>
-            <td><span class="pill pill-fixed">8.00% fijo</span></td>
-            <td class="muted">—</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">9</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#9D174D"></span><span class="bank-name">Popular CRC</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡955,370</div><div class="amt-sub">~$2,012</div></td>
-            <td class="num">~$2,012</td>
-            <td><span class="pill pill-var">TRI 6m+2.95% = 7.64%</span></td>
-            <td class="muted">₡75k/mes</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- ───────────────── RANKING AÑO 5 ───────────────── -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon">📈</div>
-      <div>
-        <div class="section-title">Cuota mensual estimada — Año 5</div>
-        <div class="section-desc">Proyección con tasas actuales al 05/03/2026 · Tasas variables pueden cambiar</div>
+    <!-- Tabla -->
+    <div class="section" id="secTabla">
+      <div class="card">
+        <button class="collapse-toggle open" onclick="toggleCollapse(this)">
+          <h2>📋 Tabla Comparativa</h2>
+          <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapse-divider"></div>
+        <div class="collapse-body open">
+          <p class="scroll-hint-text">← Desliza para ver más →</p>
+          <div class="tbl-wrap">
+            <table><thead><tr>
+              <th>Banco</th><th>Moneda</th><th>Seguro</th><th>Tasa Año 1</th><th>Cuota Año 1<br>(con seg.)</th><th>Tasa Año 5</th><th>Cuota Año 5<br>(con seg.)</th><th>Formal.</th>
+            </tr></thead><tbody id="compTableBody"><tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-tertiary)">Calculando...</td></tr></tbody></table>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="section-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:34px">#</th>
-            <th>Banco / Opción</th>
-            <th>Moneda</th>
-            <th class="num">Cuota Año 5</th>
-            <th class="num">Equiv. USD</th>
-            <th>Tasa vigente año 5</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="rank rank-1">1</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#2E6B4F"></span><span class="bank-name">Lafise</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">~$1,538</div></td>
-            <td class="num">~$1,538</td>
-            <td><span class="pill pill-var">TRI 12m USD+4% ≈ 8.15%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-2">2</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#059669"></span><span class="bank-name">Banco Nacional</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡739,440</div><div class="amt-sub">~$1,557</div></td>
-            <td class="num">~$1,557</td>
-            <td><span class="pill pill-var">TBP+4% = 7.70% (todo el plazo)</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-3">3</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#1E40AF"></span><span class="bank-name">Popular USD</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">~$1,562</div></td>
-            <td class="num">~$1,562</td>
-            <td><span class="pill pill-var">TRI 6m USD+4% ≈ 7.26%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">4</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#4B5563"></span><span class="bank-name">Promerica</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">~$1,645</div></td>
-            <td class="num">~$1,645</td>
-            <td><span class="pill pill-var">SOFR+6% ≈ 9.70%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">5</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#DC2626"></span><span class="bank-name">CoopeAnde</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡792,023</div><div class="amt-sub">~$1,667</div></td>
-            <td class="num">~$1,667</td>
-            <td><span class="pill pill-var">TBP+3.85% = 7.55%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">6</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#D97706"></span><span class="bank-name">Davibank</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">~$1,691</div></td>
-            <td class="num">~$1,691</td>
-            <td><span class="pill pill-var">Prime+2% = 8.75%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">7</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#0891B2"></span><span class="bank-name">BCR</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡847,000</div><div class="amt-sub">~$1,783</div></td>
-            <td class="num">~$1,783</td>
-            <td><span class="pill pill-var">TBP+4.85% ≈ 8.55%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">8</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#7C3AED"></span><span class="bank-name">Mucap</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">~$1,804</div></td>
-            <td class="num">~$1,804</td>
-            <td><span class="pill pill-var">SOFR+5.5% = 9.20%</span></td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">9</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#9D174D"></span><span class="bank-name">Popular CRC</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡955,370</div><div class="amt-sub">~$2,012</div></td>
-            <td class="num">~$2,012</td>
-            <td><span class="pill pill-var">TRI 6m CRC+2.95% = 7.64%</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- ───────────────── COSTOS DE FORMALIZACIÓN ───────────────── -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon">💰</div>
-      <div>
-        <div class="section-title">Gastos de formalización</div>
-        <div class="section-desc">Costo inicial capitalizado al monto del préstamo (salvo Davibank)</div>
+    <!-- Rankings -->
+    <div class="section" id="secRankings">
+      <div class="card">
+        <button class="collapse-toggle open" onclick="toggleCollapse(this)">
+          <h2>🏆 Rankings</h2>
+          <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapse-divider"></div>
+        <div class="collapse-body open">
+          <div class="rankings-container">
+            <div class="ranking-block"><h3>Ranking Año 1</h3><table class="ranking-table"><thead><tr><th>#</th><th>Banco</th><th>Cuota USD / ₡</th></tr></thead><tbody id="rank1Body"></tbody></table></div>
+            <div class="ranking-block"><h3>Ranking Año 5</h3><table class="ranking-table"><thead><tr><th>#</th><th>Banco</th><th>Cuota USD / ₡</th></tr></thead><tbody id="rank5Body"></tbody></table></div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="section-body">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:34px">#</th>
-            <th>Banco / Opción</th>
-            <th>Moneda</th>
-            <th class="num">Costo formalización</th>
-            <th class="num">Equiv. USD</th>
-            <th>% sobre monto</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="rank rank-1">1</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#D97706"></span><span class="bank-name">Davibank</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$0.00</div></td>
-            <td class="num">$0</td>
-            <td class="muted">0%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-2">2</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#2E6B4F"></span><span class="bank-name">Lafise</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$1,973.70</div></td>
-            <td class="num">$1,974</td>
-            <td class="muted">1%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-3">3</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#4B5563"></span><span class="bank-name">Promerica</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$3,739.19</div></td>
-            <td class="num">$3,739</td>
-            <td class="muted">2%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">4</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#7C3AED"></span><span class="bank-name">Mucap</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$4,934.25</div></td>
-            <td class="num">$4,934</td>
-            <td class="muted">2.5%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">5</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#DC2626"></span><span class="bank-name">CoopeAnde</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡2,502,500</div><div class="amt-sub">~$5,268</div></td>
-            <td class="num">~$5,268</td>
-            <td class="muted">2.5%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">6</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#059669"></span><span class="bank-name">Banco Nacional</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡3,507,000</div><div class="amt-sub">~$7,383</div></td>
-            <td class="num">~$7,383</td>
-            <td class="muted">3.5%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">7</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#0891B2"></span><span class="bank-name">BCR</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡3,803,628</div><div class="amt-sub">~$8,007</div></td>
-            <td class="num">~$8,007</td>
-            <td class="muted">3.77%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">8</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#1E40AF"></span><span class="bank-name">Popular USD</span></div></td>
-            <td><span class="tag tag-usd">USD</span></td>
-            <td class="num"><div class="amt-main">$8,195.54</div></td>
-            <td class="num">$8,196</td>
-            <td class="muted">3.5%</td>
-          </tr>
-          <tr>
-            <td><span class="rank rank-n">9</span></td>
-            <td><div class="bank-cell"><span class="bank-dot" style="background:#9D174D"></span><span class="bank-name">Popular CRC</span></div></td>
-            <td><span class="tag tag-crc">CRC</span></td>
-            <td class="num"><div class="amt-main">₡4,200,000</div><div class="amt-sub">~$8,842</div></td>
-            <td class="num">~$8,842</td>
-            <td class="muted">3.5%</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <!-- ───────────────── FICHA POR BANCO ───────────────── -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon">🏦</div>
-      <div>
-        <div class="section-title">Ficha detallada por banco</div>
-        <div class="section-desc">Condiciones completas · Estructura de tasas por tramo temporal</div>
+    <!-- Detalle por Banco -->
+    <div class="section" id="secDetalle">
+      <div class="card">
+        <button class="collapse-toggle open" onclick="toggleCollapse(this)">
+          <h2>🏦 Detalle por Banco</h2>
+          <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapse-divider"></div>
+        <div class="collapse-body open"><div class="bank-grid" id="bankDetailGrid">Calculando...</div></div>
       </div>
     </div>
-    <div class="section-body" style="padding:16px 20px">
 
-      <!-- LAFISE -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#2E6B4F;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Lafise</span>
-            <span class="tag tag-usd">USD</span>
+    <!-- Macro -->
+    <div class="section" id="secMacro">
+      <div class="card">
+        <button class="collapse-toggle open" onclick="toggleCollapse(this)">
+          <h2>🌐 Contexto Macroeconómico</h2>
+          <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="collapse-divider"></div>
+        <div class="collapse-body open">
+          <div class="macro-grid">
+            <div class="macro-item"><div class="macro-title">TC (₡/USD)</div><div class="macro-val">₡476</div><div class="macro-sub">-32% desde 2022</div></div>
+            <div class="macro-item"><div class="macro-title">Var. Ene–Feb</div><div class="macro-val">-5.1%</div><div class="macro-sub">Colón se fortaleció</div></div>
+            <div class="macro-item"><div class="macro-title">Reservas Int.</div><div class="macro-val">$18,931M</div><div class="macro-sub">+31% vs 2023</div></div>
+            <div class="macro-item"><div class="macro-title">Compras BCCR</div><div class="macro-val">$659M</div><div class="macro-sub">Estabilizar TC</div></div>
+            <div class="macro-item"><div class="macro-title">TBP Actual</div><div class="macro-val">3.70%</div><div class="macro-sub">Tasa Básica Pasiva</div></div>
+            <div class="macro-item"><div class="macro-title">Proy. TC 2026</div><div class="macro-val">₡505–515</div><div class="macro-sub">Analistas</div></div>
           </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong style="color:var(--green)">$1,251.79</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">$197,370</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">$1,973.70 (1%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">$75 / mes</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">~$1,538</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Año 1</div><div class="tl-rate">5.95% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 2–30</div><div class="tl-rate">TRI 12m USD + 4% (≥7.85%)</div></div>
-        </div>
-      </div>
-
-      <!-- PROMERICA -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#4B5563;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Promerica</span>
-            <span class="tag tag-usd">USD</span>
+          <div class="context-box">
+            <p class="ctx-title">💡 Ventaja del Colón</p>
+            <ul>
+              <li>Ingresos en colones + TC estable favorecen préstamos CRC.</li>
+              <li>Colón apreciándose puede aumentar costo de deuda USD.</li>
+              <li>BCCR mantiene control cambiario.</li>
+              <li>Penalizaciones prepago solo <strong>primeros 3 años</strong>.</li>
+              <li>CRC si ingresos en colones; USD si ingresos en dólares.</li>
+            </ul>
           </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>$1,439.25</strong></div>
         </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">$197,370</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">$3,739.19 (2%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">—</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">~$1,645</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Año 1</div><div class="tl-rate">6.25% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 2–30</div><div class="tl-rate">SOFR + 6% ≈ 9.70%</div></div>
-        </div>
-      </div>
-
-      <!-- POPULAR USD -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#1E40AF;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Banco Popular (USD)</span>
-            <span class="tag tag-usd">USD</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>$1,492.23</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">$234,158 (~$197,370+3.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">$8,195.54 (3.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">—</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">~$1,562</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Todo el plazo</div><div class="tl-rate">TRI 6m USD + 4% = 7.26%</div></div>
-        </div>
-      </div>
-
-      <!-- DAVIBANK -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#D97706;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Davibank</span>
-            <span class="tag tag-usd">USD</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>$1,510.06</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">$197,370</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">$0 (0%)</div><div class="detail-sub" style="color:var(--green)">✓ Sin costo inicial</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">$150 / mes</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">~$1,691</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Años 1–3</div><div class="tl-rate">7.35% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 4–30</div><div class="tl-rate">Prime USA + 2% = 8.75%</div></div>
-        </div>
-      </div>
-
-      <!-- MUCAP -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#7C3AED;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Banco Mucap</span>
-            <span class="tag tag-usd">USD</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>$1,538.04</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">$202,304 ($197,370+2.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">$4,934.25 (2.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">₡75,000 (~$158)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">~$1,804</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Años 1–2</div><div class="tl-rate">7.25% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 3–30</div><div class="tl-rate">SOFR + 5.5% = 9.20%</div></div>
-        </div>
-      </div>
-
-      <!-- BANCO NACIONAL -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#059669;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Banco Nacional (BN)</span>
-            <span class="tag tag-crc">CRC</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>₡739,440 (~$1,557)</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">₡103,707,000 (+ 3.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">₡3,507,000 (~$7,383)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">—</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">₡739,440 (~$1,557)</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Todo el plazo</div><div class="tl-rate">TBP + 4% = 7.70%</div></div>
-        </div>
-      </div>
-
-      <!-- COOPEANDE -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#DC2626;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Banco CoopeAnde</span>
-            <span class="tag tag-crc">CRC</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>₡788,737 (~$1,660)</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">₡102,602,500 (₡100.1M+2.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">₡2,502,500 (~$5,268)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">$150 / mes</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">₡792,023 (~$1,667)</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Años 1–3</div><div class="tl-rate">7.50% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 4–5</div><div class="tl-rate">TBP+3.85% = 7.55%</div></div>
-          <div class="tl-seg"><div class="tl-yr">Año 6+</div><div class="tl-rate">TBP+4.25% = 7.95%</div></div>
-        </div>
-      </div>
-
-      <!-- BCR -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#0891B2;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">BCR</span>
-            <span class="tag tag-crc">CRC</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>₡816,896 (~$1,720)</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">₡101,000,000</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">₡3,803,628 (~$8,007)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">—</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">₡847,000 (~$1,783)</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Años 1–2</div><div class="tl-rate">8.00% fijo</div></div>
-          <div class="tl-seg"><div class="tl-yr">Años 3–30</div><div class="tl-rate">TBP + 4.85% ≈ 8.55%</div></div>
-        </div>
-      </div>
-
-      <!-- POPULAR CRC -->
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="bank-dot" style="background:#9D174D;width:10px;height:10px;border-radius:50%"></span>
-            <span class="detail-card-bank">Banco Popular (CRC)</span>
-            <span class="tag tag-crc">CRC</span>
-          </div>
-          <div style="font-size:12px;color:var(--text-3)">Cuota Año 1: <strong>₡955,370 (~$2,012)</strong></div>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item"><div class="detail-lbl">Monto préstamo</div><div class="detail-val">₡124,200,000 (₡120M+3.5%)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Gastos formalización</div><div class="detail-val">₡4,200,000 (~$8,842)</div></div>
-          <div class="detail-item"><div class="detail-lbl">Seguro mensual</div><div class="detail-val">₡75,000 / mes</div></div>
-          <div class="detail-item"><div class="detail-lbl">Cuota Año 5 estimada</div><div class="detail-val">₡955,370 (~$2,012)</div></div>
-        </div>
-        <div class="timeline">
-          <div class="tl-seg"><div class="tl-yr">Todo el plazo</div><div class="tl-rate">TRI 6m CRC + 2.95% = 7.64%</div></div>
-        </div>
-      </div>
-
-    </div><!-- /section-body -->
-  </div><!-- /fichas -->
-
-  <!-- ───────────────── MACRO ───────────────── -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon">🌎</div>
-      <div>
-        <div class="section-title">Contexto macroeconómico</div>
-        <div class="section-desc">Tipo de cambio CRC/USD · Tendencias y proyecciones 2026</div>
       </div>
     </div>
-    <div class="macro-grid">
-      <div class="macro-card">
-        <div class="macro-lbl">T/C actual (venta)</div>
-        <div class="macro-val accent">₡476</div>
-        <div class="macro-note">vs ₡501 a inicio de 2026</div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-lbl">Apreciación colón 2026</div>
-        <div class="macro-val green">−5%</div>
-        <div class="macro-note">En solo 1.5 meses (récord 20 años)</div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-lbl">Apreciación colón 2022–2026</div>
-        <div class="macro-val green">−32%</div>
-        <div class="macro-note">De ₡698 a ₡475 por dólar</div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-lbl">Intervención BCCR (2026)</div>
-        <div class="macro-val">$659M</div>
-        <div class="macro-note">Compras primeros 38 días hábiles</div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-lbl">Reservas internacionales</div>
-        <div class="macro-val green">+31%</div>
-        <div class="macro-note">De $14,407M a $18,931M (16.7% PIB)</div>
-      </div>
-      <div class="macro-card">
-        <div class="macro-lbl">Proyección T/C fin 2026</div>
-        <div class="macro-val">₡505–515</div>
-        <div class="macro-note">Posible ligera corrección al alza</div>
+
+  </div><!-- /contentCol -->
+
+  <!-- PANEL: sibling of contentCol for proper 2-column desktop layout -->
+  <div class="section" id="panelSection">
+    <div class="card">
+      <button class="collapse-toggle open" onclick="toggleCollapse(this)">
+        <h2>⚙️ Panel de Control</h2>
+        <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="collapse-divider"></div>
+      <div class="collapse-body open">
+        <div class="field-row">
+          <label>Nombre del cliente <span class="badge-edit">✏️ Editable</span></label>
+          <input type="text" id="inputName" value="Elizabeth" oninput="recalculate()">
+        </div>
+        <div class="field-row">
+          <label>Monto del crédito (₡) <span class="badge-edit">✏️ Editable</span></label>
+          <input type="number" id="inputCRC" value="100100000" min="1000000" step="100000" oninput="recalculate()">
+        </div>
+        <div class="field-row">
+          <label>Equivalente en USD <span class="badge-fixed">🔒 Fijo</span></label>
+          <input type="text" id="inputUSD" readonly disabled>
+        </div>
+        <div class="info-box">
+          <p class="label">Tipo de Cambio <span class="badge-fixed">🔒</span></p>
+          <p class="sublabel">Vigente 05/03/2026</p>
+          <p class="big-val">₡476.00 / USD</p>
+        </div>
+        <div style="margin-top:12px">
+          <p style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px">Tasas de Referencia <span class="badge-fixed">🔒</span></p>
+          <div class="rates-grid">
+            <div class="rate-item"><div class="name">TBP</div><div class="val">3.70%</div></div>
+            <div class="rate-item"><div class="name">SOFR</div><div class="val">3.70%</div></div>
+            <div class="rate-item"><div class="name">Prime</div><div class="val">6.75%</div></div>
+            <div class="rate-item"><div class="name">TRI 6m CRC</div><div class="val">4.69%</div></div>
+            <div class="rate-item"><div class="name">TRI 6m USD</div><div class="val">3.26%</div></div>
+            <div class="rate-item"><div class="name">TRI 12m USD</div><div class="val">4.15%</div></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ───────────────── RECOMENDACIONES ───────────────── -->
-  <div class="rec-box">
-    <div class="rec-header">
-      <div class="rec-header-icon">🎯</div>
-      <div>
-        <div class="rec-header-title">Análisis y recomendaciones personalizadas — Elizabeth</div>
-        <div class="rec-header-sub">Basado en ingresos en colones, contexto macroeconómico y condiciones bancarias al 05/03/2026</div>
-      </div>
-    </div>
-    <div class="rec-body">
+</div><!-- /desktopWrap -->
 
-      <div class="rec-section">
-        <div class="rec-section-title">📌 Contexto clave del cliente</div>
-        <div class="alert-box alert-blue">
-          <span>💡</span>
-          <span><strong>Ingresos en colones + colón en apreciación = ventaja estratégica.</strong> El colón se ha fortalecido un 32% desde 2022 y un 5% solo en enero–febrero 2026, nivel no visto en 20 años. Con ingresos en CRC y un dólar que no ha subido históricamente en los últimos 3 años, un préstamo en USD genera cuotas que cada vez representan menos colones reales. Esta situación es ventajosa para endeudarse en dólares a corto plazo.</span>
-        </div>
-        <div class="alert-box alert-green">
-          <span>✅</span>
-          <span><strong>Su análisis sobre el tipo de cambio es correcto.</strong> El BCCR ha intervenido masivamente comprando divisas para frenar la apreciación, y los fundamentos (exportaciones, turismo, IED, menor factura petrolera) siguen sólidos. El gobierno de continuidad no tiene incentivos para devaluar el colón.</span>
-        </div>
-        <div class="alert-box alert-amber">
-          <span>⚠️</span>
-          <span><strong>Penalizaciones por pago anticipado:</strong> En Costa Rica, las comisiones por prepago aplican generalmente durante los primeros 3 años (pueden llegar hasta 3% del saldo anticipado). Después del año 3, puede trasladarse de banco o cambiar de moneda sin penalización. Confirme el plazo exacto de cada banco antes de firmar — algunos extienden la restricción hasta 5 años.</span>
-        </div>
-      </div>
 
-      <div class="rec-section">
-        <div class="rec-section-title">🏆 Opción recomendada: Banco Lafise USD</div>
-        <div class="rec-item">
-          <span class="rec-item-icon">💸</span>
-          <div class="rec-item-text"><strong>Cuota más baja del mercado en Año 1:</strong> <em>$1,251.79/mes</em> — ahorro de $187–$258 vs. las siguientes opciones. Sobre 3 años esto representa un ahorro de ~$6,750 frente a Promerica.</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">📉</span>
-          <div class="rec-item-text"><strong>Costo de formalización muy bajo:</strong> solo <em>$1,973.70 (1%)</em> — el más económico después de Davibank ($0). Ahorra hasta $6,800 vs. Popular o BCR.</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">💱</span>
-          <div class="rec-item-text"><strong>Beneficio del colón fuerte:</strong> con ingresos en colones y T/C a ₡476/$, pagar $1,252/mes equivale a ~₡595,000. Si el colón se aprecia a ₡460/$, esa misma cuota costaría ~₡576,000. <em>Efecto positivo de la apreciación.</em></div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🔄</span>
-          <div class="rec-item-text"><strong>Estrategia de salida:</strong> después del año 3, sin penalización, puede migrar a un banco en colones (BN, CoopeAnde) si el dólar comienza a subir o si prefiere estabilidad cambiaria total.</div>
-        </div>
-      </div>
 
-      <div class="rec-section">
-        <div class="rec-section-title">🥈 Alternativa sólida: Davibank</div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🆓</span>
-          <div class="rec-item-text"><strong>Única opción sin gastos de formalización ($0).</strong> Si el capital inicial es limitado, <em>Davibank ahorra hasta $8,800</em> en costos de entrada vs. Popular CRC.</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">📅</span>
-          <div class="rec-item-text"><strong>3 años a tasa fija 7.35%</strong> — mayor predictibilidad en el inicio. A partir del año 4, la tasa sube a Prime+2% = 8.75%, pero para entonces el saldo del préstamo ya habrá bajado.</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🏦</span>
-          <div class="rec-item-text"><strong>Ventana de 3 años:</strong> el período de penalización coincide exactamente con los años de tasa fija. Al año 4, si Prime sube mucho, puede refinanciar sin costo hacia una opción en colones.</div>
-        </div>
-      </div>
+<nav id="bottomNav">
+  <button class="nav-tab active" onclick="navTo('secResumen',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Resumen</button>
+  <button class="nav-tab" onclick="navTo('secTabla',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>Tabla</button>
+  <button class="nav-tab" onclick="navTo('secRankings',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Rankings</button>
+  <button class="nav-tab" onclick="navTo('secDetalle',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Bancos</button>
+  <button class="nav-tab" onclick="navTo('panelSection',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Config</button>
+</nav>
 
-      <div class="rec-section">
-        <div class="rec-section-title">🏅 Si prefiere colones: Banco Nacional</div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🛡️</span>
-          <div class="rec-item-text"><strong>Cero riesgo cambiario</strong> durante todo el plazo. La cuota en TBP+4% = 7.70% es estable y conocida. <em>Banco del Estado = mayor seguridad institucional.</em></div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">📊</span>
-          <div class="rec-item-text"><strong>La TBP ha bajado de ~8% a 3.70% en los últimos años</strong>. Si continúa bajando, la cuota del BN podría disminuir. Si sube, la cuota sube — riesgo a monitorear.</div>
-        </div>
-      </div>
+<script>
+function toggleCollapse(btn){btn.classList.toggle('open');var b=btn.nextElementSibling.nextElementSibling;b.classList.toggle('open')}
+function navTo(id,tab){
+  var p=document.getElementById('panelSection');
+  if(id==='panelSection'){
+    if(window.innerWidth<768){
+      if(p.style.display==='block'){p.style.display='none';return}
+      p.style.display='block';
+    }
+  } else { if(window.innerWidth<768) p.style.display='none'; }
+  var el=document.getElementById(id);
+  if(el){var h=document.getElementById('header').offsetHeight;window.scrollTo({top:el.getBoundingClientRect().top+window.pageYOffset-h-6,behavior:'smooth'})}
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
+  if(tab)tab.classList.add('active');
+}
+var sIds=['secResumen','secTabla','secRankings','secDetalle'];
+window.addEventListener('scroll',function(){
+  if(window.innerWidth>=768)return;
+  var h=document.getElementById('header').offsetHeight+60,c='';
+  sIds.forEach(function(id){var e=document.getElementById(id);if(e&&e.getBoundingClientRect().top<=h)c=id});
+  var i=sIds.indexOf(c);if(i>=0){document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.nav-tab')[i].classList.add('active')}
+},{passive:true});
+function handleResize(){
+  var p=document.getElementById('panelSection');
+  if(window.innerWidth>=768)p.style.display='block';
+  else if(!p.dataset.userOpened) p.style.display='none';
+  document.querySelectorAll('.scroll-hint-text').forEach(function(h){h.style.display=window.innerWidth>=768?'none':'block'});
+}
+window.addEventListener('resize',handleResize);
 
-      <div class="rec-section">
-        <div class="rec-section-title">⚠️ Opciones a analizar con cuidado</div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🔴</span>
-          <div class="rec-item-text"><strong>Mucap y Promerica:</strong> tasas variables ligadas a SOFR (actualmente 3.70%). Si la Reserva Federal vuelve a subir tasas, SOFR puede dispararse — las cuotas en año 3+ serían las más altas del grupo. <em>Alto riesgo de tasa variable.</em></div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🔴</span>
-          <div class="rec-item-text"><strong>Popular CRC:</strong> monto mayor (₡124.2M), cuota más alta ($2,012/mes), gastos de formalización más caros (~$8,842). <em>La opción menos competitiva del grupo.</em></div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">🟡</span>
-          <div class="rec-item-text"><strong>BCR:</strong> tasa inicial alta (8% fijo 2 años → TBP+4.85%). Banco estatal con seguridad, pero cuota y gastos de formalización elevados vs. Lafise o Davibank.</div>
-        </div>
-      </div>
+var TC=476,TBP=3.70,TRI6CRC=4.69,TRI6USD=3.26,TRI12USD=4.15,SOFR=3.70,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
 
-      <div class="rec-section">
-        <div class="rec-section-title">🗺️ Estrategia recomendada (resumen)</div>
-        <div class="rec-item">
-          <span class="rec-item-icon">1️⃣</span>
-          <div class="rec-item-text"><strong>Corto plazo (años 1–3):</strong> contratar <em>Lafise USD</em> o <em>Davibank USD</em>. Menor cuota inicial, costo de entrada bajo (Lafise) o nulo (Davibank), y beneficio del colón fuerte. Los $150/mes de seguro en Davibank encarecen la cuota vs. Lafise ($75/mes).</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">2️⃣</span>
-          <div class="rec-item-text"><strong>Al año 3:</strong> reevaluar. Si el T/C ha subido y el colón se ha debilitado, considerar migrar a <em>BN</em> o <em>CoopeAnde</em> en colones sin penalización.</div>
-        </div>
-        <div class="rec-item">
-          <span class="rec-item-icon">3️⃣</span>
-          <div class="rec-item-text"><strong>CoopeAnde</strong> es competitiva en colones si desea estabilidad cambiaria desde el inicio, con tasas fijas 3 años y formalizaciones moderadas (2.5%), aunque el seguro de $150/mes la hace más cara que BN en cuota mensual.</div>
-        </div>
-      </div>
+function pmt(P,a){var r=a/12/100;return r===0?P/PLAZO:P*r/(1-Math.pow(1+r,-PLAZO))}
+function fmtCRC(v){return'₡'+Math.round(v).toLocaleString('es-CR')}
+function fmtUSD(v){return'$'+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function fmtMoney(v,m){return m==='USD'?fmtUSD(v):fmtCRC(v)}
+// Show CRC primary, USD secondary
+function fmtDual(usd){return fmtCRC(usd*TC)+'<span class="dual-val">'+fmtUSD(usd)+'</span>'}
 
-    </div>
-  </div>
+function getBanks(lc,lu){
+  var a=TBP+4,b=TBP+4.85,c=TBP+4.5,d=TBP+4.95,e=TBP+1.5,f=TBP+3.85,g=SOFR+6,h=SOFR+5.5,j=TRI6USD+4,k=TRI6USD+2.95,l=TRI12USD+4,m=Math.max(TBP+4,8),n=Math.max(l,7.85);
+  return[
+    {id:'promerica_usd',name:'Promerica',moneda:'USD',formalPct:1.89,insurancePct:0.074,rate1:6.75,labelRate1:'Fija 6.75%',rate5:g,labelRate5:'SOFR+6%',condicional:false,loanBase:lu},
+    {id:'lafise_usd',name:'Lafise USD',moneda:'USD',formalPct:1.70,insurancePct:0.074,rate1:5.75,labelRate1:'Fija 5.75%',rate5:m,labelRate5:'TBP+4% piso8%',condicional:false,loanBase:lu},
+    {id:'popular_usd',name:'B.Popular USD',moneda:'USD',formalPct:3.70,insurancePct:0.061,rate1:6.75,labelRate1:'Fija 6.75%',rate5:j,labelRate5:'TRI6m+4%',condicional:false,loanBase:lu},
+    {id:'mucap_usd',name:'Mucap USD',moneda:'USD',formalPct:2.30,insurancePct:0.081,rate1:7.25,labelRate1:'Fija 7.25%',rate5:h,labelRate5:'SOFR+5.5%',condicional:false,loanBase:lu},
+    {id:'davibank_usd',name:'Davibank USD',moneda:'USD',formalPct:0.00,insurancePct:0.075,rate1:7.35,labelRate1:'Fija 7.35%',rate5:7.35,labelRate5:'Fija 7.35%',condicional:false,loanBase:lu},
+    {id:'lafise_crc',name:'Lafise CRC',moneda:'CRC',formalPct:1.70,insurancePct:0.074,rate1:6.75,labelRate1:'Fija 6.75%',rate5:n,labelRate5:'TRI12m+4%',condicional:false,loanBase:lc},
+    {id:'bncr_crc',name:'B.Nacional CRC',moneda:'CRC',formalPct:3.50,insurancePct:0.00,rate1:a,labelRate1:'TBP+4%',rate5:a,labelRate5:'TBP+4%',condicional:false,loanBase:lc},
+    {id:'popular_crc',name:'B.Popular CRC',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:k,labelRate1:'TRI6m+2.95%',rate5:k,labelRate5:'TRI6m+2.95%',condicional:false,loanBase:lc},
+    {id:'popular_fevi',name:'Popular FEVI',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:e,labelRate1:'TBP+1.5%',rate5:e,labelRate5:'TBP+1.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
+    {id:'bcr_crc',name:'BCR CRC',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:8.00,labelRate1:'Fija 8.00%',rate5:b,labelRate5:'TBP+4.85%',condicional:false,loanBase:lc},
+    {id:'bcr_casafacil',name:'BCR CasaFácil',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:c,labelRate1:'TBP+4.5%',rate5:c,labelRate5:'TBP+4.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
+    {id:'mucap_crc',name:'Mucap CRC',moneda:'CRC',formalPct:2.30,insurancePct:0.081,rate1:7.75,labelRate1:'Fija 7.75%',rate5:d,labelRate5:'TBP+4.95%',condicional:false,loanBase:lc},
+    {id:'mucap_bono',name:'Mucap Bono',moneda:'CRC',formalPct:2.30,insurancePct:0.081,rate1:7.75,labelRate1:'Fija 7.75%+Bono',rate5:d,labelRate5:'TBP+4.95%',condicional:true,condLabel:'≤₡75.5M',bono:6000000,loanBase:lc},
+    {id:'coopeande_crc',name:'CoopeAnde',moneda:'CRC',formalPct:2.70,insurancePct:0.082,rate1:7.50,labelRate1:'Fija 7.50%',rate5:f,labelRate5:'TBP+3.85%',condicional:false,loanBase:lc},
+    {id:'davibank_crc',name:'Davibank CRC',moneda:'CRC',formalPct:0.00,insurancePct:0.075,rate1:7.70,labelRate1:'Fija 7.70%',rate5:a,labelRate5:'TBP+4%',condicional:false,loanBase:lc}
+  ];
+}
+function calcBank(bk,lc){
+  if(bk.condicional&&lc>LIMIT_COND)return{active:false};
+  var el=bk.loanBase;if(bk.bono){el-=bk.bono;if(el<0)el=0}
+  var P=el*(1+bk.formalPct/100),fc=el*bk.formalPct/100,cb1=pmt(P,bk.rate1),cb5=pmt(P,bk.rate5),ins=el*bk.insurancePct/100,f=bk.moneda==='USD'?1:1/TC;
+  return{active:true,loan:bk.loanBase,effectiveLoan:el,P:P,formalCost:fc,cuotaBase1:cb1,cuotaBase5:cb5,insMonthly:ins,cuotaTotal1:cb1+ins,cuotaTotal5:cb5+ins,cuotaTotal1USD:(cb1+ins)*f,cuotaTotal5USD:(cb5+ins)*f};
+}
 
-</div><!-- /main -->
+function recalculate(){
+  var lc=parseFloat(document.getElementById('inputCRC').value)||100100000,cn=document.getElementById('inputName').value||'Cliente',lu=lc/TC;
+  document.getElementById('inputUSD').value=fmtUSD(lu);
+  document.getElementById('headerSub').textContent=cn+' – '+fmtCRC(lc)+' ('+fmtUSD(lu)+')';
+  var banks=getBanks(lc,lu),res=banks.map(function(b){var r=calcBank(b,lc);r.bank=b;return r}),act=res.filter(function(r){return r.active});
+  renderTable(act);renderRankings(act);renderResumen(act,cn);renderBankDetail(act);
+}
 
-<!-- ───────────────── FOOTER ───────────────── -->
-<div class="page-footer">
-  <p><strong>Fuentes:</strong> BCCR (bccr.fi.cr) · Cámara de Bancos e Instituciones Financieras de Costa Rica · NY Federal Reserve (SOFR) · FedPrimeRate.com · Teletica, Infobae CR (apreciación del colón) · Información bancaria proporcionada por el cliente.</p>
-  <p style="margin-top:6px"><strong>Aviso:</strong> Este informe es únicamente de carácter informativo y comparativo. Las cuotas proyectadas son estimaciones basadas en tasas vigentes al 05/03/2026. Las tasas variables pueden cambiar. Consulte con cada entidad bancaria para confirmar condiciones finales. No constituye asesoramiento financiero profesional.</p>
-  <p style="margin-top:6px">Elaborado: 05 de marzo de 2026 · T/C referencia: ₡475 por USD · Tasas: ver barra superior</p>
-</div>
+// TABLE: show cuotas with dual currency
+function renderTable(act){
+  var s=act.slice().sort(function(a,b){return a.cuotaTotal1USD-b.cuotaTotal1USD}),rows='';
+  act.forEach(function(r){
+    var b=r.bank,cr=b.moneda==='CRC',cb=b.condicional?'<span class="cond-badge">'+b.condLabel+'</span>':'',bb=b.bono?'<span class="cond-badge" style="background:var(--blue-bg);color:var(--blue-text)">+₡6M</span>':'';
+    var p=s.indexOf(r),rc=p===0?'rank-1':p===1?'rank-2':'';
+    var is=b.insurancePct===0?'Sin seg.':b.insurancePct.toFixed(3)+'%';
+    // Cuota: always ₡ primary, $ secondary
+    var c1crc=fmtCRC(r.cuotaTotal1USD*TC);
+    var c1usd='<span class="dual-val">'+fmtUSD(r.cuotaTotal1USD)+'</span>';
+    var c5crc=fmtCRC(r.cuotaTotal5USD*TC);
+    var c5usd='<span class="dual-val">'+fmtUSD(r.cuotaTotal5USD)+'</span>';
+    rows+='<tr class="'+rc+'"><td>'+b.name+cb+bb+'</td><td style="text-align:center">'+b.moneda+'</td><td style="text-align:center">'+is+'</td><td style="text-align:center">'+b.rate1.toFixed(2)+'%</td><td style="font-weight:700">'+c1crc+c1usd+'</td><td style="text-align:center">'+b.rate5.toFixed(2)+'%</td><td style="font-weight:700">'+c5crc+c5usd+'</td><td>'+b.formalPct.toFixed(2)+'%</td></tr>';
+  });
+  document.getElementById('compTableBody').innerHTML=rows;
+}
 
+// RANKINGS: show USD + CRC equivalent
+function renderRankings(act){
+  var s1=act.slice().sort(function(a,b){return a.cuotaTotal1USD-b.cuotaTotal1USD}),s5=act.slice().sort(function(a,b){return a.cuotaTotal5USD-b.cuotaTotal5USD});
+  function mk(s,k){return s.map(function(r,i){var c=i===0?'gold':i===1?'silver':i===2?'bronze':'';return'<tr><td><span class="rank-num '+c+'">'+(i+1)+'</span></td><td>'+r.bank.name+(r.bank.condicional?' <span class="cond-badge">'+r.bank.condLabel+'</span>':'')+'</td><td>'+fmtDual(r[k])+'</td></tr>'}).join('')}
+  document.getElementById('rank1Body').innerHTML=mk(s1,'cuotaTotal1USD');
+  document.getElementById('rank5Body').innerHTML=mk(s5,'cuotaTotal5USD');
+}
+
+// RESUMEN: show dual currency
+function renderResumen(act,cn){
+  var s=act.slice().sort(function(a,b){return a.cuotaTotal1USD-b.cuotaTotal1USD}),best=s[0],sec=s[1],sv=sec?(sec.cuotaTotal1USD-best.cuotaTotal1USD):0;
+  var bcs=fmtCRC(best.cuotaTotal1USD*TC);
+  var bcsAlt=fmtUSD(best.cuotaTotal1USD);
+  var h='<div class="best-card"><h3>🥇 Mejor opción – Año 1</h3><div class="bank-name">'+best.bank.name+'</div><div class="cuota-val">'+bcs+' <small style="color:var(--green-accent)">('+bcsAlt+')</small></div><div style="font-size:0.72rem;color:var(--green-accent);margin-top:4px">Tasa: '+best.bank.rate1.toFixed(2)+'% · Seguro: '+best.bank.insurancePct.toFixed(3)+'% · 30 años</div></div>';
+  if(sec)h+='<div class="savings">💰 Ahorro vs '+sec.bank.name+': <strong>'+fmtCRC(sv*TC)+'/mes</strong> ('+fmtUSD(sv)+') → <strong>'+fmtCRC(sv*12*TC)+'/año</strong> ('+fmtUSD(sv*12)+')</div>';
+  h+='<div style="margin-top:10px"><p style="font-size:0.75rem;font-weight:700;color:var(--accent-primary);margin-bottom:4px">Top 3</p><table class="ranking-table"><thead><tr><th>#</th><th>Banco</th><th>Año 1</th><th>Año 5</th></tr></thead><tbody>';
+  s.slice(0,3).forEach(function(r,i){h+='<tr><td><span class="rank-num '+(i===0?'gold':i===1?'silver':'bronze')+'">'+(i+1)+'</span></td><td style="text-align:left">'+r.bank.name+'</td><td>'+fmtDual(r.cuotaTotal1USD)+'</td><td>'+fmtDual(r.cuotaTotal5USD)+'</td></tr>'});
+  h+='</tbody></table></div>';
+  document.getElementById('execContent').innerHTML=h;
+}
+
+function renderBankDetail(act){
+  var h='';
+  act.forEach(function(r){
+    var b=r.bank,cr=b.moneda==='CRC',cb=b.condicional?' <span class="cond-badge">'+b.condLabel+'</span>':'',bb=b.bono?' <span class="cond-badge" style="background:var(--blue-bg);color:var(--blue-text)">Bono₡6M</span>':'',cc=cr?'crc-card':'usd-card';
+    var is=b.insurancePct===0?'Sin seguro':b.insurancePct.toFixed(3)+'%='+fmtMoney(r.insMonthly,b.moneda)+'/mes';
+    var c1=fmtCRC(r.cuotaTotal1USD*TC),c1alt=fmtUSD(r.cuotaTotal1USD);
+    var c5=fmtCRC(r.cuotaTotal5USD*TC),c5alt=fmtUSD(r.cuotaTotal5USD);
+    h+='<div class="bank-card '+cc+'"><h3>'+b.name+cb+bb+'</h3>'+
+      '<div class="row"><span class="lbl">Moneda</span><span class="val">'+b.moneda+'</span></div>'+
+      '<div class="row"><span class="lbl">Monto</span><span class="val">'+fmtMoney(r.effectiveLoan,b.moneda)+'</span></div>'+
+      '<div class="row"><span class="lbl">Formal.</span><span class="val">'+b.formalPct.toFixed(2)+'%</span></div>'+
+      '<div class="row"><span class="lbl">Financiado</span><span class="val">'+fmtMoney(r.P,b.moneda)+'</span></div>'+
+      '<div class="row"><span class="lbl">Seguro</span><span class="val">'+is+'</span></div>'+
+      '<div class="row"><span class="lbl">Plazo</span><span class="val">30 años</span></div>'+
+      '<div class="row"><span class="lbl">Tasa Año 1</span><span class="val">'+b.rate1.toFixed(2)+'%</span></div>'+
+      '<div class="row"><span class="lbl">Tasa Año 5</span><span class="val">'+b.rate5.toFixed(2)+'%</span></div>'+
+      '<div class="cuota-highlight">'+
+        '<div style="font-size:0.68rem;color:var(--text-tertiary)">Cuota Año 1</div>'+
+        '<div class="cuota-total">'+c1+'</div>'+
+        '<div style="font-size:0.64rem;color:var(--text-tertiary);margin-top:1px">≈ '+c1alt+'</div>'+
+        '<div style="font-size:0.68rem;color:var(--text-tertiary);margin-top:6px">Cuota Año 5</div>'+
+        '<div class="cuota-total" style="color:var(--accent-hover)">'+c5+'</div>'+
+        '<div style="font-size:0.64rem;color:var(--text-tertiary);margin-top:1px">≈ '+c5alt+'</div>'+
+      '</div></div>';
+  });
+  document.getElementById('bankDetailGrid').innerHTML=h;
+}
+
+document.addEventListener('DOMContentLoaded',function(){handleResize();recalculate()});
+</script>
 </body>
 </html>
