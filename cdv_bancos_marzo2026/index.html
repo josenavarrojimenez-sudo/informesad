@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Informe Comparativo de Hipotecas – Adelante</title>
 <style>
   :root {
@@ -40,7 +40,7 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  html { }
   body {
     font-family: var(--font-body);
     background: var(--bg-primary);
@@ -76,6 +76,9 @@
   }
   .btn-claude:active { transform: scale(0.96); background: var(--accent-hover); }
   .btn-claude svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .btn-config-mobile { padding: 7px 8px; background: var(--bg-hover); color: var(--text-secondary); }
+  .btn-config-mobile:active { background: var(--border-medium); transform: scale(0.96); }
+  .btn-config-mobile.active { background: var(--accent-primary); color: #fff; }
 
   /* ═══════ BOTTOM NAV ═══════ */
   #bottomNav {
@@ -214,6 +217,7 @@
     td:first-child { position: static; box-shadow: none; }
     th:first-child { position: static; }
     #panelSection { display: block !important; }
+    .btn-config-mobile { display: none; }
     .field-row input[type=text], .field-row input[type=number] { font-size: 0.85rem; padding: 8px 12px; }
   }
   @media (min-width: 1024px) {
@@ -257,6 +261,9 @@
     <button class="btn-claude" onclick="window.print()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       PDF
+    </button>
+    <button class="btn-claude btn-config-mobile" onclick="toggleConfigPanel()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
 </div>
@@ -408,30 +415,62 @@
 </nav>
 
 <script>
+var isInputFocused = false;
+document.addEventListener('focusin', function(e) {
+  if (e.target.tagName === 'INPUT') isInputFocused = true;
+});
+document.addEventListener('focusout', function() {
+  isInputFocused = false;
+});
+
 function toggleCollapse(btn){btn.classList.toggle('open');var b=btn.nextElementSibling.nextElementSibling;b.classList.toggle('open')}
+
+function toggleConfigPanel(){
+  var p=document.getElementById('panelSection');
+  var btn=document.querySelector('.btn-config-mobile');
+  if(p.style.display==='block' && window.innerWidth<768){
+    p.style.display='none';
+    delete p.dataset.userOpened;
+    if(btn) btn.classList.remove('active');
+  } else {
+    p.style.display='block';
+    p.dataset.userOpened='1';
+    if(btn) btn.classList.add('active');
+    var h=document.getElementById('header').offsetHeight;
+    window.scrollTo({top:p.getBoundingClientRect().top+window.pageYOffset-h-6,behavior:'smooth'});
+  }
+}
+
 function navTo(id,tab){
   var p=document.getElementById('panelSection');
   if(id==='panelSection'){
     if(window.innerWidth<768){
       if(p.style.display==='block'){p.style.display='none';return}
       p.style.display='block';
+      p.dataset.userOpened='1';
     }
-  } else { if(window.innerWidth<768) p.style.display='none'; }
+  } else { if(window.innerWidth<768){p.style.display='none';delete p.dataset.userOpened;} }
   var el=document.getElementById(id);
-  if(el){var h=document.getElementById('header').offsetHeight;window.scrollTo({top:el.getBoundingClientRect().top+window.pageYOffset-h-6,behavior:'smooth'})}
+  if(el && !isInputFocused){var h=document.getElementById('header').offsetHeight;window.scrollTo({top:el.getBoundingClientRect().top+window.pageYOffset-h-6,behavior:'smooth'})}
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
   if(tab)tab.classList.add('active');
 }
 var sIds=['secResumen','secTabla','secRankings','secDetalle'];
 window.addEventListener('scroll',function(){
-  if(window.innerWidth>=768)return;
+  if(window.innerWidth>=768 || isInputFocused)return;
   var h=document.getElementById('header').offsetHeight+60,c='';
   sIds.forEach(function(id){var e=document.getElementById(id);if(e&&e.getBoundingClientRect().top<=h)c=id});
   var i=sIds.indexOf(c);if(i>=0){document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.nav-tab')[i].classList.add('active')}
 },{passive:true});
+
+// Use visualViewport to detect keyboard vs real resize
+var lastWindowWidth = window.innerWidth;
 function handleResize(){
+  // Only act on width changes (not keyboard height changes)
+  if(Math.abs(window.innerWidth - lastWindowWidth) < 50 && isInputFocused) return;
+  lastWindowWidth = window.innerWidth;
   var p=document.getElementById('panelSection');
-  if(window.innerWidth>=768)p.style.display='block';
+  if(window.innerWidth>=768) p.style.display='block';
   else if(!p.dataset.userOpened) p.style.display='none';
   document.querySelectorAll('.scroll-hint-text').forEach(function(h){h.style.display=window.innerWidth>=768?'none':'block'});
 }
