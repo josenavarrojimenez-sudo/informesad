@@ -504,7 +504,7 @@ tbody td {
   font-size: 12px;
   color: var(--text-secondary);
   line-height: 1.5;
-  max-width: 280px;
+  min-width: 250px;
 }
 
 /* KANBAN VIEW */
@@ -2121,8 +2121,17 @@ function renderEstadoSelect(c) {
 function updateEstadoCasa(lote, estado) {
   const casa = casas.find(c => c.lote === lote);
   if (!casa) return;
+
+  const clave = prompt('Ingrese la clave para modificar el estado:');
+  if (clave !== CLAVE_FECHA) {
+    alert('Clave incorrecta. El cambio no se guardará.');
+    renderTable(); // Re-render to reset the select visual state
+    return;
+  }
+
   casa.estadoCasa = estado;
   casa.terminada = (estado === "Terminada");
+  saveToLocal();
   applyFilters();
 }
 
@@ -2140,6 +2149,7 @@ document.addEventListener('change', (e) => {
     return;
   }
   casa.fecha = nueva;
+  saveToLocal();
   applyFilters();
 });
 
@@ -2198,7 +2208,34 @@ function renderPermisosStatus(val) {
   return '⏳';
 }
 
+
+// ====== PERSISTENCIA ======
+const STORAGE_KEY = 'cdv_formalizacion_data_v1';
+
+function saveToLocal() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(casas));
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      const savedData = JSON.parse(saved);
+      // Merge: update existing objects in memory
+      savedData.forEach(savedCasa => {
+        const index = casas.findIndex(c => c.lote === savedCasa.lote);
+        if (index !== -1) {
+          casas[index] = savedCasa;
+        }
+      });
+    } catch (e) {
+      console.error("Error loading from localStorage", e);
+    }
+  }
+}
+
 // Init
+loadFromLocal();
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
 </script>
