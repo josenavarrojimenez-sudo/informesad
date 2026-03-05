@@ -144,7 +144,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 0 40px;
   position: sticky;
-  top: 84px;
+  top: var(--header-h, 84px);
   z-index: 99;
   box-shadow: var(--shadow-sm);
 }
@@ -185,7 +185,14 @@ body {
   padding: 16px 40px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: var(--header-nav-h, 130px);
+  z-index: 98;
 }
+
+/* Mobile filter toggle & collapsible: desktop defaults */
+.mobile-filter-toggle { display: none; }
+.filters-collapsible { max-height: none !important; overflow: visible !important; }
 
 .filters-inner {
   max-width: 1440px;
@@ -944,7 +951,7 @@ tbody td {
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .header { padding: 16px; position: relative; }
+  .header { padding: 16px; }
   .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
   .header-inner > div:last-child { 
     display: flex !important; 
@@ -969,12 +976,28 @@ tbody td {
   .month-toggle { width: 100%; }
   .month-btn { flex: 1; text-align: center; padding: 8px 12px; }
 
+  /* Logo/title row: collapsible on scroll */
+  .header-inner > div:first-child {
+    max-height: 80px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+  }
+  .header.scrolled .header-inner > div:first-child {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .header.scrolled .header-inner {
+    gap: 0;
+  }
+
+  /* Nav sticky below header */
   .nav-bar { 
     padding: 0 8px; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
-    top: auto;
-    position: relative;
   }
   .nav-inner { gap: 0; }
   .nav-tab { 
@@ -983,7 +1006,15 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; }
+  /* Filters section - sticky below nav on mobile */
+  .filters-bar { 
+    padding: 12px 12px; 
+    position: sticky; 
+    top: var(--header-nav-h, 130px); 
+    z-index: 98;
+    background: var(--bg-secondary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
@@ -994,6 +1025,47 @@ tbody td {
   .filter-clear { width: 100%; text-align: center; padding: 10px; }
   .btn-export { width: 100%; justify-content: center; padding: 10px 16px; }
   .filters-inner > div[style*="flex:1"] { display: none !important; }
+
+  /* Show filter toggle on mobile */
+  .mobile-filter-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-filter-toggle:active {
+    background: var(--bg-tertiary);
+  }
+  .mobile-filter-toggle .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+  }
+  .mobile-filter-toggle.is-open .toggle-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Collapsible wrapper: collapsed by default */
+  .filters-collapsible {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .filters-collapsible.is-open {
+    max-height: 700px !important;
+  }
 
   .main { padding: 12px; }
 
@@ -2302,6 +2374,112 @@ function exportToExcel() {
 loadEdits(); // Load any saved fecha/estado changes
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
+</script>
+<script>
+// ===== STICKY OFFSETS + MOBILE COLLAPSIBLE FILTERS =====
+(function(){
+  function isMobile(){ return window.innerWidth <= 900; }
+
+  function updateStickyOffsets(){
+    var header = document.querySelector('.header');
+    var navBar = document.querySelector('.nav-bar');
+    if(!header || !navBar) return;
+    var hH = header.offsetHeight;
+    var nH = navBar.offsetHeight;
+    document.documentElement.style.setProperty('--header-h', hH + 'px');
+    document.documentElement.style.setProperty('--header-nav-h', (hH + nH) + 'px');
+  }
+
+  function setupCollapsibleFilters(){
+    if(!isMobile()) return;
+    var filtersBar = document.querySelector('.filters-bar');
+    var filtersInner = document.querySelector('.filters-inner');
+    if(!filtersBar || !filtersInner || document.querySelector('.mobile-filter-toggle')) return;
+
+    // Move export button outside the collapsible area
+    var exportBtn = filtersInner.querySelector('.btn-export');
+
+    // Wrap filters-inner in collapsible div
+    var wrapper = document.createElement('div');
+    wrapper.className = 'filters-collapsible';
+    filtersBar.insertBefore(wrapper, filtersInner);
+    wrapper.appendChild(filtersInner);
+
+    // Put export button after wrapper (always visible)
+    if(exportBtn){
+      var exportClone = exportBtn.cloneNode(true);
+      exportClone.style.marginTop = '8px';
+      exportClone.addEventListener('click', function(){ exportToExcel(); });
+      filtersBar.appendChild(exportClone);
+      exportBtn.style.display = 'none';
+    }
+
+    // Create toggle button
+    var btn = document.createElement('button');
+    btn.className = 'mobile-filter-toggle';
+    btn.type = 'button';
+    btn.innerHTML = '<span class="toggle-label">Filtros</span> <span class="toggle-icon">▼</span>';
+    filtersBar.insertBefore(btn, wrapper);
+
+    btn.addEventListener('click', function(){
+      var open = wrapper.classList.toggle('is-open');
+      btn.classList.toggle('is-open', open);
+      btn.querySelector('.toggle-label').textContent = open ? 'Ocultar filtros' : 'Filtros';
+    });
+  }
+
+  function init(){
+    updateStickyOffsets();
+    setupCollapsibleFilters();
+    setupScrollHideLogo();
+  }
+
+  // --- Scroll: hide logo row on mobile ---
+  function setupScrollHideLogo(){
+    var header = document.querySelector('.header');
+    if(!header) return;
+    var scrollThreshold = 30;
+
+    window.addEventListener('scroll', function(){
+      if(!isMobile()){
+        header.classList.remove('scrolled');
+        return;
+      }
+      if(window.scrollY > scrollThreshold){
+        if(!header.classList.contains('scrolled')){
+          header.classList.add('scrolled');
+          setTimeout(updateStickyOffsets, 350);
+        }
+      } else {
+        if(header.classList.contains('scrolled')){
+          header.classList.remove('scrolled');
+          setTimeout(updateStickyOffsets, 350);
+        }
+      }
+    }, {passive: true});
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 150); });
+  } else {
+    setTimeout(init, 150);
+  }
+
+  window.addEventListener('resize', function(){
+    updateStickyOffsets();
+    // Setup collapsible if switched to mobile
+    if(isMobile() && !document.querySelector('.mobile-filter-toggle')){
+      setupCollapsibleFilters();
+    }
+  });
+
+  if(typeof ResizeObserver !== 'undefined'){
+    var headerEl = document.querySelector('.header');
+    if(headerEl) new ResizeObserver(updateStickyOffsets).observe(headerEl);
+    var navEl = document.querySelector('.nav-bar');
+    if(navEl) new ResizeObserver(updateStickyOffsets).observe(navEl);
+  }
+})();
 </script>
 </body>
 </html>
