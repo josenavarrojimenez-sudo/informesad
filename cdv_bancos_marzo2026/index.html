@@ -486,7 +486,7 @@ function fmtMoney(v,m){return m==='USD'?fmtUSD(v):fmtCRC(v)}
 function fmtDual(usd){return fmtCRC(usd*TC)+'<span class="dual-val">'+fmtUSD(usd)+'</span>'}
 
 function getBanks(lc,lu){
-  var a=TBP+4,b=TBP+4.85,c=TBP+4.5,d=TBP+4.95,e=TBP+1.5,f=TBP+3.85,g=SOFR+6,h=SOFR+5.5,j=TRI6USD+4,k=TRI6USD+2.95,l=TRI12USD+4,m=Math.max(TBP+4,8),n=Math.max(l,7.85);
+  var a=TBP+4,b=TBP+4.85,c=TBP+4.5,d=TBP+4.95,e=TBP+1.5,f=TBP+3.85,g=SOFR+6,h=SOFR+5.5,j=TRI6USD+4,k=TRI6USD+2.95,l=TRI12USD+4,m=Math.max(TBP+4,8),n=Math.max(l,7.85),o=TBP+4.4;
   return[
     {id:'promerica_usd',name:'Promerica',moneda:'USD',formalPct:1.89,insurancePct:0.074,rate1:6.75,labelRate1:'Fija 6.75%',rate5:g,labelRate5:'SOFR+6%',condicional:false,loanBase:lu},
     {id:'lafise_usd',name:'Lafise USD',moneda:'USD',formalPct:2.54,insurancePct:0.074,rate1:5.95,labelRate1:'Fija 5.95%',rate5:m,labelRate5:'TBP+4% piso8%',condicional:false,loanBase:lu},
@@ -494,9 +494,9 @@ function getBanks(lc,lu){
     {id:'mucap_usd',name:'Mucap USD',moneda:'USD',formalPct:2.30,insurancePct:0.081,rate1:7.25,labelRate1:'Fija 7.25%',rate5:h,labelRate5:'SOFR+5.5%',condicional:false,loanBase:lu},
     {id:'davibank_usd',name:'Davibank USD',moneda:'USD',formalPct:0.00,insurancePct:0.075,rate1:7.35,labelRate1:'Fija 7.35%',rate5:7.35,labelRate5:'Fija 7.35%',condicional:false,loanBase:lu},
     {id:'lafise_crc',name:'Lafise CRC',moneda:'CRC',formalPct:2.54,insurancePct:0.074,rate1:6.75,labelRate1:'Fija 6.75%',rate5:n,labelRate5:'TRI12m+4%',condicional:false,loanBase:lc},
-    {id:'bncr_crc',name:'B.Nacional CRC',moneda:'CRC',formalPct:3.50,insurancePct:0.00,rate1:a,labelRate1:'TBP+4%',rate5:a,labelRate5:'TBP+4%',condicional:false,loanBase:lc},
+    {id:'bncr_crc',name:'B.Nacional CRC',moneda:'CRC',formalPct:3.50,insurancePct:0.00,rate1:8.00,labelRate1:'Fija 8% (1-24m)',rate5:o,labelRate5:'TBP+4.4%',condicional:false,loanBase:lc},
     {id:'popular_crc',name:'B.Popular CRC',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:k,labelRate1:'TRI6m+2.95%',rate5:k,labelRate5:'TRI6m+2.95%',condicional:false,loanBase:lc},
-    {id:'popular_fevi',name:'Popular FEVI',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:e,labelRate1:'TBP+1.5%',rate5:e,labelRate5:'TBP+1.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
+    {id:'popular_fevi',name:'Popular FEVI',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:e,labelRate1:'TBP+1.5%',rate5:e,labelRate5:'TBP+1.5%',condicional:true,condLabel:'≤₡85M',customLimit:85000000,loanBase:lc},
     {id:'bcr_crc',name:'BCR CRC',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:7.85,labelRate1:'Fija 7.85% (1-24m)',rate5:b,labelRate5:'TBP+4.85%',condicional:false,loanBase:lc},
     {id:'bcr_casafacil',name:'BCR CasaFácil',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:c,labelRate1:'TBP+4.5%',rate5:c,labelRate5:'TBP+4.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
     {id:'mucap_crc',name:'Mucap CRC',moneda:'CRC',formalPct:2.30,insurancePct:0.081,rate1:7.75,labelRate1:'Fija 7.75%',rate5:d,labelRate5:'TBP+4.95%',condicional:false,loanBase:lc},
@@ -506,7 +506,7 @@ function getBanks(lc,lu){
   ];
 }
 function calcBank(bk,lc){
-  if(bk.condicional&&lc>LIMIT_COND)return{active:false};
+  if(bk.condicional&&lc>(bk.customLimit||LIMIT_COND))return{active:false};
   var el=bk.loanBase;if(bk.bono){el-=bk.bono;if(el<0)el=0}
   var P=el*(1+bk.formalPct/100),fc=el*bk.formalPct/100,cb1=pmt(P,bk.rate1),cb5=pmt(P,bk.rate5),ins=el*bk.insurancePct/100,f=bk.moneda==='USD'?1:1/TC;
   return{active:true,loan:bk.loanBase,effectiveLoan:el,P:P,formalCost:fc,cuotaBase1:cb1,cuotaBase5:cb5,insMonthly:ins,cuotaTotal1:cb1+ins,cuotaTotal5:cb5+ins,cuotaTotal1USD:(cb1+ins)*f,cuotaTotal5USD:(cb5+ins)*f};
