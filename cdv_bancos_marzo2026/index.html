@@ -489,7 +489,7 @@ function getBanks(lc,lu){
   var a=TBP+4,b=TBP+4.85,c=TBP+4.5,d=TBP+4.95,e=TBP+1.5,f=TBP+3.85,g=SOFR+6,h=SOFR+5.5,j=TRI6USD+4,k=TRI6USD+2.95,l=TRI12USD+4,m=Math.max(TBP+4,8),n=Math.max(l,7.85);
   return[
     {id:'promerica_usd',name:'Promerica',moneda:'USD',formalPct:1.89,insurancePct:0.074,rate1:6.75,labelRate1:'Fija 6.75%',rate5:g,labelRate5:'SOFR+6%',condicional:false,loanBase:lu},
-    {id:'lafise_usd',name:'Lafise USD',moneda:'USD',formalPct:2.54,insurancePct:0.074,rate1:5.75,labelRate1:'Fija 5.75%',rate5:m,labelRate5:'TBP+4% piso8%',condicional:false,loanBase:lu},
+    {id:'lafise_usd',name:'Lafise USD',moneda:'USD',formalPct:2.54,insurancePct:0.074,rate1:5.95,labelRate1:'Fija 5.95%',rate5:m,labelRate5:'TBP+4% piso8%',condicional:false,loanBase:lu},
     {id:'popular_usd',name:'B.Popular USD',moneda:'USD',formalPct:3.70,insurancePct:0.061,rate1:6.75,labelRate1:'Fija 6.75%',rate5:j,labelRate5:'TRI6m+4%',condicional:false,loanBase:lu},
     {id:'mucap_usd',name:'Mucap USD',moneda:'USD',formalPct:2.30,insurancePct:0.081,rate1:7.25,labelRate1:'Fija 7.25%',rate5:h,labelRate5:'SOFR+5.5%',condicional:false,loanBase:lu},
     {id:'davibank_usd',name:'Davibank USD',moneda:'USD',formalPct:0.00,insurancePct:0.075,rate1:7.35,labelRate1:'Fija 7.35%',rate5:7.35,labelRate5:'Fija 7.35%',condicional:false,loanBase:lu},
@@ -497,7 +497,7 @@ function getBanks(lc,lu){
     {id:'bncr_crc',name:'B.Nacional CRC',moneda:'CRC',formalPct:3.50,insurancePct:0.00,rate1:a,labelRate1:'TBP+4%',rate5:a,labelRate5:'TBP+4%',condicional:false,loanBase:lc},
     {id:'popular_crc',name:'B.Popular CRC',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:k,labelRate1:'TRI6m+2.95%',rate5:k,labelRate5:'TRI6m+2.95%',condicional:false,loanBase:lc},
     {id:'popular_fevi',name:'Popular FEVI',moneda:'CRC',formalPct:3.70,insurancePct:0.061,rate1:e,labelRate1:'TBP+1.5%',rate5:e,labelRate5:'TBP+1.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
-    {id:'bcr_crc',name:'BCR CRC',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:8.00,labelRate1:'Fija 8.00%',rate5:b,labelRate5:'TBP+4.85%',condicional:false,loanBase:lc},
+    {id:'bcr_crc',name:'BCR CRC',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:7.85,labelRate1:'Fija 7.85% (1-24m)',rate5:b,labelRate5:'TBP+4.85%',condicional:false,loanBase:lc},
     {id:'bcr_casafacil',name:'BCR CasaFácil',moneda:'CRC',formalPct:2.50,insurancePct:0.066,rate1:c,labelRate1:'TBP+4.5%',rate5:c,labelRate5:'TBP+4.5%',condicional:true,condLabel:'≤₡75.5M',loanBase:lc},
     {id:'mucap_crc',name:'Mucap CRC',moneda:'CRC',formalPct:2.30,insurancePct:0.081,rate1:7.75,labelRate1:'Fija 7.75%',rate5:d,labelRate5:'TBP+4.95%',condicional:false,loanBase:lc},
     {id:'mucap_bono',name:'Mucap Bono',moneda:'CRC',formalPct:2.30,insurancePct:0.081,rate1:7.75,labelRate1:'Fija 7.75%+Bono',rate5:d,labelRate5:'TBP+4.95%',condicional:true,condLabel:'≤₡75.5M',bono:6000000,loanBase:lc},
