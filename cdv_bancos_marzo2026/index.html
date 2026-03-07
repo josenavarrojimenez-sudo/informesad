@@ -527,7 +527,7 @@ function handleResize(){
 }
 window.addEventListener('resize',handleResize);
 
-var TC=503.00,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.66,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
+var TC=479.79,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.66,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
 
 function pmt(P,a){var r=a/12/100;return r===0?P/PLAZO:P*r/(1-Math.pow(1+r,-PLAZO))}
 function fmtCRC(v){return'₡'+Math.round(v).toLocaleString('es-CR')}
