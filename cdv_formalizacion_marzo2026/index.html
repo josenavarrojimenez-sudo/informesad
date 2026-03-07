@@ -1724,8 +1724,6 @@ const EDIT_PASSWORD = 'Adelante2025';
 let isAuthenticated = false;
 
 // PERSISTENCE - Save/Load edits from localStorage
-const STORAGE_KEY = 'cdv_formalizacion_edits';
-
 function loadEdits() {
   // 1. Cargar primero de localStorage (rápido)
   try {
@@ -1735,11 +1733,6 @@ function loadEdits() {
   
   // 2. Intentar cargar de la nube (si hay URL)
   if (SYNC_URL) syncFromCloud();
-}
-    });
-  } catch (e) {
-    console.warn('Error cargando edits:', e);
-  }
 }
 
 function saveEdits() {
@@ -1756,11 +1749,6 @@ function saveEdits() {
     // Sincronizar a la nube
     if (SYNC_URL) syncToCloud();
   } catch (e) { console.warn('Save err:', e); }
-}));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
-  } catch (e) {
-    console.warn('Error guardando edits:', e);
-  }
 }
 
 function promptPassword(callback) {
