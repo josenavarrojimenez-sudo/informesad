@@ -1263,6 +1263,8 @@ tbody td {
 
 <script>
 
+
+
 // --- CEREBRO INVISIBLE (Sync) ---
 let SYNC_URL = 'https://script.google.com/macros/s/AKfycbw6WJK2KZr79e6AjfbN4BCX1n1JSsymuvAiniFO6nE_fnMD7d5D5gtGoIx53Prs44vwhA/exec';
 const SYNC_TOKEN = "Adelante2025";
@@ -1280,19 +1282,16 @@ async function syncToCloud() {
       pendientes: c.pendientes, capacidad: c.capacidad
     }));
     
-    // Note: Apps Script POST needs 'no-cors' or a proper response. 
-    // We use a simpler fetch for now.
     await fetch(SYNC_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: SYNC_TOKEN, casas: edits })
     });
     
     showSyncStatus('Sincronizado', '✅');
     setTimeout(() => showSyncStatus('', ''), 3000);
   } catch (e) {
-    console.error('Error sincronizando:', e);
+    console.error('Error sync:', e);
     showSyncStatus('Error sync', '❌');
   }
 }
@@ -1307,15 +1306,18 @@ async function syncFromCloud() {
       applyEdits(result.casas);
       renderAll();
       showSyncStatus('Datos cargados', '✅');
-      setTimeout(() => showSyncStatus('', ''), 3000);
+    } else {
+      showSyncStatus('Sincronizado', '✅');
     }
+    setTimeout(() => showSyncStatus('', ''), 3000);
   } catch (e) {
-    console.error('Error cargando de la nube:', e);
-    showSyncStatus('Offline', '⚠️');
+    console.error('Error load:', e);
+    showSyncStatus('Modo Local', '🏠');
   }
 }
 
 function applyEdits(edits) {
+  if (!edits || !Array.isArray(edits)) return;
   edits.forEach(edit => {
     const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
     if (!casa) return;
@@ -1337,10 +1339,11 @@ function applyEdits(edits) {
 
 function showSyncStatus(text, icon) {
   const el = document.getElementById('syncStatus');
-  if (el) el.innerHTML = icon + ' ' + text;
+  if (el) el.innerHTML = (icon ? icon + ' ' : '') + text;
 }
 
 const casas = [
+
   // HAZEL
   {
     lote: "M.23", modelo: "Stella A 2D 2.5B WC L(PA)", modeloBase: "Stella",
@@ -1529,7 +1532,9 @@ const casas = [
     pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dólares, el precio real que se vendió es el que dice la adenda en el file, ya que tiene extras.",
     terminada: true, estadoCasa: "Casa terminada"
   }
+
 ];
+
 
 // Helpers
 let selectedMonth = 3; // Default: March
@@ -1724,14 +1729,12 @@ const EDIT_PASSWORD = 'Adelante2025';
 let isAuthenticated = false;
 
 // PERSISTENCE - Save/Load edits from localStorage
+
 function loadEdits() {
-  // 1. Cargar primero de localStorage (rápido)
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) applyEdits(JSON.parse(saved));
   } catch (e) { console.warn('Local load err:', e); }
-  
-  // 2. Intentar cargar de la nube (si hay URL)
   if (SYNC_URL) syncFromCloud();
 }
 
@@ -1745,10 +1748,8 @@ function saveEdits() {
       pendientes: c.pendientes, capacidad: c.capacidad
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
-    
-    // Sincronizar a la nube
     if (SYNC_URL) syncToCloud();
-  } catch (e) { console.warn('Save err:', e); }
+  } catch (e) { console.error('Save err:', e); }
 }
 
 function promptPassword(callback) {
