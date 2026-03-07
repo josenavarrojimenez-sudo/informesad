@@ -1262,6 +1262,84 @@ tbody td {
 </div>
 
 <script>
+
+// --- CEREBRO INVISIBLE (Sync) ---
+let SYNC_URL = ''; // SE LLENARÁ CON EL LINK DE LA APLICACIÓN WEB
+const SYNC_TOKEN = "Adelante2025";
+const STORAGE_KEY = 'cdv_formalizacion_edits';
+
+async function syncToCloud() {
+  if (!SYNC_URL) return;
+  showSyncStatus('Sincronizando...', '⏳');
+  try {
+    const edits = casas.map(c => ({
+      lote: c.lote, cliente: c.cliente, fecha: c.fecha,
+      estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
+      montoLote: c.montoLote, montoLoteQFI: c.montoLoteQFI,
+      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
+      pendientes: c.pendientes, capacidad: c.capacidad
+    }));
+    
+    // Note: Apps Script POST needs 'no-cors' or a proper response. 
+    // We use a simpler fetch for now.
+    await fetch(SYNC_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: SYNC_TOKEN, casas: edits })
+    });
+    
+    showSyncStatus('Sincronizado', '✅');
+    setTimeout(() => showSyncStatus('', ''), 3000);
+  } catch (e) {
+    console.error('Error sincronizando:', e);
+    showSyncStatus('Error sync', '❌');
+  }
+}
+
+async function syncFromCloud() {
+  if (!SYNC_URL) return;
+  showSyncStatus('Cargando...', '⏳');
+  try {
+    const response = await fetch(SYNC_URL);
+    const result = await response.json();
+    if (result.status === 'ok' && result.casas && result.casas.length > 0) {
+      applyEdits(result.casas);
+      renderAll();
+      showSyncStatus('Datos cargados', '✅');
+      setTimeout(() => showSyncStatus('', ''), 3000);
+    }
+  } catch (e) {
+    console.error('Error cargando de la nube:', e);
+    showSyncStatus('Offline', '⚠️');
+  }
+}
+
+function applyEdits(edits) {
+  edits.forEach(edit => {
+    const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
+    if (!casa) return;
+    if (edit.fecha) casa.fecha = edit.fecha;
+    if (typeof edit.montoCasa === 'number') casa.montoCasa = edit.montoCasa;
+    if (typeof edit.montoLote === 'number') casa.montoLote = edit.montoLote;
+    if (typeof edit.montoLoteQFI === 'number') casa.montoLoteQFI = edit.montoLoteQFI;
+    if (typeof edit.banco === 'string') casa.banco = edit.banco;
+    if (typeof edit.traspaso === 'boolean') casa.traspaso = edit.traspaso;
+    if (typeof edit.permisos === 'boolean') casa.permisos = edit.permisos;
+    if (typeof edit.pendientes === 'string') casa.pendientes = edit.pendientes;
+    if (typeof edit.capacidad === 'string') casa.capacidad = edit.capacidad;
+    if (typeof edit.estadoCasa === 'string') {
+      casa.estadoCasa = edit.estadoCasa;
+      casa.terminada = (edit.estadoCasa === 'Casa terminada');
+    }
+  });
+}
+
+function showSyncStatus(text, icon) {
+  const el = document.getElementById('syncStatus');
+  if (el) el.innerHTML = icon + ' ' + text;
+}
+
 const casas = [
   // HAZEL
   {
@@ -1637,6 +1715,7 @@ function renderKPIs() {
       <div class="header-stat-value">${fmt(totalLotesQFI)}</div>
       <div class="header-stat-label">Lotes QFI</div>
     </div>
+    <div id="syncStatus" style="font-size:12px;color:#FCD34D;margin-left:20px;display:flex;align-items:center;gap:5px;font-weight:600"></div>
   `;
 }
 
@@ -1648,29 +1727,15 @@ let isAuthenticated = false;
 const STORAGE_KEY = 'cdv_formalizacion_edits';
 
 function loadEdits() {
+  // 1. Cargar primero de localStorage (rápido)
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-    const edits = JSON.parse(saved);
-    edits.forEach(edit => {
-      const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
-      if (!casa) return;
-
-      if (edit.fecha) casa.fecha = edit.fecha;
-      if (typeof edit.montoCasa === 'number') casa.montoCasa = edit.montoCasa;
-      if (typeof edit.montoLote === 'number') casa.montoLote = edit.montoLote;
-      if (typeof edit.montoLoteQFI === 'number') casa.montoLoteQFI = edit.montoLoteQFI;
-
-      if (typeof edit.banco === 'string') casa.banco = edit.banco;
-      if (typeof edit.traspaso === 'boolean') casa.traspaso = edit.traspaso;
-      if (typeof edit.permisos === 'boolean') casa.permisos = edit.permisos;
-      if (typeof edit.pendientes === 'string') casa.pendientes = edit.pendientes;
-      if (typeof edit.capacidad === 'string') casa.capacidad = edit.capacidad;
-
-      if (typeof edit.estadoCasa === 'string') {
-        casa.estadoCasa = edit.estadoCasa;
-        casa.terminada = (edit.estadoCasa === 'Casa terminada');
-      }
+    if (saved) applyEdits(JSON.parse(saved));
+  } catch (e) { console.warn('Local load err:', e); }
+  
+  // 2. Intentar cargar de la nube (si hay URL)
+  if (SYNC_URL) syncFromCloud();
+}
     });
   } catch (e) {
     console.warn('Error cargando edits:', e);
@@ -1680,19 +1745,18 @@ function loadEdits() {
 function saveEdits() {
   try {
     const edits = casas.map(c => ({
-      lote: c.lote,
-      cliente: c.cliente,
-      fecha: c.fecha,
-      estadoCasa: c.estadoCasa,
-      montoCasa: c.montoCasa,
-      montoLote: c.montoLote,
-      montoLoteQFI: c.montoLoteQFI,
-      banco: c.banco,
-      traspaso: c.traspaso,
-      permisos: c.permisos,
-      pendientes: c.pendientes,
-      capacidad: c.capacidad
+      lote: c.lote, cliente: c.cliente, fecha: c.fecha,
+      estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
+      montoLote: c.montoLote, montoLoteQFI: c.montoLoteQFI,
+      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
+      pendientes: c.pendientes, capacidad: c.capacidad
     }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+    
+    // Sincronizar a la nube
+    if (SYNC_URL) syncToCloud();
+  } catch (e) { console.warn('Save err:', e); }
+}));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
   } catch (e) {
     console.warn('Error guardando edits:', e);
