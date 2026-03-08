@@ -60,106 +60,156 @@
     <div style="margin-top:12px"><a href="./" style="text-decoration:none">← Volver al Informe (Prueba)</a></div>
   </div>
 <script>
-let DOCS = [
-  'Estados de Cuenta',
-  'Estudio Registral',
-  'Plano Catastro',
-  'Permiso Construccion',
-  'Solicitud de Credito',
-  'Acta Inicio',
-  'Orden Extra',
-  'Croquis Extra',
-  'Formalizado',
-  'Pre-Expediente',
-  'Resolucion Judicial',
-  'Certificacion de Cancelacion de Deudas',
-  'Croquis Reserva',
-  'Hoja Reserva Firmada',
-  'Hoja Referido',
-  'Liquidacion Anticipada',
-  // Del otro listado
-  'Entrega de Casa',
-  'Solicitud Pre-Entrega',
-  'Liquidacion',
-  'Hoja de Acabados',
-  'Presupuesto',
-  'Comprobante de Prima',
-  'Solicitud de Desembolso 1',
-  'Solicitud de Desembolso 2',
-  'Solicitud de Desembolso 3',
-  'Solicitud de Desembolso 4',
-  'Solicitud de Desembolso 5',
-  'Colillas de Pago',
-  'Política de Extras',
-  'Consentimiento de Formalización',
-  'Póliza de Vida',
-  'Póliza de Siniestro',
-  'Declaración Jurada de Deudas',
-  'Grupo de Interés Económico',
-  // De la tercera imagen (faltantes)
-  'Constancia Salarial / CPA',
-  'CREDID',
-  'SUGEF',
-  'Orden Patronal',
-  'Sicere',
-  'Cédula de Identidad',
-  'Opción de Compra y Venta',
-  'Contrato Construcción',
-  'Estados de Tarjetas de Crédito',
-  'Declaración de Renta (Hacienda)',
-  'Morosidad Patronal CCSS',
-  'Cartas de Descargo',
-  'Expediente a Banco',
-  'Informe Avaluo',
-  'Carta de Aprobacion',
-  'Coordinacion Firma Cliente',
-  'Calculo',
-  'Solicitud Medidor'
+// Definición definitiva con adjuntos requeridos/opcionales
+const DOCS = [
+  {name:'Estados de Cuenta', files:true},
+  {name:'Estudio Registral', files:true},
+  {name:'Plano Catastro', files:true},
+  {name:'Permiso de Construcción', files:true},
+  {name:'Solicitud de Crédito', files:true},
+  {name:'Acta de Inicio', files:true},
+  {name:'Orden Extra', files:true, optional:true},
+  {name:'Croquis Extra', files:true, optional:true},
+  {name:'Resolución Judicial', files:true, optional:true},
+  {name:'Certificación de Cancelación de Deudas', files:true, optional:true},
+  {name:'Croquis Reserva', files:true},
+  {name:'Hoja de Reserva Firmada', files:true},
+  {name:'Liquidación Anticipada', files:true},
+  {name:'Hoja de Acabados', files:true},
+  {name:'Presupuesto', files:true},
+  {name:'Comprobante de Prima', files:true, optional:true},
+  {name:'Colillas de Pago', files:true},
+  {name:'Declaración Jurada de Deudas', files:true},
+  {name:'Grupo de Interés Económico', files:true, optional:true},
+  {name:'Constancia Salarial / CPA', files:true},
+  {name:'CREDID', files:true},
+  {name:'SUGEF', files:true},
+  {name:'Orden Patronal', files:true, optional:true},
+  {name:'Sicere', files:true, optional:true},
+  {name:'Cédula de Identidad', files:true},
+  {name:'Opción de Compra y Venta', files:true},
+  {name:'Contrato Construcción', files:true},
+  {name:'Estados de Tarjetas de Crédito', files:true, optional:true},
+  {name:'Declaración de Renta (Hacienda)', files:true, optional:true},
+  {name:'Morosidad Patronal CCSS', files:true, optional:true},
+  {name:'Cartas de Descargo', files:true, optional:true},
+  {name:'Informe Avaluo', files:true},
+  {name:'Carta de Aprobacion', files:true},
+  {name:'Coordinacion Firma Cliente', files:false} // solo estado
 ];
 const STATES = ['Pendiente','Recibido','Observado','Aprobado','N/A'];
 let currentId = '';
 
-function key(id){return `expedienteProgress:${id}`}
+function key(id){return `expedienteProgress:v2:${id}`}
+
+function makeRow(doc, data){
+  const row=document.createElement('div');row.className='doc';
+  const label=document.createElement('div');label.className='name';label.textContent=doc.name;row.appendChild(label);
+
+  const sel=document.createElement('select');
+  STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
+  sel.value = (data.statuses&&data.statuses[doc.name]) || 'Pendiente';
+  sel.addEventListener('change',updatePct);
+  row.appendChild(sel);
+
+  if(doc.files){
+    const up=document.createElement('input');
+    up.type='file'; up.multiple=true; up.style.marginLeft='6px';
+    up.addEventListener('change', evt=>{
+      const files=Array.from(evt.target.files||[]);
+      if(!files.length) return;
+      const list = data.files[doc.name] || (data.files[doc.name]=[]);
+      // Read each file as data URL
+      files.forEach(f=>{
+        const r=new FileReader();
+        r.onload=()=>{
+          list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result});
+          renderFiles(row, doc, data);
+        };
+        r.readAsDataURL(f);
+      });
+      // clear input to allow re-uploading same name
+      evt.target.value='';
+    });
+    row.appendChild(up);
+
+    const filesBox=document.createElement('div');
+    filesBox.className='files';
+    filesBox.style.flexBasis='100%';
+    filesBox.style.marginLeft='0';
+    filesBox.style.display='block';
+    row.appendChild(filesBox);
+    renderFiles(row, doc, data);
+  }
+  return row;
+}
+
+function renderFiles(row, doc, data){
+  const box=row.querySelector('.files');
+  if(!box) return;
+  const items=(data.files&&data.files[doc.name])||[];
+  box.innerHTML = items.length? 'Adjuntos: ' : '';
+  items.forEach((fi,idx)=>{
+    const a=document.createElement('a');
+    a.textContent=fi.name; a.style.marginRight='10px'; a.style.fontSize='12px';
+    a.href=fi.data; a.download=fi.name;
+    box.appendChild(a);
+    const rm=document.createElement('button');
+    rm.textContent='✕'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.style.marginRight='8px';
+    rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); };
+    box.appendChild(rm);
+  });
+}
+
+function getCurrentData(){
+  // collect from DOM
+  const data={statuses:{}, files: load(currentId, /*silent*/true).files || {}};
+  document.querySelectorAll('.doc').forEach(row=>{
+    const name=row.querySelector('.name').textContent;
+    const val=row.querySelector('select').value;
+    data.statuses[name]=val;
+  });
+  return data;
+}
+
 function renderRows(data){
   const cont=document.getElementById('docs');
   cont.innerHTML='';
-  DOCS.forEach(name=>{
-    const row=document.createElement('div');row.className='doc';
-    const label=document.createElement('div');label.className='name';label.textContent=name;row.appendChild(label);
-    const sel=document.createElement('select');
-    STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
-    sel.value = (data&&data[name]) || 'Pendiente';
-    sel.addEventListener('change',updatePct);
-    row.appendChild(sel);
-    cont.appendChild(row);
+  if(!data.statuses) data.statuses={};
+  if(!data.files) data.files={};
+  DOCS.forEach(doc=>{
+    if(!data.files[doc.name]) data.files[doc.name]=[];
+    cont.appendChild(makeRow(doc, data));
   });
 }
-function load(id){
-  currentId = id;
-  const raw = localStorage.getItem(key(id));
-  let data = raw? JSON.parse(raw): {};
-  renderRows(data);
-  updatePct();
+
+function load(id, silent){
+  if(id) currentId = id;
+  const raw = localStorage.getItem(key(currentId));
+  let data = raw? JSON.parse(raw): {statuses:{},files:{}};
+  if(!silent){ renderRows(data); updatePct(); }
+  return data;
 }
+
 function updatePct(){
   const selects=[...document.querySelectorAll('.doc select')];
   const total=selects.length;
-  const done=selects.filter(s=>s.value==='Aprobado').length; // criterio: solo "Aprobado" cuenta como completado
+  const done=selects.filter(s=>s.value==='Aprobado').length; // criterio: solo "Aprobado" cuenta
   const pct=Math.round((done/total)*100);
   document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
   document.getElementById('barFill').style.width=pct+'%';
 }
+
 function save(){
   if(!currentId){alert('Definí primero el ID de expediente');return}
-  const data={};
-  document.querySelectorAll('.doc').forEach(row=>{
-    const name=row.querySelector('.name').textContent;
-    const val=row.querySelector('select').value;
-    data[name]=val;
-  });
+  const prev = load(currentId, /*silent*/true);
+  const data=getCurrentData();
+  // keep files map from prev if missing
+  data.files = data.files && Object.keys(data.files).length? data.files : (prev.files||{});
   localStorage.setItem(key(currentId), JSON.stringify(data));
   alert('Guardado localmente. Podés descargar el JSON para respaldarlo.');
 }
+
 function download(){
   if(!currentId){alert('Definí primero el ID de expediente');return}
   const raw=localStorage.getItem(key(currentId))||'{}';
@@ -169,12 +219,14 @@ function download(){
   a.download=`expediente-${currentId.replace(/\W+/g,'_')}.json`;
   a.click();
 }
+
 function upload(file){
   const r=new FileReader();
   r.onload=()=>{
     try{
       const data=JSON.parse(r.result);
       if(!currentId){alert('Definí primero el ID de expediente');return}
+      if(!data.statuses||!data.files){ throw new Error('Estructura inválida'); }
       localStorage.setItem(key(currentId), JSON.stringify(data));
       load(currentId);
       alert('Cargado correctamente.');
@@ -187,14 +239,8 @@ function addDoc(){
   const inp=document.getElementById('newDoc');
   const name=inp.value.trim();
   if(!name) return;
-  if(!DOCS.includes(name)) DOCS.push(name);
-  // preserve current selections if any
-  const data={};
-  document.querySelectorAll('.doc').forEach(row=>{
-    const n=row.querySelector('.name').textContent;
-    const v=row.querySelector('select').value;
-    data[n]=v;
-  });
+  if(!DOCS.some(d=>d.name===name)) DOCS.push({name, files:false});
+  const data=getCurrentData();
   renderRows(data);
   updatePct();
   inp.value='';
