@@ -30,6 +30,8 @@
   .status{display:flex;gap:8px;align-items:center}
   select{padding:10px;border:1px solid var(--line);border-radius:10px}
   input[type=file]{font-size:13px}
+  .file-chip{display:inline-flex;align-items:center;gap:6px;background:#F5F4F0;color:#6B6560;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px}
+  .file-chip .clip{font-size:12px}
   .bar{height:12px;background:#EEE;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
   .bar > div{height:100%;background:linear-gradient(90deg,#34d399,#10b981);width:0}
   .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
@@ -157,6 +159,12 @@ function makeRow(doc, data){
   });
   row.appendChild(sel);
 
+  // file chip indicator
+  const chip=document.createElement('span'); chip.className='file-chip'; chip.style.display='none';
+  const clip=document.createElement('span'); clip.className='clip'; clip.textContent='📎'; chip.appendChild(clip);
+  const countSpan=document.createElement('span'); countSpan.className='count'; chip.appendChild(countSpan);
+  row.appendChild(chip);
+
   if(doc.files){
     const up=document.createElement('input');
     up.type='file'; up.multiple=true; up.style.marginLeft='6px';
@@ -190,6 +198,20 @@ function makeRow(doc, data){
 
 function formatBytes(n){ if(!n) return '0 B'; const u=['B','KB','MB','GB']; let i=0; while(n>=1024 && i<u.length-1){ n/=1024; i++; } return (Math.round(n*10)/10)+' '+u[i]; }
 
+function updateChip(row, doc, data){
+  const chip = row.querySelector('.file-chip');
+  if(!chip) return;
+  const items=(data.files&&data.files[doc.name])||[];
+  const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
+  const countSpan = chip.querySelector('.count');
+  if(items.length){
+    chip.style.display='inline-flex';
+    countSpan.textContent = `${items.length} archivos • ${formatBytes(totalSize)}`;
+  } else {
+    chip.style.display='none';
+  }
+}
+
 function renderFiles(row, doc, data){
   const box=row.querySelector('.files');
   if(!box) return;
@@ -218,6 +240,7 @@ function renderFiles(row, doc, data){
     list.appendChild(wrap);
   });
   box.appendChild(list);
+  updateChip(row, doc, data);
 }
 
 function getCurrentData(){
