@@ -118,7 +118,7 @@ const DOCS = [
   {name:'Carta de Aprobacion', files:true},
   {name:'Coordinacion Firma Cliente', files:false} // solo estado
 ];
-const STATES = ['Pendiente','Recibido','Observado','Aprobado','N/A'];
+const STATES = ['Pendiente','En Proceso','Completado'];
 let currentId = '';
 
 function key(id){return `expedienteProgress:v2:${id}`}
@@ -222,10 +222,26 @@ function renderRows(data){
   });
 }
 
+function migrateStatus(v, doc){
+  // Map old statuses -> new 3-state model
+  if(v==='Aprobado') return 'Completado';
+  if(v==='Recibido' || v==='Observado') return 'En Proceso';
+  if(v==='Pendiente') return 'Pendiente';
+  if(v==='N/A') return doc && doc.optional ? 'Completado' : 'En Proceso'; // si era N/A y el doc es opcional, marcar completo; si no, dejar en proceso
+  return 'Pendiente';
+}
+
 function load(id, silent){
   if(id) currentId = id;
   const raw = localStorage.getItem(key(currentId));
   let data = raw? JSON.parse(raw): {statuses:{},files:{}};
+  // migrate statuses to new set
+  const migrated={};
+  DOCS.forEach(doc=>{
+    const prev = data.statuses ? data.statuses[doc.name] : undefined;
+    migrated[doc.name] = migrateStatus(prev, doc);
+  });
+  data.statuses = migrated;
   if(!silent){ renderRows(data); updatePct(); }
   return data;
 }
@@ -233,7 +249,7 @@ function load(id, silent){
 function updatePct(){
   const selects=[...document.querySelectorAll('.doc select')];
   const total=selects.length;
-  const done=selects.filter(s=>s.value==='Aprobado').length; // criterio: solo "Aprobado" cuenta
+  const done=selects.filter(s=>s.value==='Completado').length; // criterio: solo "Completado" cuenta
   const pct=Math.round((done/total)*100);
   document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
   document.getElementById('barFill').style.width=pct+'%';
