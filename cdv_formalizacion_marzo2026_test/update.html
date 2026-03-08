@@ -4,39 +4,59 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Actualizar Expediente — Prueba</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Tiempos+Fine:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root{
     --bg:#FAF9F7;--card:#FFFFFF;--ink:#1A1A1A;--muted:#6B6560;--line:#E5E2DC;--accent:#D97706;--ok:#059669;--warn:#D97706;--danger:#DC2626;--radius:12px;
+    --claude-grad: linear-gradient(135deg, #2D2014 0%, #3D2E1F 50%, #4A3728 100%);
   }
   body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;}
-  .wrap{max-width:960px;margin:24px auto;padding:0 16px}
-  h1{font-size:20px;margin:8px 0 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.05);padding:16px}
-  .row{display:flex;gap:12px;align-items:center;margin:8px 0}
-  .row input[type=text]{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .header{background:var(--claude-grad);padding:18px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+  .header-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .brand{color:#F5E6D3;font-weight:700;letter-spacing:-0.2px;font-family:'Tiempos Fine', serif}
+  .brand small{display:block;color:#BFA88E;font-weight:500;letter-spacing:0}
+  .wrap{max-width:960px;margin:16px auto 24px;padding:0 16px}
+  h1{font-size:18px;margin:8px 0 16px;font-family:'Tiempos Fine', serif;color:#3D2E1F}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.06);padding:16px}
+  .row{display:flex;gap:12px;align-items:center;margin:8px 0;flex-wrap:wrap}
+  .row input[type=text], .row select{flex:1;min-width:180px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:14px}
   .docs{margin-top:12px}
-  .doc{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:10px 0}
+  .doc{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0;flex-wrap:wrap}
   .doc:last-child{border-bottom:none}
-  .doc .name{flex:1}
+  .doc .name{flex:1;min-width:200px;font-weight:600}
   .status{display:flex;gap:8px;align-items:center}
-  select{padding:8px;border:1px solid var(--line);border-radius:8px}
+  select{padding:10px;border:1px solid var(--line);border-radius:10px}
+  input[type=file]{font-size:13px}
   .bar{height:12px;background:#EEE;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
   .bar > div{height:100%;background:linear-gradient(90deg,#34d399,#10b981);width:0}
-  .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
-  button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  button{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer}
   button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
   .muted{color:var(--muted);font-size:12px}
+  @media (max-width:680px){
+    .row{flex-direction:column;align-items:stretch}
+    .row > *{width:100%}
+    .doc{flex-direction:column;align-items:stretch}
+    .doc .name{min-width:unset}
+    button, .row input[type=text], .row select{font-size:16px}
+  }
 </style>
 </head>
 <body>
+  <div class="header">
+    <div class="header-inner">
+      <div class="brand">Actualizar Expediente <small>Versión de prueba · estilo Claude</small></div>
+      <a href="./" style="color:#F5E6D3;text-decoration:none;font-weight:600">← Volver al Informe</a>
+    </div>
+  </div>
   <div class="wrap">
-    <h1>Actualizar Expediente (Prueba)</h1>
     <div class="card">
       <div class="row">
-        <label for="expediente" style="min-width:130px">ID Expediente/Lote</label>
-        <input id="expediente" type="text" placeholder="Ej: F.18 o 2026-03-Navarro" />
-        <button id="load">Cargar</button>
+        <label for="expSelect" style="min-width:130px">Lote / Expediente</label>
+        <select id="expSelect"><option value="">Cargando lotes…</option></select>
+        <input id="expediente" type="text" placeholder="O escribir manual (Ej: F.18)" />
+        <button id="refreshLots">Refrescar lotes</button>
+        <button id="load" class="primary">Cargar</button>
         <button id="clear">Limpiar</button>
       </div>
       <div class="row">
@@ -44,11 +64,13 @@
           <div class="bar"><div id="barFill"></div></div>
           <div class="muted" id="pct">0% completo</div>
         </div>
-        <button id="save" class="primary">Guardar</button>
-        <button id="download">Descargar JSON</button>
-        <label style="border:1px dashed var(--line);padding:8px 10px;border-radius:10px;cursor:pointer">Subir JSON
-          <input id="upload" type="file" accept="application/json" style="display:none" />
-        </label>
+        <div class="footer">
+          <button id="save" class="primary">Guardar</button>
+          <button id="download">Descargar JSON</button>
+          <label style="border:1px dashed var(--line);padding:10px 12px;border-radius:12px;cursor:pointer;display:inline-block">Subir JSON
+            <input id="upload" type="file" accept="application/json" style="display:none" />
+          </label>
+        </div>
       </div>
       <div class="docs" id="docs"></div>
       <div class="row" style="margin-top:10px">
@@ -56,8 +78,7 @@
         <button id="addDoc">Agregar requisito</button>
       </div>
     </div>
-    <div class="muted" style="margin-top:10px">Nota: Esta es una versión de PRUEBA (no impacta el informe original). Los datos se guardan localmente en tu navegador con opción de descarga/subida.</div>
-    <div style="margin-top:12px"><a href="./" style="text-decoration:none">← Volver al Informe (Prueba)</a></div>
+    <div class="muted" style="margin-top:10px">Nota: PRUEBA — no impacta el informe original. Datos locales con opción de exportar/importar.</div>
   </div>
 <script>
 // Definición definitiva con adjuntos requeridos/opcionales
@@ -101,6 +122,24 @@ const STATES = ['Pendiente','Recibido','Observado','Aprobado','N/A'];
 let currentId = '';
 
 function key(id){return `expedienteProgress:v2:${id}`}
+async function fetchLots(){
+  try{
+    const res = await fetch('./index.html',{cache:'no-store'});
+    const html = await res.text();
+    const rx = /<span class="lote-badge">([^<]+)<\/span>/g;
+    const lots = new Set();
+    let m; while((m=rx.exec(html))){ lots.add(m[1].trim()); }
+    return Array.from(lots);
+  }catch(e){ return []; }
+}
+async function populateLots(){
+  const sel=document.getElementById('expSelect');
+  sel.innerHTML = '<option value="">Seleccionar lote del informe…</option>';
+  const lots = await fetchLots();
+  if(!lots.length){ sel.innerHTML = '<option value="">(No se pudo leer lotes — usar entrada manual)</option>'; return; }
+  lots.sort((a,b)=>a.localeCompare(b, 'es', {numeric:true}));
+  lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+}
 
 function makeRow(doc, data){
   const row=document.createElement('div');row.className='doc';
@@ -248,15 +287,21 @@ function addDoc(){
 
 // wire
 const exp=document.getElementById('expediente');
-document.getElementById('load').onclick=()=>{if(!exp.value.trim())return;load(exp.value.trim())};
-document.getElementById('clear').onclick=()=>{exp.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
+const sel=document.getElementById('expSelect');
+document.getElementById('load').onclick=()=>{
+  const v = sel.value || exp.value.trim();
+  if(!v) return; load(v);
+};
+document.getElementById('clear').onclick=()=>{exp.value='';sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 document.getElementById('save').onclick=save;
 document.getElementById('download').onclick=download;
 document.getElementById('upload').addEventListener('change',e=>{if(e.target.files[0]) upload(e.target.files[0])});
 document.getElementById('addDoc').onclick=addDoc;
+document.getElementById('refreshLots').onclick=populateLots;
+sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
 
 // init
-load('demo');document.getElementById('expediente').value='demo';
+populateLots();
 </script>
 </body>
 </html>
