@@ -2007,9 +2007,7 @@ function renderFlow() {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
     const totalAD = items.reduce((s, c) => s + (c.loteAD||0), 0);
     const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
-    const totalLote = items.reduce((s, c) => s + (c.loteAD||0), 0);
-    const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
-    const totalGlobal = totalCasa + totalLote; // only Casa + Lote AD
+    const totalGlobal = totalCasa + totalAD; // only Casa + Lote AD
 
 
     html += `
