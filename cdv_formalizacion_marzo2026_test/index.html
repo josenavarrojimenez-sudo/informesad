@@ -1949,20 +1949,22 @@ function renderTable() {
       <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
       <td data-label="Cliente"><strong>${c.cliente}</strong></td>
       <td data-label="💰 Desembolso">
-        <div class="monto-highlight">${fmt(c.montoCasa)}</div>
-        <div class="monto-lote">Lote AD: ${fmt(c.loteAD||0)}</div>
-        <div class="monto-lote">Lote QFI: ${fmt(c.loteQFI||0)}</div>
+        <div style="cursor:pointer" onclick="editMontos(${idx})" title="Click para editar montos">${desembolsoBlock(c, false)}</div>
       </td>
-      <td data-label="Fecha Est.">${formatDate(c.fecha)}</td>
-      <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
+      <td data-label="Fecha Est.">
+        <span style="cursor:pointer;text-decoration:underline dotted;color:var(--claude-dark)" onclick="editFecha(${idx})" title="Click para editar">${formatDate(c.fecha)}</span>
+      </td>
+      <td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(${idx})" title="Click para editar banco">${c.banco}</span></td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
       <td data-label="Vendedor"><span style="font-size:12px;font-weight:500">${c.vendedor||''}</span></td>
       <td data-label="Traspaso / Permisos">
-        ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
-        ${c.permisos ? '<span class="status-check"> ✅</span>' : '<span class="status-pending"> ⏳</span>'}
+        <span style="cursor:pointer" onclick="toggleTraspaso(${idx})">${c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>'}</span>
+        <span style="cursor:pointer;margin-left:4px" onclick="togglePermisos(${idx})">${c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>'}</span>
       </td>
-      <td data-label="Estado Casa"><span style="font-size:12px">${c.estadoCasa||''}</span></td>
-      <td data-label="Pendientes"><div class="pendientes-text">${c.pendientes}</div></td>
+      <td data-label="Estado Casa">
+        <span style="cursor:pointer" onclick="changeEstadoCasa(${idx})" title="Click para cambiar estado">${getEstadoBadge(c.estadoCasa)}</span>
+      </td>
+      <td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(${idx})" title="Click para editar">${c.pendientes}</div></td>
     </tr>
   `).join('');
 
@@ -2385,7 +2387,140 @@ function exportToExcel() {
   XLSX.writeFile(wb, 'Ciudad_del_Valle_Formalizacion.xlsx');
 }
 
+// ===== HELPERS: Password, edits, desembolsoBlock, estadoBadge =====
+const EDIT_PASSWORD = 'Adelante2025';
+let isAuthenticated = false;
+const STORAGE_KEY_TEST = 'cdvFormTest_edits';
+
+function promptPassword(callback) {
+  if (isAuthenticated) { callback(); return; }
+  const pw = prompt('Ingrese la clave para modificar:');
+  if (pw === EDIT_PASSWORD) { isAuthenticated = true; callback(); }
+  else if (pw !== null) { alert('Clave incorrecta.'); }
+}
+
+function parseMoneyInput(input, fallback) {
+  if (input === null || input === undefined) return fallback;
+  const s = String(input).replace(/[^0-9.-]/g, '');
+  if (s.trim() === '') return fallback;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function saveEdits() {
+  try {
+    const edits = casas.map(c => ({
+      lote: c.lote, cliente: c.cliente, fecha: c.fecha,
+      estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
+      loteAD: c.loteAD, loteQFI: c.loteQFI,
+      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
+      pendientes: c.pendientes, vendedor: c.vendedor
+    }));
+    localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
+  } catch(e) { console.error('Save err:', e); }
+}
+
+function loadEdits() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_TEST);
+    if (!saved) return;
+    const edits = JSON.parse(saved);
+    edits.forEach(e => {
+      const c = casas.find(x => x.lote === e.lote && x.cliente === e.cliente);
+      if (!c) return;
+      if (e.fecha) c.fecha = e.fecha;
+      if (e.estadoCasa) { c.estadoCasa = e.estadoCasa; c.terminada = (e.estadoCasa === 'Casa terminada'); }
+      if (e.montoCasa !== undefined) c.montoCasa = e.montoCasa;
+      if (e.loteAD !== undefined) c.loteAD = e.loteAD;
+      if (e.loteQFI !== undefined) c.loteQFI = e.loteQFI;
+      if (e.banco) c.banco = e.banco;
+      if (e.traspaso !== undefined) c.traspaso = e.traspaso;
+      if (e.permisos !== undefined) c.permisos = e.permisos;
+      if (e.pendientes !== undefined) c.pendientes = e.pendientes;
+    });
+  } catch(e) { console.warn('Load edits err:', e); }
+}
+
+function editMontos(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    const casaIn = prompt(`Monto CASA actual: ${fmt(c.montoCasa)}\nIngrese nuevo monto:`, c.montoCasa);
+    if (casaIn === null) return;
+    const adIn = prompt(`Monto LOTE AD actual: ${fmt(c.loteAD||0)}\nIngrese nuevo monto:`, c.loteAD||0);
+    if (adIn === null) return;
+    const qfiIn = prompt(`Monto LOTE QFI actual: ${fmt(c.loteQFI||0)}\nIngrese nuevo monto:`, c.loteQFI||0);
+    if (qfiIn === null) return;
+    c.montoCasa = parseMoneyInput(casaIn, c.montoCasa);
+    c.loteAD = parseMoneyInput(adIn, c.loteAD||0);
+    c.loteQFI = parseMoneyInput(qfiIn, c.loteQFI||0);
+    saveEdits(); applyFilters();
+  });
+}
+
+function editBanco(index) {
+  promptPassword(() => {
+    const c = casas[index];
+    const v = prompt(`Banco actual: ${c.banco}\nIngrese nuevo banco:`, c.banco);
+    if (v === null || !v.trim()) return;
+    c.banco = v.trim(); saveEdits(); applyFilters();
+  });
+}
+
+function toggleTraspaso(index) {
+  promptPassword(() => { casas[index].traspaso = !casas[index].traspaso; saveEdits(); applyFilters(); });
+}
+
+function togglePermisos(index) {
+  promptPassword(() => { casas[index].permisos = !casas[index].permisos; saveEdits(); applyFilters(); });
+}
+
+function editPendientes(index) {
+  promptPassword(() => {
+    const v = prompt('Pendientes:', casas[index].pendientes || '');
+    if (v === null) return;
+    casas[index].pendientes = v; saveEdits(); applyFilters();
+  });
+}
+
+function editFecha(index) {
+  promptPassword(() => {
+    const v = prompt(`Fecha actual: ${casas[index].fecha}\nNueva fecha (YYYY-MM-DD):`, casas[index].fecha);
+    if (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) { casas[index].fecha = v; saveEdits(); applyFilters(); }
+    else if (v !== null) alert('Formato inválido. Use YYYY-MM-DD');
+  });
+}
+
+function changeEstadoCasa(index) {
+  promptPassword(() => {
+    const estados = ['Sin reunion de inicio','Reunion de inicio','Casa iniciada','Casa terminada'];
+    const cur = estados.indexOf(casas[index].estadoCasa);
+    const next = (cur + 1) % estados.length;
+    casas[index].estadoCasa = estados[next];
+    casas[index].terminada = (estados[next] === 'Casa terminada');
+    saveEdits(); applyFilters();
+  });
+}
+
+function getEstadoBadge(estado) {
+  if (estado === 'Casa terminada') return '<span class="terminada-badge">✓ TERMINADA</span>';
+  if (estado === 'Casa iniciada') return '<span class="status-pill pill-green">🏗️ Casa iniciada</span>';
+  if (estado === 'Reunion de inicio') return '<span class="status-pill pill-yellow">📋 Reunión de inicio</span>';
+  return '<span class="status-pill" style="background:#F3F4F6;color:#6B7280">⏳ Sin reunión de inicio</span>';
+}
+
+function desembolsoBlock(c, compact) {
+  const cls = compact ? 'desembolso-compact' : 'desembolso-block';
+  return `
+    <div class="${cls}">
+      <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa</span><span class="desembolso-amount">${fmt(c.montoCasa)}</span></div>
+      <div class="desembolso-row desembolso-ad"><span class="desembolso-label">Lote AD</span><span class="desembolso-amount">${fmt(c.loteAD||0)}</span></div>
+      <div class="desembolso-row desembolso-qfi"><span class="desembolso-label">Lote QFI</span><span class="desembolso-amount">${fmt(c.loteQFI||0)}</span></div>
+      <div class="desembolso-total"><div class="desembolso-total-row"><span>Casa + AD</span><strong>${fmt(c.montoCasa + (c.loteAD||0))}</strong></div></div>
+    </div>`;
+}
+
 // Init
+loadEdits();
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
 </script>
