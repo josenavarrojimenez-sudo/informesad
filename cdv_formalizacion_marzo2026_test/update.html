@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Actualizar Expediente — Prueba</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#FAF9F7;--card:#FFFFFF;--ink:#1A1A1A;--muted:#6B6560;--line:#E5E2DC;--accent:#D97706;--ok:#059669;--warn:#D97706;--danger:#DC2626;--radius:12px;
+  }
+  body{font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);margin:0;}
+  .wrap{max-width:960px;margin:24px auto;padding:0 16px}
+  h1{font-size:20px;margin:8px 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.05);padding:16px}
+  .row{display:flex;gap:12px;align-items:center;margin:8px 0}
+  .row input[type=text]{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px}
+  .docs{margin-top:12px}
+  .doc{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding:10px 0}
+  .doc:last-child{border-bottom:none}
+  .doc .name{flex:1}
+  .status{display:flex;gap:8px;align-items:center}
+  select{padding:8px;border:1px solid var(--line);border-radius:8px}
+  .bar{height:12px;background:#EEE;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+  .bar > div{height:100%;background:linear-gradient(90deg,#34d399,#10b981);width:0}
+  .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .muted{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Actualizar Expediente (Prueba)</h1>
+    <div class="card">
+      <div class="row">
+        <label for="expediente" style="min-width:130px">ID Expediente/Lote</label>
+        <input id="expediente" type="text" placeholder="Ej: F.18 o 2026-03-Navarro" />
+        <button id="load">Cargar</button>
+        <button id="clear">Limpiar</button>
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <div class="bar"><div id="barFill"></div></div>
+          <div class="muted" id="pct">0% completo</div>
+        </div>
+        <button id="save" class="primary">Guardar</button>
+        <button id="download">Descargar JSON</button>
+        <label style="border:1px dashed var(--line);padding:8px 10px;border-radius:10px;cursor:pointer">Subir JSON
+          <input id="upload" type="file" accept="application/json" style="display:none" />
+        </label>
+      </div>
+      <div class="docs" id="docs"></div>
+    </div>
+    <div class="muted" style="margin-top:10px">Nota: Esta es una versión de PRUEBA (no impacta el informe original). Los datos se guardan localmente en tu navegador con opción de descarga/subida.</div>
+    <div style="margin-top:12px"><a href="./" style="text-decoration:none">← Volver al Informe (Prueba)</a></div>
+  </div>
+<script>
+const DOCS = [
+  'Estados de Cuenta',
+  'Estudio Registral',
+  'Plano Catastro',
+  'Permiso Construccion',
+  'Solicitud de Credito',
+  'Acta Inicio',
+  'Orden Extra',
+  'Croquis Extra',
+  'Formalizado',
+  'Pre-Expediente',
+  'Resolucion Judicial',
+  'Certificacion de Cancelacion de Deudas',
+  'Croquis Reserva',
+  'Hoja Reserva Firmada',
+  'Hoja Referido',
+  'Liquidacion Anticipada',
+  // Del otro listado
+  'Entrega de Casa',
+  'Solicitud Pre-Entrega',
+  'Liquidacion',
+  'Hoja de Acabados',
+  'Presupuesto',
+  'Comprobante de Prima',
+  'Solicitud de Desembolso 1',
+  'Solicitud de Desembolso 2',
+  'Solicitud de Desembolso 3',
+  'Solicitud de Desembolso 4',
+  'Solicitud de Desembolso 5',
+  'Colillas de Pago',
+  'Política de Extras',
+  'Consentimiento de Formalización',
+  'Póliza de Vida',
+  'Póliza de Siniestro',
+  'Declaración Jurada de Deudas',
+  'Grupo de Interés Económico'
+];
+const STATES = ['Pendiente','Recibido','Observado','Aprobado','N/A'];
+let currentId = '';
+
+function key(id){return `expedienteProgress:${id}`}
+function load(id){
+  currentId = id;
+  const raw = localStorage.getItem(key(id));
+  let data = raw? JSON.parse(raw): {};
+  const cont = document.getElementById('docs');
+  cont.innerHTML='';
+  DOCS.forEach(name=>{
+    const row=document.createElement('div');row.className='doc';
+    const label=document.createElement('div');label.className='name';label.textContent=name;row.appendChild(label);
+    const sel=document.createElement('select');
+    STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
+    sel.value = data[name] || 'Pendiente';
+    sel.addEventListener('change',updatePct);
+    row.appendChild(sel);
+    cont.appendChild(row);
+  });
+  updatePct();
+}
+function updatePct(){
+  const selects=[...document.querySelectorAll('.doc select')];
+  const total=selects.length;
+  const done=selects.filter(s=>s.value==='Aprobado').length; // criterio: solo "Aprobado" cuenta como completado
+  const pct=Math.round((done/total)*100);
+  document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
+  document.getElementById('barFill').style.width=pct+'%';
+}
+function save(){
+  if(!currentId){alert('Definí primero el ID de expediente');return}
+  const data={};
+  document.querySelectorAll('.doc').forEach(row=>{
+    const name=row.querySelector('.name').textContent;
+    const val=row.querySelector('select').value;
+    data[name]=val;
+  });
+  localStorage.setItem(key(currentId), JSON.stringify(data));
+  alert('Guardado localmente. Podés descargar el JSON para respaldarlo.');
+}
+function download(){
+  if(!currentId){alert('Definí primero el ID de expediente');return}
+  const raw=localStorage.getItem(key(currentId))||'{}';
+  const blob=new Blob([raw],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`expediente-${currentId.replace(/\W+/g,'_')}.json`;
+  a.click();
+}
+function upload(file){
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(!currentId){alert('Definí primero el ID de expediente');return}
+      localStorage.setItem(key(currentId), JSON.stringify(data));
+      load(currentId);
+      alert('Cargado correctamente.');
+    }catch(e){alert('Archivo inválido');}
+  };
+  r.readAsText(file);
+}
+
+// wire
+const exp=document.getElementById('expediente');
+document.getElementById('load').onclick=()=>{if(!exp.value.trim())return;load(exp.value.trim())};
+document.getElementById('clear').onclick=()=>{exp.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
+document.getElementById('save').onclick=save;
+document.getElementById('download').onclick=download;
+document.getElementById('upload').addEventListener('change',e=>{if(e.target.files[0]) upload(e.target.files[0])});
+
+// init
+load('demo');document.getElementById('expediente').value='demo';
+</script>
+</body>
+</html>
