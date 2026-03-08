@@ -30,8 +30,11 @@
   .status{display:flex;gap:8px;align-items:center}
   select{padding:10px;border:1px solid var(--line);border-radius:10px}
   input[type=file]{font-size:13px}
-  .file-chip{display:inline-flex;align-items:center;gap:6px;background:#F5F4F0;color:#6B6560;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px}
+  .file-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 8px;font-size:12px;border:1px solid var(--line)}
   .file-chip .clip{font-size:12px}
+  .chip-pend{background:#F5F4F0;color:#6B6560;border-color:#E5E2DC}
+  .chip-prog{background:#FEF3C7;color:#92400E;border-color:#F3E8C7}
+  .chip-done{background:#ECFDF5;color:#065F46;border-color:#D1FAE5}
   .bar{height:12px;background:#EEE;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
   .bar > div{height:100%;background:linear-gradient(90deg,#34d399,#10b981);width:0}
   .footer{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
@@ -156,6 +159,7 @@ function makeRow(doc, data){
       if(!items.length){ alert('Este requisito requiere al menos un archivo para marcarlo como Completado.'); sel.value='En Proceso'; }
     }
     updatePct();
+    updateChip(row, doc, data);
   });
   row.appendChild(sel);
 
@@ -204,10 +208,18 @@ function updateChip(row, doc, data){
   const items=(data.files&&data.files[doc.name])||[];
   const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
   const countSpan = chip.querySelector('.count');
+  // color by status
+  const status = row.querySelector('select')?.value || 'Pendiente';
+  chip.classList.remove('chip-pend','chip-prog','chip-done');
+  if(status==='Completado') chip.classList.add('chip-done');
+  else if(status==='En Proceso') chip.classList.add('chip-prog');
+  else chip.classList.add('chip-pend');
+
   if(items.length){
     chip.style.display='inline-flex';
     countSpan.textContent = `${items.length} archivos • ${formatBytes(totalSize)}`;
   } else {
+    // mostrar chip vacio con color si hay estado? mejor ocultarlo cuando no hay adjuntos
     chip.style.display='none';
   }
 }
