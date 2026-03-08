@@ -69,11 +69,7 @@
         </div>
         <div class="footer">
           <button id="save" class="primary">Guardar</button>
-          <button id="download">Descargar JSON</button>
-          <button id="downloadZipAll">Descargar todo (ZIP)</button>
-          <label style="border:1px dashed var(--line);padding:10px 12px;border-radius:12px;cursor:pointer;display:inline-block">Subir JSON
-            <input id="upload" type="file" accept="application/json" style="display:none" />
-          </label>
+          <button id="refreshLots">Refrescar lotes</button>
         </div>
       </div>
       <div class="docs" id="docs"></div>
@@ -82,7 +78,7 @@
         <button id="addDoc">Agregar requisito</button>
       </div>
     </div>
-    <div class="muted" style="margin-top:10px">Nota: PRUEBA — no impacta el informe original. Datos locales con opción de exportar/importar.</div>
+    <div class="muted" style="margin-top:10px">Nota: PRUEBA — no impacta el informe original. Los cambios se guardan localmente en tu navegador.</div>
   </div>
 <script>
 // Definición definitiva con adjuntos requeridos/opcionales
@@ -201,6 +197,18 @@ function renderFiles(row, doc, data){
   const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
   box.innerHTML = items.length? `Adjuntos (${items.length} • ${formatBytes(totalSize)}). Arrastrá y soltá más archivos aquí:` : 'Arrastrá y soltá archivos aquí o usá el botón Seleccionar.';
   box.style.fontSize='12px'; box.style.color='#6B6560'; box.style.marginTop='6px';
+  const actions=document.createElement('div'); actions.style.marginTop='6px';
+  if(items.length){
+    const zipBtn=document.createElement('button'); zipBtn.textContent='Descargar ZIP de este requisito'; zipBtn.style.fontSize='12px'; zipBtn.onclick=async()=>{
+      const zip=new JSZip();
+      const decode=(dataUrl)=>{ const comma=dataUrl.indexOf(','); const bstr=atob(dataUrl.slice(comma+1)); const u8=new Uint8Array(bstr.length); for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i); return u8; };
+      items.forEach(fi=> zip.file(fi.name, decode(fi.data)) );
+      const blob=await zip.generateAsync({type:'blob'});
+      saveAs(blob, `${doc.name.replace(/[^\w\-\. ]+/g,'_')}.zip`);
+    };
+    actions.appendChild(zipBtn);
+  }
+  box.appendChild(actions);
   const list=document.createElement('div'); list.style.marginTop='6px';
   items.forEach((fi,idx)=>{
     const wrap=document.createElement('span'); wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.marginRight='10px'; wrap.style.marginBottom='6px';
@@ -274,32 +282,7 @@ function save(){
   // keep files map from prev if missing
   data.files = data.files && Object.keys(data.files).length? data.files : (prev.files||{});
   localStorage.setItem(key(currentId), JSON.stringify(data));
-  alert('Guardado localmente. Podés descargar el JSON para respaldarlo.');
-}
-
-function download(){
-  if(!currentId){alert('Definí primero el ID de expediente');return}
-  const raw=localStorage.getItem(key(currentId))||'{}';
-  const blob=new Blob([raw],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`expediente-${currentId.replace(/\W+/g,'_')}.json`;
-  a.click();
-}
-
-function upload(file){
-  const r=new FileReader();
-  r.onload=()=>{
-    try{
-      const data=JSON.parse(r.result);
-      if(!currentId){alert('Definí primero el ID de expediente');return}
-      if(!data.statuses||!data.files){ throw new Error('Estructura inválida'); }
-      localStorage.setItem(key(currentId), JSON.stringify(data));
-      load(currentId);
-      alert('Cargado correctamente.');
-    }catch(e){alert('Archivo inválido');}
-  };
-  r.readAsText(file);
+  alert('Guardado localmente.');
 }
 
 function addDoc(){
@@ -322,29 +305,9 @@ document.getElementById('load').onclick=()=>{
 };
 document.getElementById('clear').onclick=()=>{exp.value='';sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 document.getElementById('save').onclick=save;
-document.getElementById('download').onclick=download;
-document.getElementById('downloadZipAll').onclick=downloadZipAll;
-document.getElementById('upload').addEventListener('change',e=>{if(e.target.files[0]) upload(e.target.files[0])});
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
 sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
-
-async function downloadZipAll(){
-  if(!currentId){alert('Cargá primero un expediente/lote');return}
-  const data = load(currentId, /*silent*/true);
-  const zip = new JSZip();
-  const decode = (dataUrl)=>{ const comma=dataUrl.indexOf(','); const bstr=atob(dataUrl.slice(comma+1)); const u8=new Uint8Array(bstr.length); for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i); return u8; };
-  let added=0;
-  DOCS.forEach(doc=>{
-    const list=(data.files&&data.files[doc.name])||[];
-    if(!list.length) return;
-    const folder = zip.folder(doc.name.replace(/[^\w\-\. ]+/g,'_'));
-    list.forEach(fi=>{ folder.file(fi.name, decode(fi.data)); added++; });
-  });
-  if(!added){ alert('No hay archivos adjuntos en este expediente.'); return; }
-  const blob = await zip.generateAsync({type:'blob'});
-  saveAs(blob, `expediente-${String(currentId).replace(/\W+/g,'_')}.zip`);
-}
 
 // init
 populateLots();
