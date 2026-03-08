@@ -75,8 +75,16 @@
         <div class="footer">
           <button id="save" class="primary">Guardar</button>
           <button id="refreshLots">Refrescar lotes</button>
+          <select id="viewMode">
+            <option value="todos">Vista: Todos</option>
+            <option value="etapa">Vista: Por etapa</option>
+          </select>
+          <select id="stageSelect" style="display:none">
+            <option value="">Todas las etapas</option>
+          </select>
         </div>
       </div>
+      <div class="summary" id="summary" style="position:sticky;top:64px;z-index:9;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow-sm);margin-bottom:8px;display:none"></div>
       <div class="docs" id="docs"></div>
       <div class="row" style="margin-top:10px">
         <input id="newDoc" type="text" placeholder="Agregar nuevo requisito (ej. Carta de Aprobación)" />
@@ -87,41 +95,52 @@
   </div>
 <script>
 // Definición definitiva con adjuntos requeridos/opcionales
+const STAGES = ['Preanálisis','Contrato','Análisis','Banco','Firma','Obra/Entrega'];
 const DOCS = [
-  {name:'Estados de Cuenta', files:true},
-  {name:'Estudio Registral', files:true},
-  {name:'Plano Catastro', files:true},
-  {name:'Permiso de Construcción', files:true},
-  {name:'Solicitud de Crédito', files:true},
-  {name:'Acta de Inicio', files:true},
-  {name:'Orden Extra', files:true, optional:true},
-  {name:'Croquis Extra', files:true, optional:true},
-  {name:'Resolución Judicial', files:true, optional:true},
-  {name:'Certificación de Cancelación de Deudas', files:true, optional:true},
-  {name:'Croquis Reserva', files:true},
-  {name:'Hoja de Reserva Firmada', files:true},
-  {name:'Liquidación Anticipada', files:true},
-  {name:'Hoja de Acabados', files:true},
-  {name:'Presupuesto', files:true},
-  {name:'Comprobante de Prima', files:true, optional:true},
-  {name:'Colillas de Pago', files:true},
-  {name:'Declaración Jurada de Deudas', files:true},
-  {name:'Grupo de Interés Económico', files:true, optional:true},
-  {name:'Constancia Salarial / CPA', files:true},
-  {name:'CREDID', files:true},
-  {name:'SUGEF', files:true},
-  {name:'Orden Patronal', files:true, optional:true},
-  {name:'Sicere', files:true, optional:true},
-  {name:'Cédula de Identidad', files:true},
-  {name:'Opción de Compra y Venta', files:true},
-  {name:'Contrato Construcción', files:true},
-  {name:'Estados de Tarjetas de Crédito', files:true, optional:true},
-  {name:'Declaración de Renta (Hacienda)', files:true, optional:true},
-  {name:'Morosidad Patronal CCSS', files:true, optional:true},
-  {name:'Cartas de Descargo', files:true, optional:true},
-  {name:'Informe Avaluo', files:true},
-  {name:'Carta de Aprobacion', files:true},
-  {name:'Coordinacion Firma Cliente', files:false} // solo estado
+  // Preanálisis
+  {name:'Constancia Salarial / CPA', files:true, stage:'Preanálisis'},
+  {name:'CREDID', files:true, stage:'Preanálisis'},
+  {name:'SUGEF', files:true, stage:'Preanálisis'},
+  {name:'Orden Patronal', files:true, optional:true, stage:'Preanálisis'},
+  {name:'Sicere', files:true, optional:true, stage:'Preanálisis'},
+  {name:'Cédula de Identidad', files:true, stage:'Preanálisis'},
+  {name:'Colillas de Pago', files:true, stage:'Preanálisis'},
+
+  // Contrato
+  {name:'Opción de Compra y Venta', files:true, stage:'Contrato'},
+  {name:'Contrato Construcción', files:true, stage:'Contrato'},
+  {name:'Hoja de Reserva Firmada', files:true, stage:'Contrato'},
+  {name:'Croquis Reserva', files:true, stage:'Contrato'},
+  {name:'Comprobante de Prima', files:true, optional:true, stage:'Contrato'},
+
+  // Análisis
+  {name:'Estados de Cuenta', files:true, stage:'Análisis'},
+  {name:'Estados de Tarjetas de Crédito', files:true, optional:true, stage:'Análisis'},
+  {name:'Declaración de Renta (Hacienda)', files:true, optional:true, stage:'Análisis'},
+  {name:'Morosidad Patronal CCSS', files:true, optional:true, stage:'Análisis'},
+  {name:'Cartas de Descargo', files:true, optional:true, stage:'Análisis'},
+  {name:'Certificación de Cancelación de Deudas', files:true, optional:true, stage:'Análisis'},
+  {name:'Declaración Jurada de Deudas', files:true, stage:'Análisis'},
+  {name:'Grupo de Interés Económico', files:true, optional:true, stage:'Análisis'},
+
+  // Banco
+  {name:'Solicitud de Crédito', files:true, stage:'Banco'},
+  {name:'Estudio Registral', files:true, stage:'Banco'},
+  {name:'Informe Avaluo', files:true, stage:'Banco'},
+  {name:'Carta de Aprobacion', files:true, stage:'Banco'},
+
+  // Firma
+  {name:'Coordinacion Firma Cliente', files:false, stage:'Firma'},
+
+  // Obra/Entrega
+  {name:'Permiso de Construcción', files:true, stage:'Obra/Entrega'},
+  {name:'Plano Catastro', files:true, stage:'Obra/Entrega'},
+  {name:'Hoja de Acabados', files:true, stage:'Obra/Entrega'},
+  {name:'Presupuesto', files:true, stage:'Obra/Entrega'},
+  {name:'Liquidación Anticipada', files:true, stage:'Obra/Entrega'},
+  {name:'Orden Extra', files:true, optional:true, stage:'Obra/Entrega'},
+  {name:'Croquis Extra', files:true, optional:true, stage:'Obra/Entrega'},
+  {name:'Acta de Inicio', files:true, stage:'Obra/Entrega'}
 ];
 const STATES = ['Pendiente','En Proceso','Completado'];
 let currentId = '';
@@ -144,6 +163,13 @@ async function populateLots(){
   if(!lots.length){ sel.innerHTML = '<option value="">(No se pudo leer lotes — usar entrada manual)</option>'; return; }
   lots.sort((a,b)=>a.localeCompare(b, 'es', {numeric:true}));
   lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+}
+
+function populateStages(){
+  const stSel=document.getElementById('stageSelect');
+  stSel.innerHTML='';
+  const def=document.createElement('option'); def.value=''; def.textContent='Todas las etapas'; stSel.appendChild(def);
+  STAGES.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; stSel.appendChild(o); });
 }
 
 function makeRow(doc, data){
@@ -271,10 +297,15 @@ function renderRows(data){
   cont.innerHTML='';
   if(!data.statuses) data.statuses={};
   if(!data.files) data.files={};
-  DOCS.forEach(doc=>{
+  const view=document.getElementById('viewMode')?.value||'todos';
+  const stageSel=document.getElementById('stageSelect');
+  const stageFilter = (view==='etapa' && stageSel && stageSel.value)? stageSel.value : null;
+  const list = DOCS.filter(doc=> !stageFilter || doc.stage===stageFilter);
+  list.forEach(doc=>{
     if(!data.files[doc.name]) data.files[doc.name]=[];
     cont.appendChild(makeRow(doc, data));
   });
+  updateSummary(data);
 }
 
 function migrateStatus(v, doc){
@@ -301,13 +332,43 @@ function load(id, silent){
   return data;
 }
 
+function updateSummary(data){
+  const summary = document.getElementById('summary');
+  const view=document.getElementById('viewMode')?.value||'todos';
+  const stageSel=document.getElementById('stageSelect');
+  const stageFilter = (view==='etapa' && stageSel && stageSel.value)? stageSel.value : null;
+  const rows=[...document.querySelectorAll('.doc')];
+  if(!rows.length){ summary.style.display='none'; return; }
+  const states = rows.map(r=> r.querySelector('select')?.value || 'Pendiente');
+  const total=rows.length;
+  const done=states.filter(s=>s==='Completado').length;
+  const prog=states.filter(s=>s==='En Proceso').length;
+  const pend=states.filter(s=>s==='Pendiente').length;
+  const pct= total? Math.round(done*100/total) : 0;
+  summary.style.display='block';
+  summary.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="min-width:160px;font-weight:600">Resumen ${stageFilter? '· '+stageFilter : ''}</div>
+      <div style="flex:1;min-width:180px">
+        <div class="bar"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#34d399,#10b981)"></div></div>
+        <div class="muted">${pct}% — ${done}/${total} completados</div>
+      </div>
+      <div class="file-chip chip-pend">Pendiente: ${pend}</div>
+      <div class="file-chip chip-prog">En Proceso: ${prog}</div>
+      <div class="file-chip chip-done">Completado: ${done}</div>
+    </div>`;
+}
+
 function updatePct(){
   const selects=[...document.querySelectorAll('.doc select')];
-  const total=selects.length;
+  const total=selects.length||1;
   const done=selects.filter(s=>s.value==='Completado').length; // criterio: solo "Completado" cuenta
   const pct=Math.round((done/total)*100);
   document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
   document.getElementById('barFill').style.width=pct+'%';
+  // summary refresh
+  const data = load(currentId, /*silent*/true);
+  updateSummary(data);
 }
 
 function save(){
@@ -343,9 +404,18 @@ document.getElementById('save').onclick=save;
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
 sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
+const viewMode=document.getElementById('viewMode');
+const stageSel=document.getElementById('stageSelect');
+viewMode.addEventListener('change',()=>{
+  if(viewMode.value==='etapa'){ stageSel.style.display='inline-block'; }
+  else { stageSel.style.display='none'; }
+  const data=load(currentId, /*silent*/true); renderRows(data); updatePct();
+});
+stageSel.addEventListener('change',()=>{ const data=load(currentId, /*silent*/true); renderRows(data); updatePct(); });
 
 // init
 populateLots();
+populateStages();
 </script>
 </body>
 </html>
