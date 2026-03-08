@@ -51,12 +51,16 @@
         </label>
       </div>
       <div class="docs" id="docs"></div>
+      <div class="row" style="margin-top:10px">
+        <input id="newDoc" type="text" placeholder="Agregar nuevo requisito (ej. Carta de Aprobación)" />
+        <button id="addDoc">Agregar requisito</button>
+      </div>
     </div>
     <div class="muted" style="margin-top:10px">Nota: Esta es una versión de PRUEBA (no impacta el informe original). Los datos se guardan localmente en tu navegador con opción de descarga/subida.</div>
     <div style="margin-top:12px"><a href="./" style="text-decoration:none">← Volver al Informe (Prueba)</a></div>
   </div>
 <script>
-const DOCS = [
+let DOCS = [
   'Estados de Cuenta',
   'Estudio Registral',
   'Plano Catastro',
@@ -97,22 +101,25 @@ const STATES = ['Pendiente','Recibido','Observado','Aprobado','N/A'];
 let currentId = '';
 
 function key(id){return `expedienteProgress:${id}`}
-function load(id){
-  currentId = id;
-  const raw = localStorage.getItem(key(id));
-  let data = raw? JSON.parse(raw): {};
-  const cont = document.getElementById('docs');
+function renderRows(data){
+  const cont=document.getElementById('docs');
   cont.innerHTML='';
   DOCS.forEach(name=>{
     const row=document.createElement('div');row.className='doc';
     const label=document.createElement('div');label.className='name';label.textContent=name;row.appendChild(label);
     const sel=document.createElement('select');
     STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
-    sel.value = data[name] || 'Pendiente';
+    sel.value = (data&&data[name]) || 'Pendiente';
     sel.addEventListener('change',updatePct);
     row.appendChild(sel);
     cont.appendChild(row);
   });
+}
+function load(id){
+  currentId = id;
+  const raw = localStorage.getItem(key(id));
+  let data = raw? JSON.parse(raw): {};
+  renderRows(data);
   updatePct();
 }
 function updatePct(){
@@ -157,6 +164,23 @@ function upload(file){
   r.readAsText(file);
 }
 
+function addDoc(){
+  const inp=document.getElementById('newDoc');
+  const name=inp.value.trim();
+  if(!name) return;
+  if(!DOCS.includes(name)) DOCS.push(name);
+  // preserve current selections if any
+  const data={};
+  document.querySelectorAll('.doc').forEach(row=>{
+    const n=row.querySelector('.name').textContent;
+    const v=row.querySelector('select').value;
+    data[n]=v;
+  });
+  renderRows(data);
+  updatePct();
+  inp.value='';
+}
+
 // wire
 const exp=document.getElementById('expediente');
 document.getElementById('load').onclick=()=>{if(!exp.value.trim())return;load(exp.value.trim())};
@@ -164,6 +188,7 @@ document.getElementById('clear').onclick=()=>{exp.value='';document.getElementBy
 document.getElementById('save').onclick=save;
 document.getElementById('download').onclick=download;
 document.getElementById('upload').addEventListener('change',e=>{if(e.target.files[0]) upload(e.target.files[0])});
+document.getElementById('addDoc').onclick=addDoc;
 
 // init
 load('demo');document.getElementById('expediente').value='demo';
