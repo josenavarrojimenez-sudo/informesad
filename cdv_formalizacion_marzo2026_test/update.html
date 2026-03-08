@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Actualizar Expediente — Prueba</title>
 <link href="https://fonts.googleapis.com/css2?family=Tiempos+Fine:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
   :root{
     --bg:#FAF9F7;--card:#FFFFFF;--ink:#1A1A1A;--muted:#6B6560;--line:#E5E2DC;--accent:#D97706;--ok:#059669;--warn:#D97706;--danger:#DC2626;--radius:12px;
@@ -22,6 +24,7 @@
   .row input[type=text], .row select{flex:1;min-width:180px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:14px}
   .docs{margin-top:12px}
   .doc{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0;flex-wrap:wrap}
+  .doc.dragover{outline:2px dashed var(--accent);outline-offset:4px;background:#FFFBEB}
   .doc:last-child{border-bottom:none}
   .doc .name{flex:1;min-width:200px;font-weight:600}
   .status{display:flex;gap:8px;align-items:center}
@@ -67,6 +70,7 @@
         <div class="footer">
           <button id="save" class="primary">Guardar</button>
           <button id="download">Descargar JSON</button>
+          <button id="downloadZipAll">Descargar todo (ZIP)</button>
           <label style="border:1px dashed var(--line);padding:10px 12px;border-radius:12px;cursor:pointer;display:inline-block">Subir JSON
             <input id="upload" type="file" accept="application/json" style="display:none" />
           </label>
@@ -148,29 +152,34 @@ function makeRow(doc, data){
   const sel=document.createElement('select');
   STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
   sel.value = (data.statuses&&data.statuses[doc.name]) || 'Pendiente';
-  sel.addEventListener('change',updatePct);
+  sel.addEventListener('change', ()=>{
+    if(sel.value==='Completado' && doc.files){
+      const items=(data.files&&data.files[doc.name])||[];
+      if(!items.length){ alert('Este requisito requiere al menos un archivo para marcarlo como Completado.'); sel.value='En Proceso'; }
+    }
+    updatePct();
+  });
   row.appendChild(sel);
 
   if(doc.files){
     const up=document.createElement('input');
     up.type='file'; up.multiple=true; up.style.marginLeft='6px';
-    up.addEventListener('change', evt=>{
-      const files=Array.from(evt.target.files||[]);
-      if(!files.length) return;
+    const handleAdd=(files)=>{
+      if(!files||!files.length) return;
       const list = data.files[doc.name] || (data.files[doc.name]=[]);
-      // Read each file as data URL
       files.forEach(f=>{
         const r=new FileReader();
-        r.onload=()=>{
-          list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result});
-          renderFiles(row, doc, data);
-        };
+        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); };
         r.readAsDataURL(f);
       });
-      // clear input to allow re-uploading same name
-      evt.target.value='';
-    });
+    };
+    up.addEventListener('change', evt=>{ handleAdd(Array.from(evt.target.files||[])); evt.target.value=''; });
     row.appendChild(up);
+
+    // Drag & drop
+    row.addEventListener('dragover', e=>{ e.preventDefault(); row.classList.add('dragover'); });
+    row.addEventListener('dragleave', ()=> row.classList.remove('dragover'));
+    row.addEventListener('drop', e=>{ e.preventDefault(); row.classList.remove('dragover'); handleAdd(Array.from(e.dataTransfer.files||[])); });
 
     const filesBox=document.createElement('div');
     filesBox.className='files';
@@ -183,21 +192,24 @@ function makeRow(doc, data){
   return row;
 }
 
+function formatBytes(n){ if(!n) return '0 B'; const u=['B','KB','MB','GB']; let i=0; while(n>=1024 && i<u.length-1){ n/=1024; i++; } return (Math.round(n*10)/10)+' '+u[i]; }
+
 function renderFiles(row, doc, data){
   const box=row.querySelector('.files');
   if(!box) return;
   const items=(data.files&&data.files[doc.name])||[];
-  box.innerHTML = items.length? 'Adjuntos: ' : '';
+  const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
+  box.innerHTML = items.length? `Adjuntos (${items.length} • ${formatBytes(totalSize)}). Arrastrá y soltá más archivos aquí:` : 'Arrastrá y soltá archivos aquí o usá el botón Seleccionar.';
+  box.style.fontSize='12px'; box.style.color='#6B6560'; box.style.marginTop='6px';
+  const list=document.createElement('div'); list.style.marginTop='6px';
   items.forEach((fi,idx)=>{
-    const a=document.createElement('a');
-    a.textContent=fi.name; a.style.marginRight='10px'; a.style.fontSize='12px';
-    a.href=fi.data; a.download=fi.name;
-    box.appendChild(a);
-    const rm=document.createElement('button');
-    rm.textContent='✕'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.style.marginRight='8px';
-    rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); };
-    box.appendChild(rm);
+    const wrap=document.createElement('span'); wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.marginRight='10px'; wrap.style.marginBottom='6px';
+    const a=document.createElement('a'); a.textContent=fi.name; a.style.marginRight='6px'; a.style.fontSize='12px'; a.href=fi.data; a.download=fi.name; wrap.appendChild(a);
+    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); };
+    wrap.appendChild(rm);
+    list.appendChild(wrap);
   });
+  box.appendChild(list);
 }
 
 function getCurrentData(){
@@ -311,10 +323,28 @@ document.getElementById('load').onclick=()=>{
 document.getElementById('clear').onclick=()=>{exp.value='';sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 document.getElementById('save').onclick=save;
 document.getElementById('download').onclick=download;
+document.getElementById('downloadZipAll').onclick=downloadZipAll;
 document.getElementById('upload').addEventListener('change',e=>{if(e.target.files[0]) upload(e.target.files[0])});
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
 sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
+
+async function downloadZipAll(){
+  if(!currentId){alert('Cargá primero un expediente/lote');return}
+  const data = load(currentId, /*silent*/true);
+  const zip = new JSZip();
+  const decode = (dataUrl)=>{ const comma=dataUrl.indexOf(','); const bstr=atob(dataUrl.slice(comma+1)); const u8=new Uint8Array(bstr.length); for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i); return u8; };
+  let added=0;
+  DOCS.forEach(doc=>{
+    const list=(data.files&&data.files[doc.name])||[];
+    if(!list.length) return;
+    const folder = zip.folder(doc.name.replace(/[^\w\-\. ]+/g,'_'));
+    list.forEach(fi=>{ folder.file(fi.name, decode(fi.data)); added++; });
+  });
+  if(!added){ alert('No hay archivos adjuntos en este expediente.'); return; }
+  const blob = await zip.generateAsync({type:'blob'});
+  saveAs(blob, `expediente-${String(currentId).replace(/\W+/g,'_')}.zip`);
+}
 
 // init
 populateLots();
