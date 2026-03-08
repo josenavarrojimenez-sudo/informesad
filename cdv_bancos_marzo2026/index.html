@@ -434,8 +434,8 @@
         </div>
         <div class="info-box">
           <p class="label">Tipo de Cambio <span class="badge-fixed">🔒</span></p>
-          <p class="sublabel">Vigente 06/03/2026</p>
-          <p class="big-val">₡479.79 / USD</p>
+          \108/03/2026\3
+          \1478.7\3
         </div>
         <div style="margin-top:12px">
           <p style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px">Tasas de Referencia <span class="badge-fixed">🔒</span></p>
@@ -527,7 +527,7 @@ function handleResize(){
 }
 window.addEventListener('resize',handleResize);
 
-var TC=479.79,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.66,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
+var TC=478.7,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.66,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
 
 function pmt(P,a){var r=a/12/100;return r===0?P/PLAZO:P*r/(1-Math.pow(1+r,-PLAZO))}
 function fmtCRC(v){return'₡'+Math.round(v).toLocaleString('es-CR')}
