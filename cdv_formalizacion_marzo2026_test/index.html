@@ -1956,10 +1956,12 @@ function renderTable() {
       <td data-label="Fecha Est.">${formatDate(c.fecha)}</td>
       <td data-label="Banco"><span class="bank-tag">${c.banco}</span></td>
       <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
+      <td data-label="Vendedor"><span style="font-size:12px;font-weight:500">${c.vendedor||''}</span></td>
       <td data-label="Traspaso / Permisos">
         ${c.traspaso ? '<span class="status-check">✅</span>' : '<span class="status-pending">⏳</span>'}
         ${c.permisos ? '<span class="status-check"> ✅</span>' : '<span class="status-pending"> ⏳</span>'}
       </td>
+      <td data-label="Estado Casa"><span style="font-size:12px">${c.estadoCasa||''}</span></td>
       <td data-label="Pendientes"><div class="pendientes-text">${c.pendientes}</div></td>
     </tr>
   `).join('');
@@ -1981,7 +1983,9 @@ function renderTable() {
               <th>Fecha Est.</th>
               <th>Banco</th>
               <th>Formalizador</th>
+              <th>Vendedor</th>
               <th>Trasp. / Perm.</th>
+              <th>Estado Casa</th>
               <th>Pendientes</th>
             </tr>
           </thead>
