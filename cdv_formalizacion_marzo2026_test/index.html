@@ -2318,6 +2318,7 @@ function renderTable() {
     r += '<td data-label="Traspaso / Permisos"><div style="display:flex;flex-direction:column;gap:4px">';
     r += '<span style="cursor:pointer;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
     r += '<span style="cursor:pointer;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
+    r += '<span style="cursor:pointer;white-space:nowrap;margin-top:2px" onclick="toggleExpo(' + i + ')" title="Marcar/desmarcar EXPO">' + (c.expo ? '<span class="expo-badge" style="cursor:pointer">⭐ EXPO ✕</span>' : '<span style="font-size:11px;color:#9CA3AF;border:1px dashed #D1D5DB;border-radius:20px;padding:2px 8px">☆ EXPO</span>') + '</span>';
     r += '</div></td>';
     r += '<td data-label="📋 Expediente" style="vertical-align:middle">' + expedienteBar(c.lote) + '</td>';
     r += '<td data-label="Estado Casa"><span style="cursor:pointer" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
@@ -2922,6 +2923,14 @@ function editMontos(index) {
     c.loteAD = parseMoneyInput(adIn, c.loteAD||0);
     c.loteQFI = parseMoneyInput(qfiIn, c.loteQFI||0);
     saveEdits(); applyFilters();
+  });
+}
+
+function toggleExpo(index) {
+  requireAuth(function() {
+    casas[index].expo = !casas[index].expo;
+    saveEdits();
+    renderAll();
   });
 }
 
