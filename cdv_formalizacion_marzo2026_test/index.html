@@ -1167,6 +1167,53 @@ tbody td {
   font-family: inherit;
 }
 .nc-input:focus { outline: none; border-color: #92400E; background: #fff; }
+
+/* ===== MOBILE FILTER COLLAPSIBLE ===== */
+.mobile-filter-toggle { display: none; }
+.filters-collapsible { max-height: none !important; overflow: visible !important; }
+
+@media (max-width: 900px) {
+  .mobile-filter-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 11px 16px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: var(--transition);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-filter-toggle:active { background: var(--bg-tertiary); }
+  .mobile-filter-toggle .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+  }
+  .mobile-filter-toggle.is-open .toggle-icon { transform: rotate(180deg); }
+  .filters-collapsible {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .filters-collapsible.is-open { max-height: 700px !important; }
+  .header-inner > div:first-child {
+    max-height: 80px; opacity: 1; overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+  }
+  .header.scrolled .header-inner > div:first-child {
+    max-height: 0; opacity: 0; margin: 0; padding: 0;
+  }
+  .header.scrolled .header-inner { gap: 0; }
+  .btn-nuevo-caso { width: 100%; justify-content: center; padding: 10px 16px; }
+}
 </style>
 </head>
 <body>
@@ -2803,6 +2850,82 @@ populateFilters();
 applyFilters(); // This will filter by default month (March) and render
 
 // Close modal on backdrop click (after DOM ready)
+
+// ===== MOBILE COLLAPSIBLE FILTERS =====
+(function(){
+  function isMobile(){ return window.innerWidth <= 900; }
+
+  function setupCollapsibleFilters(){
+    if(!isMobile()) return;
+    var filtersBar = document.querySelector('.filters-bar');
+    var filtersInner = document.querySelector('.filters-inner');
+    if(!filtersBar || !filtersInner || document.querySelector('.mobile-filter-toggle')) return;
+
+    var exportBtn = filtersInner.querySelector('.btn-export');
+    var nuevoBtn = filtersInner.querySelector('.btn-nuevo-caso');
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'filters-collapsible';
+    filtersBar.insertBefore(wrapper, filtersInner);
+    wrapper.appendChild(filtersInner);
+
+    // Keep export + nuevo buttons always visible
+    [exportBtn, nuevoBtn].forEach(function(btn){
+      if(!btn) return;
+      var clone = btn.cloneNode(true);
+      clone.style.marginTop = '8px';
+      clone.addEventListener('click', function(){
+        if(btn.classList.contains('btn-export')) exportToExcel();
+        else openNuevoCaso();
+      });
+      filtersBar.appendChild(clone);
+      btn.style.display = 'none';
+    });
+
+    var toggleBtn = document.createElement('button');
+    toggleBtn.className = 'mobile-filter-toggle';
+    toggleBtn.type = 'button';
+    toggleBtn.innerHTML = '<span class="toggle-label">Filtros</span> <span class="toggle-icon">▼</span>';
+    filtersBar.insertBefore(toggleBtn, wrapper);
+
+    toggleBtn.addEventListener('click', function(){
+      var open = wrapper.classList.toggle('is-open');
+      toggleBtn.classList.toggle('is-open', open);
+      toggleBtn.querySelector('.toggle-label').textContent = open ? 'Ocultar filtros' : 'Filtros';
+    });
+  }
+
+  function setupScrollHideLogo(){
+    var header = document.querySelector('.header');
+    if(!header) return;
+    window.addEventListener('scroll', function(){
+      if(!isMobile()){ header.classList.remove('scrolled'); return; }
+      if(window.scrollY > 30){
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    }, {passive: true});
+  }
+
+  function init(){
+    setupCollapsibleFilters();
+    setupScrollHideLogo();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ setTimeout(init, 150); });
+  } else {
+    setTimeout(init, 150);
+  }
+
+  window.addEventListener('resize', function(){
+    if(isMobile() && !document.querySelector('.mobile-filter-toggle')){
+      setupCollapsibleFilters();
+    }
+  });
+})();
+
 window.addEventListener('DOMContentLoaded', function() {
   var m = document.getElementById('modalNuevoCaso');
   if (m) m.addEventListener('click', function(e) { if (e.target === this) closeNuevoCaso(); });
