@@ -60,6 +60,29 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  transition: padding 0.3s ease;
+}
+
+/* Compact header on scroll (desktop + mobile) */
+.header.scrolled {
+  padding: 10px 40px;
+}
+.header.scrolled + .nav-bar {
+  top: 60px;
+}
+.header-inner > div:first-child {
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+  overflow: hidden;
+  max-height: 120px;
+  opacity: 1;
+}
+.header.scrolled .header-inner > div:first-child {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+}
+.header.scrolled .header-inner {
+  gap: 12px;
 }
 
 .header-inner {
@@ -1404,6 +1427,8 @@ tbody td {
     max-height: 0; opacity: 0; margin: 0; padding: 0;
   }
   .header.scrolled .header-inner { gap: 0; }
+  .header.scrolled { padding: 10px 16px !important; }
+  .header.scrolled + .nav-bar { top: 56px !important; }
   .btn-nuevo-caso { width: 100%; justify-content: center; padding: 10px 16px; }
 }
 </style>
@@ -3455,7 +3480,6 @@ applyFilters(); // This will filter by default month (March) and render
     var header = document.querySelector('.header');
     if(!header) return;
     window.addEventListener('scroll', function(){
-      if(!isMobile()){ header.classList.remove('scrolled'); return; }
       if(window.scrollY > 30){
         header.classList.add('scrolled');
       } else {
