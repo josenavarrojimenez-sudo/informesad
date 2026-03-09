@@ -66,7 +66,6 @@
             style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:15px;box-sizing:border-box" />
           <div id="loteSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ccc;border-top:none;border-radius:0 0 6px 6px;z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
         </div>
-        <button id="clear">Limpiar</button>
       </div>
       <div class="row">
         <div style="flex:1">
@@ -342,6 +341,16 @@ function setupAutocomplete(){
     setTimeout(() => { box.style.display = 'none'; }, 200);
   });
 
+  inp.addEventListener('input', () => {
+    // Auto-clear docs area when user starts a new search
+    if(currentId && inp.value.trim() !== currentId){
+      document.getElementById('docs').innerHTML = '';
+      document.getElementById('barFill').style.width = '0%';
+      document.getElementById('pct').textContent = '0% completo';
+      currentId = '';
+    }
+  }, true);
+
   inp.addEventListener('keydown', e => {
     if(e.key === 'Enter'){
       const v = inp.value.trim();
@@ -372,15 +381,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('stageSelect').addEventListener('change', () => {
     if(currentId) renderDocs(getStored().statuses || {});
-  });
-
-  document.getElementById('clear').addEventListener('click', () => {
-    document.getElementById('expSelect').value = '';
-    document.getElementById('docs').innerHTML = '';
-    document.getElementById('barFill').style.width = '0%';
-    document.getElementById('pct').textContent = '0% completo';
-    currentId = '';
-    localStorage.removeItem('cdvLastLote');
   });
 
   document.getElementById('addDoc').addEventListener('click', () => {
