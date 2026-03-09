@@ -357,14 +357,15 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 thead th {
-  padding: 12px 16px;
-  font-size: 11px;
+  padding: 8px 10px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   color: var(--text-tertiary);
   text-align: left;
   border-bottom: 1px solid var(--border);
@@ -373,6 +374,21 @@ thead th {
   top: 0;
   white-space: nowrap;
 }
+
+/* Column width hints */
+thead th:nth-child(1)  { width: 80px;  } /* Lote */
+thead th:nth-child(2)  { width: 90px;  } /* Modelo */
+thead th:nth-child(3)  { width: 130px; } /* Cliente */
+thead th:nth-child(4)  { width: 130px; } /* Desembolso */
+thead th:nth-child(5)  { width: 100px; } /* Precio Venta */
+thead th:nth-child(6)  { width: 70px;  } /* Fecha */
+thead th:nth-child(7)  { width: 80px;  } /* Banco */
+thead th:nth-child(8)  { width: 80px;  } /* Formalizador */
+thead th:nth-child(9)  { width: 70px;  } /* Vendedor */
+thead th:nth-child(10) { width: 90px;  } /* Trasp/Perm */
+thead th:nth-child(11) { width: 90px;  } /* Expediente */
+thead th:nth-child(12) { width: 90px;  } /* Estado */
+thead th:nth-child(13) { width: 160px; } /* Pendientes */
 
 tbody tr {
   border-bottom: 1px solid var(--border-light);
@@ -384,10 +400,29 @@ tbody tr:nth-child(even) { background: #FFFFFF; }
 tbody tr:hover { background: #F0EBE2; }
 
 tbody td {
-  padding: 14px 16px;
-  font-size: 13px;
+  padding: 8px 10px;
+  font-size: 12px;
   color: var(--text-primary);
-  vertical-align: top;
+  vertical-align: middle;
+  overflow: hidden;
+  max-width: 0; /* allows table-layout:fixed to control width */
+}
+
+/* Pendientes column wraps instead of truncating */
+tbody td:last-child {
+  overflow: visible;
+  white-space: normal;
+  max-width: none;
+}
+
+tbody td .pendientes-text {
+  font-size: 11px;
+  line-height: 1.4;
+  max-height: 48px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .lote-badge {
@@ -1295,7 +1330,7 @@ tbody td {
     <div class="table-title">Tabla General de Casas</div>
     <span class="table-count">21 registros (Marzo)</span>
   </div>
-  <div style="overflow-x:auto">
+  <div style="overflow-x:auto;font-size:12px">
     <table>
       <thead><tr><th>Lote</th><th>Modelo</th><th>Cliente</th><th>💰 Desembolso</th><th>Fecha Est.</th><th>Banco</th><th>Formalizador</th><th>Trasp. / Perm.</th><th>Pendientes</th></tr></thead>
       <tbody><tr class="">
@@ -2248,8 +2283,8 @@ function renderTable() {
     var i = casas.indexOf(c);
     var r = '<tr class="' + (c.terminada ? 'casa-terminada' : '') + '">';
     r += '<td data-label="Lote"><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : '') + '</td>';
-    r += '<td data-label="Modelo" style="font-size:12px">' + c.modelo + '</td>';
-    r += '<td data-label="Cliente"><strong>' + c.cliente + '</strong></td>';
+    r += '<td data-label="Modelo" style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + c.modelo + '">' + c.modelo + '</td>';
+    r += '<td data-label="Cliente" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + c.cliente + '"><strong>' + c.cliente + '</strong></td>';
     r += '<td data-label="💰 Desembolso"><div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, false) + '</div></td>';
     r += '<td data-label="🏷️ Precio Venta">' + precioVentaBlock(c) + '</td>';
     r += '<td data-label="Fecha Est."><span style="cursor:pointer;text-decoration:underline dotted" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
@@ -2273,7 +2308,7 @@ function renderTable() {
         <div class="table-title">Tabla General de Casas</div>
         <span class="table-count">${filteredData.length} registros</span>
       </div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto;font-size:12px">
         <table>
           <thead>
             <tr>
