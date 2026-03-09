@@ -2797,15 +2797,16 @@ function guardarNuevoCaso() {
   showToast('✅ Caso ' + lote + ' agregado');
 }
 
-// Close modal on backdrop click
-document.getElementById('modalNuevoCaso').addEventListener('click', function(e) {
-  if (e.target === this) closeNuevoCaso();
-});
-
 // Init
 loadEdits();
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
+
+// Close modal on backdrop click (after DOM ready)
+window.addEventListener('DOMContentLoaded', function() {
+  var m = document.getElementById('modalNuevoCaso');
+  if (m) m.addEventListener('click', function(e) { if (e.target === this) closeNuevoCaso(); });
+});
 </script>
   <a href="./update.html" style="position:fixed;right:16px;bottom:16px;background:#D97706;color:#fff;padding:12px 14px;border-radius:999px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.15);font-weight:700">Actualizar expediente ▸</a>
 
