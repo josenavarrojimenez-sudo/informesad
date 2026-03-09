@@ -3458,18 +3458,7 @@ applyFilters(); // This will filter by default month (March) and render
     filtersBar.insertBefore(wrapper, filtersInner);
     wrapper.appendChild(filtersInner);
 
-    // Keep export + nuevo buttons always visible
-    [exportBtn, nuevoBtn].forEach(function(btn){
-      if(!btn) return;
-      var clone = btn.cloneNode(true);
-      clone.style.marginTop = '8px';
-      clone.addEventListener('click', function(){
-        if(btn.classList.contains('btn-export')) exportToExcel();
-        else openNuevoCaso();
-      });
-      filtersBar.appendChild(clone);
-      btn.style.display = 'none';
-    });
+    // Buttons stay inside the collapsible wrapper (no cloning outside)
 
     var toggleBtn = document.createElement('button');
     toggleBtn.className = 'mobile-filter-toggle';
