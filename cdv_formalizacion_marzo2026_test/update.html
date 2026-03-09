@@ -313,7 +313,7 @@ function migrateStatus(v, doc){
 }
 
 function load(id, silent){
-  if(id) currentId = id;
+  if(id){ currentId = id; localStorage.setItem('cdvLastLote', id); }
   const raw = localStorage.getItem(key(currentId));
   let data = raw? JSON.parse(raw): {statuses:{},files:{}};
   // migrate statuses to new set
@@ -470,6 +470,20 @@ stageSel.addEventListener('change',()=>{ const data=load(currentId, /*silent*/tr
 // init
 populateLots();
 populateStages();
+// Restaurar último lote seleccionado
+const lastLote = localStorage.getItem('cdvLastLote');
+if(lastLote){
+  // Esperar a que el select esté poblado
+  setTimeout(()=>{
+    const s = document.getElementById('expSelect');
+    if([...s.options].some(o=>o.value===lastLote)){
+      s.value = lastLote;
+    } else {
+      document.getElementById('expediente').value = lastLote;
+    }
+    load(lastLote);
+  }, 100);
+}
 </script>
 </body>
 </html>
