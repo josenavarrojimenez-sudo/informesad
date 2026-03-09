@@ -61,8 +61,11 @@
     <div class="card">
       <div class="row">
         <label for="expSelect" style="min-width:130px">Lote / Expediente</label>
-        <input id="expSelect" type="text" list="lotesList" placeholder="Escribí el lote (ej: K.18)…" autocomplete="off" style="min-width:200px;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:15px" />
-        <datalist id="lotesList"></datalist>
+        <div style="position:relative;display:inline-block;min-width:220px">
+          <input id="expSelect" type="text" placeholder="Escribí el lote (ej: K.18)…" autocomplete="off"
+            style="width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:15px;box-sizing:border-box" />
+          <div id="loteSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #ccc;border-top:none;border-radius:0 0 6px 6px;z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15)"></div>
+        </div>
         <button id="clear">Limpiar</button>
       </div>
       <div class="row">
@@ -150,10 +153,7 @@ const LOTS_LIST = ["1-01 Barani", "D.21", "F.18", "I.13", "I.30", "I.36", "I.39"
 function fetchLots(){ return LOTS_LIST; }
 
 function populateLots(){
-  const dl=document.getElementById('lotesList');
-  dl.innerHTML='';
-  const lots = LOTS_LIST.slice().sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
-  lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; dl.appendChild(o); });
+  // no-op: LOTS_LIST already defined, suggestions shown via input handler
 }
 
 function populateStages(){
@@ -452,8 +452,20 @@ document.getElementById('clear').onclick=()=>{
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
 sel.addEventListener('input',()=>{
-  const v = sel.value.trim();
-  if(LOTS_LIST.includes(v)){ load(v); }
+  const v = sel.value.trim().toLowerCase();
+  const box = document.getElementById('loteSuggestions');
+  if(!v){ box.style.display='none'; return; }
+  const matches = LOTS_LIST.filter(l=>l.toLowerCase().includes(v));
+  if(!matches.length){ box.style.display='none'; return; }
+  box.innerHTML = matches.map(l=>`<div style="padding:8px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee"
+    onmousedown="event.preventDefault()" 
+    onclick="document.getElementById('expSelect').value='${l}';document.getElementById('loteSuggestions').style.display='none';load('${l}')">${l}</div>`).join('');
+  box.style.display='block';
+});
+sel.addEventListener('blur',()=>{ setTimeout(()=>{ document.getElementById('loteSuggestions').style.display='none'; },150); });
+sel.addEventListener('focus',()=>{
+  const v = sel.value.trim().toLowerCase();
+  if(v) sel.dispatchEvent(new Event('input'));
 });
 const viewMode=document.getElementById('viewMode');
 const stageSel=document.getElementById('stageSelect');
