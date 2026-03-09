@@ -2231,10 +2231,10 @@ function renderTable() {
     r += '<td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
     r += '<td data-label="Formalizador"><span class="formalizador-tag ' + getFormClass(c.formalizador) + '">' + c.formalizador + '</span></td>';
     r += '<td data-label="Vendedor"><span style="font-size:12px;font-weight:500">' + (c.vendedor||'') + '</span></td>';
-    r += '<td data-label="Traspaso / Permisos">';
-    r += '<span style="cursor:pointer" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
-    r += '<span style="cursor:pointer;margin-left:4px" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
-    r += '</td>';
+    r += '<td data-label="Traspaso / Permisos"><div style="display:flex;flex-direction:column;gap:4px">';
+    r += '<span style="cursor:pointer;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
+    r += '<span style="cursor:pointer;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
+    r += '</div></td>';
     r += '<td data-label="Estado Casa"><span style="cursor:pointer" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
     r += '<td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(' + i + ')">' + (c.pendientes||'') + '</div></td>';
     r += '</tr>';
