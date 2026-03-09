@@ -94,12 +94,13 @@
     <div class="muted" style="margin-top:10px">Nota: PRUEBA — no impacta el informe original. Los cambios se guardan localmente en tu navegador.</div>
   </div>
 <script>
-// Definición definitiva con adjuntos requeridos/opcionales
 const SYNC_URL = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
 const SYNC_TOKEN = 'Adelante2025';
 const STAGES = ['Preanálisis','Contrato','Análisis','Banco','Firma','Obra/Entrega'];
+const STATES = ['Pendiente','En Proceso','Completado'];
+const LOTS_LIST = ["1-01 Barani","D.21","F.18","I.13","I.30","I.36","I.39","I.40","K.05","K.14","K.18","K.19","K.25","K.26","L.01","L.31","L.32","L.33","L.53","M.05","M.07","M.16","M.23"];
+
 const DOCS = [
-  // Preanálisis
   {name:'Constancia Salarial / CPA', files:true, stage:'Preanálisis'},
   {name:'CREDID', files:true, stage:'Preanálisis'},
   {name:'SUGEF', files:true, stage:'Preanálisis'},
@@ -107,15 +108,11 @@ const DOCS = [
   {name:'Sicere', files:true, optional:true, stage:'Preanálisis'},
   {name:'Cédula de Identidad', files:true, stage:'Preanálisis'},
   {name:'Colillas de Pago', files:true, stage:'Preanálisis'},
-
-  // Contrato
   {name:'Opción de Compra y Venta', files:true, stage:'Contrato'},
   {name:'Contrato Construcción', files:true, stage:'Contrato'},
   {name:'Hoja de Reserva Firmada', files:true, stage:'Contrato'},
   {name:'Croquis Reserva', files:true, stage:'Contrato'},
   {name:'Comprobante de Prima', files:true, optional:true, stage:'Contrato'},
-
-  // Análisis
   {name:'Estados de Cuenta', files:true, stage:'Análisis'},
   {name:'Estados de Tarjetas de Crédito', files:true, optional:true, stage:'Análisis'},
   {name:'Declaración de Renta (Hacienda)', files:true, optional:true, stage:'Análisis'},
@@ -124,17 +121,11 @@ const DOCS = [
   {name:'Certificación de Cancelación de Deudas', files:true, optional:true, stage:'Análisis'},
   {name:'Declaración Jurada de Deudas', files:true, stage:'Análisis'},
   {name:'Grupo de Interés Económico', files:true, optional:true, stage:'Análisis'},
-
-  // Banco
   {name:'Solicitud de Crédito', files:true, stage:'Banco'},
   {name:'Estudio Registral', files:true, stage:'Banco'},
   {name:'Informe Avaluo', files:true, stage:'Banco'},
   {name:'Carta de Aprobacion', files:true, stage:'Banco'},
-
-  // Firma
   {name:'Coordinacion Firma Cliente', files:false, stage:'Firma'},
-
-  // Obra/Entrega
   {name:'Permiso de Construcción', files:true, stage:'Obra/Entrega'},
   {name:'Plano Catastro', files:true, stage:'Obra/Entrega'},
   {name:'Hoja de Acabados', files:true, stage:'Obra/Entrega'},
@@ -144,351 +135,263 @@ const DOCS = [
   {name:'Croquis Extra', files:true, optional:true, stage:'Obra/Entrega'},
   {name:'Acta de Inicio', files:true, stage:'Obra/Entrega'}
 ];
-const STATES = ['Pendiente','En Proceso','Completado'];
+
+// ─── State ───────────────────────────────────────────────────────────────
 let currentId = '';
 
-function key(id){return `expedienteProgress:v2:${id}`}
-const LOTS_LIST = ["1-01 Barani", "D.21", "F.18", "I.13", "I.30", "I.36", "I.39", "I.40", "K.05", "K.14", "K.18", "K.19", "K.25", "K.26", "L.01", "L.31", "L.32", "L.33", "L.53", "M.05", "M.07", "M.16", "M.23"];
+function storageKey(id){ return 'cdvExp_' + id; }
 
-function fetchLots(){ return LOTS_LIST; }
-
-function populateLots(){
-  // no-op: LOTS_LIST already defined, suggestions shown via input handler
-}
-
-function populateStages(){
-  const stSel=document.getElementById('stageSelect');
-  stSel.innerHTML='';
-  const def=document.createElement('option'); def.value=''; def.textContent='Todas las etapas'; stSel.appendChild(def);
-  STAGES.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.textContent=s; stSel.appendChild(o); });
-}
-
-function makeRow(doc, data){
-  const row=document.createElement('div');row.className='doc';
-  const label=document.createElement('div');label.className='name';label.textContent=doc.name;row.appendChild(label);
-
-  const sel=document.createElement('select');
-  STATES.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
-  sel.value = (data.statuses&&data.statuses[doc.name]) || 'Pendiente';
-  sel.addEventListener('change', ()=>{
-    if(sel.value==='Completado' && doc.files){
-      const items=(data.files&&data.files[doc.name])||[];
-      if(!items.length){ alert('Este requisito requiere al menos un archivo para marcarlo como Completado.'); sel.value='En Proceso'; }
-    }
-    updatePct();
-    updateChip(row, doc, data);
-    save(false);
+// ─── Persist & Sync ──────────────────────────────────────────────────────
+function getStatuses(){
+  const result = {};
+  document.querySelectorAll('.doc-row').forEach(row => {
+    const name = row.dataset.name;
+    const sel = row.querySelector('select.status-sel');
+    if(name && sel) result[name] = sel.value;
   });
-  row.appendChild(sel);
-
-  // file chip indicator
-  const chip=document.createElement('span'); chip.className='file-chip'; chip.style.display='none';
-  const clip=document.createElement('span'); clip.className='clip'; clip.textContent='📎'; chip.appendChild(clip);
-  const countSpan=document.createElement('span'); countSpan.className='count'; chip.appendChild(countSpan);
-  row.appendChild(chip);
-
-  if(doc.files){
-    const up=document.createElement('input');
-    up.type='file'; up.multiple=true; up.style.marginLeft='6px';
-    const handleAdd=(files)=>{
-      if(!files||!files.length) return;
-      const list = data.files[doc.name] || (data.files[doc.name]=[]);
-      files.forEach(f=>{
-        const r=new FileReader();
-        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); save(false); };
-        r.readAsDataURL(f);
-      });
-    };
-    up.addEventListener('change', evt=>{ handleAdd(Array.from(evt.target.files||[])); evt.target.value=''; });
-    row.appendChild(up);
-
-    // Drag & drop
-    row.addEventListener('dragover', e=>{ e.preventDefault(); row.classList.add('dragover'); });
-    row.addEventListener('dragleave', ()=> row.classList.remove('dragover'));
-    row.addEventListener('drop', e=>{ e.preventDefault(); row.classList.remove('dragover'); handleAdd(Array.from(e.dataTransfer.files||[])); });
-
-    const filesBox=document.createElement('div');
-    filesBox.className='files';
-    filesBox.style.flexBasis='100%';
-    filesBox.style.marginLeft='0';
-    filesBox.style.display='block';
-    row.appendChild(filesBox);
-    renderFiles(row, doc, data);
-  }
-  return row;
+  return result;
 }
 
-function formatBytes(n){ if(!n) return '0 B'; const u=['B','KB','MB','GB']; let i=0; while(n>=1024 && i<u.length-1){ n/=1024; i++; } return (Math.round(n*10)/10)+' '+u[i]; }
-
-function updateChip(row, doc, data){
-  const chip = row.querySelector('.file-chip');
-  if(!chip) return;
-  const items=(data.files&&data.files[doc.name])||[];
-  const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
-  const countSpan = chip.querySelector('.count');
-  // color by status
-  const status = row.querySelector('select')?.value || 'Pendiente';
-  chip.classList.remove('chip-pend','chip-prog','chip-done');
-  if(status==='Completado') chip.classList.add('chip-done');
-  else if(status==='En Proceso') chip.classList.add('chip-prog');
-  else chip.classList.add('chip-pend');
-
-  if(items.length){
-    chip.style.display='inline-flex';
-    countSpan.textContent = `${items.length} archivos • ${formatBytes(totalSize)}`;
-  } else {
-    // mostrar chip vacio con color si hay estado? mejor ocultarlo cuando no hay adjuntos
-    chip.style.display='none';
-  }
-}
-
-function renderFiles(row, doc, data){
-  const box=row.querySelector('.files');
-  if(!box) return;
-  const items=(data.files&&data.files[doc.name])||[];
-  const totalSize = items.reduce((s,it)=> s+(it.size||0), 0);
-  box.innerHTML = items.length? `Adjuntos (${items.length} • ${formatBytes(totalSize)}). Arrastrá y soltá más archivos aquí:` : 'Arrastrá y soltá archivos aquí o usá el botón Seleccionar.';
-  box.style.fontSize='12px'; box.style.color='#6B6560'; box.style.marginTop='6px';
-  const actions=document.createElement('div'); actions.style.marginTop='6px';
-  if(items.length){
-    const zipBtn=document.createElement('button'); zipBtn.textContent='Descargar ZIP de este requisito'; zipBtn.style.fontSize='12px'; zipBtn.onclick=async()=>{
-      const zip=new JSZip();
-      const decode=(dataUrl)=>{ const comma=dataUrl.indexOf(','); const bstr=atob(dataUrl.slice(comma+1)); const u8=new Uint8Array(bstr.length); for(let i=0;i<bstr.length;i++) u8[i]=bstr.charCodeAt(i); return u8; };
-      items.forEach(fi=> zip.file(fi.name, decode(fi.data)) );
-      const blob=await zip.generateAsync({type:'blob'});
-      saveAs(blob, `${doc.name.replace(/[^\w\-\. ]+/g,'_')}.zip`);
-    };
-    actions.appendChild(zipBtn);
-  }
-  box.appendChild(actions);
-  const list=document.createElement('div'); list.style.marginTop='6px';
-  items.forEach((fi,idx)=>{
-    const wrap=document.createElement('span'); wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.marginRight='10px'; wrap.style.marginBottom='6px';
-    const a=document.createElement('a'); a.textContent=fi.name; a.style.marginRight='6px'; a.style.fontSize='12px'; a.href=fi.data; a.download=fi.name; wrap.appendChild(a);
-    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); save(false); };
-    wrap.appendChild(rm);
-    list.appendChild(wrap);
-  });
-  box.appendChild(list);
-  updateChip(row, doc, data);
-}
-
-function getCurrentData(){
-  // collect from DOM
-  const data={statuses:{}, files: load(currentId, /*silent*/true).files || {}};
-  document.querySelectorAll('.doc').forEach(row=>{
-    const name=row.querySelector('.name').textContent;
-    const val=row.querySelector('select').value;
-    data.statuses[name]=val;
-  });
-  return data;
-}
-
-function renderRows(data){
-  const cont=document.getElementById('docs');
-  cont.innerHTML='';
-  if(!data.statuses) data.statuses={};
-  if(!data.files) data.files={};
-  const view=document.getElementById('viewMode')?.value||'todos';
-  const stageSel=document.getElementById('stageSelect');
-  const stageFilter = (view==='etapa' && stageSel && stageSel.value)? stageSel.value : null;
-  const list = DOCS.filter(doc=> !stageFilter || doc.stage===stageFilter);
-  list.forEach(doc=>{
-    if(!data.files[doc.name]) data.files[doc.name]=[];
-    cont.appendChild(makeRow(doc, data));
-  });
-  updateSummary(data);
-}
-
-function migrateStatus(v, doc){
-  // Map old statuses -> new 3-state model
-  if(v==='Aprobado') return 'Completado';
-  if(v==='Recibido' || v==='Observado') return 'En Proceso';
-  if(v==='Pendiente') return 'Pendiente';
-  if(v==='N/A') return doc && doc.optional ? 'Completado' : 'En Proceso'; // si era N/A y el doc es opcional, marcar completo; si no, dejar en proceso
-  return 'Pendiente';
-}
-
-function load(id, silent){
-  if(id){ currentId = id; localStorage.setItem('cdvLastLote', id); }
-  const raw = localStorage.getItem(key(currentId));
-  let data = raw? JSON.parse(raw): {statuses:{},files:{}};
-  // migrate statuses to new set
-  const migrated={};
-  DOCS.forEach(doc=>{
-    const prev = data.statuses ? data.statuses[doc.name] : undefined;
-    migrated[doc.name] = migrateStatus(prev, doc);
-  });
-  data.statuses = migrated;
-  if(!silent){
-    renderRows(data); updatePct();
-    // Try to load fresher data from cloud
-    if(SYNC_URL && currentId) syncFromCloud();
-  }
-  return data;
-}
-
-function syncFromCloud(){
-  if(!SYNC_URL || !currentId) return;
-  fetch(SYNC_URL + '?expedienteId=' + encodeURIComponent(currentId))
-    .then(r => r.json())
-    .then(res => {
-      if(res.status === 'ok' && res.data){
-        const cloudData = res.data;
-        // Merge: cloud wins over localStorage
-        const migrated={};
-        DOCS.forEach(doc=>{
-          const prev = cloudData.statuses ? cloudData.statuses[doc.name] : undefined;
-          migrated[doc.name] = migrateStatus(prev, doc);
-        });
-        cloudData.statuses = migrated;
-        // Save cloud data to localStorage
-        localStorage.setItem(key(currentId), JSON.stringify(cloudData));
-        renderRows(cloudData); updatePct();
-        showToast('☁️ Sincronizado desde la nube');
-      }
-    })
-    .catch(() => { /* offline — localStorage already shown */ });
-}
-
-function updateSummary(data){
-  const summary = document.getElementById('summary');
-  const view=document.getElementById('viewMode')?.value||'todos';
-  const stageSel=document.getElementById('stageSelect');
-  const stageFilter = (view==='etapa' && stageSel && stageSel.value)? stageSel.value : null;
-  const rows=[...document.querySelectorAll('.doc')];
-  if(!rows.length){ summary.style.display='none'; return; }
-  const states = rows.map(r=> r.querySelector('select')?.value || 'Pendiente');
-  const total=rows.length;
-  const done=states.filter(s=>s==='Completado').length;
-  const prog=states.filter(s=>s==='En Proceso').length;
-  const pend=states.filter(s=>s==='Pendiente').length;
-  const pct= total? Math.round(done*100/total) : 0;
-  summary.style.display='block';
-  summary.innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <div style="min-width:160px;font-weight:600">Resumen ${stageFilter? '· '+stageFilter : ''}</div>
-      <div style="flex:1;min-width:180px">
-        <div class="bar"><div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#34d399,#10b981)"></div></div>
-        <div class="muted">${pct}% — ${done}/${total} completados</div>
-      </div>
-      <div class="file-chip chip-pend">Pendiente: ${pend}</div>
-      <div class="file-chip chip-prog">En Proceso: ${prog}</div>
-      <div class="file-chip chip-done">Completado: ${done}</div>
-    </div>`;
-}
-
-function updatePct(){
-  const selects=[...document.querySelectorAll('.doc select')];
-  const total=selects.length||1;
-  const done=selects.filter(s=>s.value==='Completado').length; // criterio: solo "Completado" cuenta
-  const pct=Math.round((done/total)*100);
-  document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
-  document.getElementById('barFill').style.width=pct+'%';
-}
-
-function save(silent){
+function saveLocal(){
   if(!currentId) return;
-  const data = getCurrentData();
-  // Preserve files from localStorage (not re-rendered in DOM)
-  try {
-    const stored = JSON.parse(localStorage.getItem(key(currentId)) || '{}');
-    if(stored.files) data.files = stored.files;
-  } catch(e){}
-  // Save locally first (always fast)
-  localStorage.setItem(key(currentId), JSON.stringify(data));
-  if(!silent) showToast('💾 Guardando...');
-  // Push to cloud async
-  syncToCloud(data, silent);
+  const stored = getStored();
+  stored.statuses = getStatuses();
+  localStorage.setItem(storageKey(currentId), JSON.stringify(stored));
 }
 
-function syncToCloud(data, silent){
-  if(!SYNC_URL || !currentId) return;
-  // GAS no acepta CORS POST con JSON — usamos GET con payload codificado
-  const stripped = { statuses: data.statuses, updatedAt: new Date().toISOString() };
+function getStored(){
+  try { return JSON.parse(localStorage.getItem(storageKey(currentId)) || '{}'); } catch(e){ return {}; }
+}
+
+function saveToCloud(){
+  if(!currentId) return;
+  const statuses = getStatuses();
   const params = new URLSearchParams({
     token: SYNC_TOKEN,
     expedienteId: currentId,
     action: 'save',
-    data: JSON.stringify(stripped)
+    data: JSON.stringify({ statuses })
   });
   fetch(SYNC_URL + '?' + params.toString())
     .then(r => r.json())
+    .then(res => { showToast(res.status === 'ok' ? '✅ Guardado en la nube' : '⚠️ Solo local'); })
+    .catch(() => { showToast('⚠️ Sin conexión — guardado local'); });
+}
+
+function doSave(){
+  saveLocal();
+  saveToCloud();
+}
+
+function loadFromCloud(id){
+  fetch(SYNC_URL + '?expedienteId=' + encodeURIComponent(id))
+    .then(r => r.json())
     .then(res => {
-      if(!silent) showToast(res.status === 'ok' ? '✅ Guardado en la nube' : '✅ Guardado local');
+      if(res.status === 'ok' && res.data && res.data.statuses){
+        // Merge cloud into localStorage
+        const stored = getStored();
+        stored.statuses = res.data.statuses;
+        localStorage.setItem(storageKey(id), JSON.stringify(stored));
+        // Apply to DOM
+        applyStatuses(res.data.statuses);
+        updateProgress();
+        showToast('☁️ Sincronizado');
+      }
     })
-    .catch(() => {
-      if(!silent) showToast('✅ Guardado local');
-    });
+    .catch(() => {});
 }
 
+function applyStatuses(statuses){
+  document.querySelectorAll('.doc-row').forEach(row => {
+    const name = row.dataset.name;
+    if(statuses && statuses[name]){
+      const sel = row.querySelector('select.status-sel');
+      if(sel) sel.value = statuses[name];
+    }
+    updateRowChip(row);
+  });
+}
+
+// ─── UI ──────────────────────────────────────────────────────────────────
 function showToast(msg){
-  let t = document.getElementById('autoSaveToast');
-  if(!t){ t=document.createElement('div'); t.id='autoSaveToast';
-    t.style.cssText='position:fixed;bottom:80px;right:16px;background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none';
-    document.body.appendChild(t); }
-  t.textContent=msg; t.style.opacity='1';
-  clearTimeout(t._timer);
-  t._timer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:16px;background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.opacity = '0'; }, 2500);
 }
 
-function addDoc(){
-  const inp=document.getElementById('newDoc');
-  const name=inp.value.trim();
-  if(!name) return;
-  if(!DOCS.some(d=>d.name===name)) DOCS.push({name, files:false});
-  const data=getCurrentData();
-  renderRows(data);
-  updatePct();
-  inp.value='';
+function updateProgress(){
+  const sels = [...document.querySelectorAll('.doc-row select.status-sel')];
+  const total = sels.length || 1;
+  const done = sels.filter(s => s.value === 'Completado').length;
+  const pct = Math.round(done / total * 100);
+  document.getElementById('pct').textContent = pct + '% completo (' + done + '/' + total + ')';
+  document.getElementById('barFill').style.width = pct + '%';
 }
 
-// wire
-const sel=document.getElementById('expSelect');
+function updateRowChip(row){
+  const sel = row.querySelector('select.status-sel');
+  const chip = row.querySelector('.status-chip');
+  if(!sel || !chip) return;
+  chip.textContent = sel.value;
+  chip.className = 'status-chip file-chip ' + (sel.value === 'Completado' ? 'chip-done' : sel.value === 'En Proceso' ? 'chip-prog' : 'chip-pend');
+}
 
-document.getElementById('clear').onclick=()=>{
-  sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
-// auto-save: no manual save button
-document.getElementById('addDoc').onclick=addDoc;
-// refreshLots button removed
-sel.addEventListener('input',()=>{
-  const v = sel.value.trim().toLowerCase();
+function renderDocs(statuses){
+  const cont = document.getElementById('docs');
+  cont.innerHTML = '';
+  const view = document.getElementById('viewMode').value;
+  const stage = document.getElementById('stageSelect').value;
+
+  let docs = DOCS.slice();
+  if(view === 'etapa' && stage) docs = docs.filter(d => d.stage === stage);
+
+  // Group by stage if etapa view
+  if(view === 'etapa'){
+    const grouped = {};
+    docs.forEach(d => { if(!grouped[d.stage]) grouped[d.stage] = []; grouped[d.stage].push(d); });
+    Object.entries(grouped).forEach(([stageName, stageDocs]) => {
+      const h = document.createElement('div');
+      h.style.cssText = 'font-weight:700;color:#3D2E1F;margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.5px';
+      h.textContent = stageName;
+      cont.appendChild(h);
+      stageDocs.forEach(doc => cont.appendChild(makeRow(doc, statuses)));
+    });
+  } else {
+    docs.forEach(doc => cont.appendChild(makeRow(doc, statuses)));
+  }
+}
+
+function makeRow(doc, statuses){
+  const row = document.createElement('div');
+  row.className = 'doc doc-row';
+  row.dataset.name = doc.name;
+
+  const name = document.createElement('div');
+  name.className = 'name';
+  name.textContent = doc.name + (doc.optional ? ' (opcional)' : '');
+  row.appendChild(name);
+
+  const sel = document.createElement('select');
+  sel.className = 'status-sel';
+  STATES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; sel.appendChild(o); });
+  const savedVal = (statuses && statuses[doc.name]) || 'Pendiente';
+  sel.value = savedVal;
+
+  sel.addEventListener('change', () => {
+    updateRowChip(row);
+    updateProgress();
+    doSave();
+  });
+  row.appendChild(sel);
+
+  const chip = document.createElement('span');
+  chip.className = 'status-chip file-chip chip-pend';
+  chip.textContent = savedVal;
+  row.appendChild(chip);
+  updateRowChip(row);
+
+  return row;
+}
+
+// ─── Load Expediente ─────────────────────────────────────────────────────
+function loadExpediente(id){
+  currentId = id;
+  localStorage.setItem('cdvLastLote', id);
+
+  const stored = getStored();
+  const statuses = stored.statuses || {};
+
+  renderDocs(statuses);
+  updateProgress();
+
+  // Then try cloud for fresher data
+  loadFromCloud(id);
+}
+
+// ─── Autocomplete ─────────────────────────────────────────────────────────
+function setupAutocomplete(){
+  const inp = document.getElementById('expSelect');
   const box = document.getElementById('loteSuggestions');
-  if(!v){ box.style.display='none'; return; }
-  const matches = LOTS_LIST.filter(l=>l.toLowerCase().includes(v));
-  if(!matches.length){ box.style.display='none'; return; }
-  box.innerHTML = matches.map(l=>`<div style="padding:8px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee"
-    onmousedown="event.preventDefault()" 
-    onclick="document.getElementById('expSelect').value='${l}';document.getElementById('loteSuggestions').style.display='none';load('${l}')">${l}</div>`).join('');
-  box.style.display='block';
-});
-sel.addEventListener('blur',()=>{ setTimeout(()=>{ document.getElementById('loteSuggestions').style.display='none'; },150); });
-sel.addEventListener('focus',()=>{
-  const v = sel.value.trim().toLowerCase();
-  if(v) sel.dispatchEvent(new Event('input'));
-});
-const viewMode=document.getElementById('viewMode');
-const stageSel=document.getElementById('stageSelect');
-viewMode.addEventListener('change',()=>{
-  if(viewMode.value==='etapa'){ stageSel.style.display='inline-block'; }
-  else { stageSel.style.display='none'; }
-  const data=load(currentId, /*silent*/true); renderRows(data); updatePct();
-});
-stageSel.addEventListener('change',()=>{ const data=load(currentId, /*silent*/true); renderRows(data); updatePct(); });
 
-// init
-populateLots();
-populateStages();
-// Restaurar último lote seleccionado
-const lastLote = localStorage.getItem('cdvLastLote');
-if(lastLote){
-  // Esperar a que el select esté poblado
-  setTimeout(()=>{
-    const s = document.getElementById('expSelect');
-    sel.value = lastLote;
-    load(lastLote);
-  }, 100);
+  inp.addEventListener('input', () => {
+    const v = inp.value.trim().toLowerCase();
+    if(!v){ box.style.display = 'none'; return; }
+    const matches = LOTS_LIST.filter(l => l.toLowerCase().includes(v));
+    if(!matches.length){ box.style.display = 'none'; return; }
+    box.innerHTML = matches.map(l =>
+      '<div style="padding:10px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee" ' +
+      'onmousedown="event.preventDefault()" ' +
+      'onclick="selectLote('' + l + '')">' + l + '</div>'
+    ).join('');
+    box.style.display = 'block';
+  });
+
+  inp.addEventListener('blur', () => {
+    setTimeout(() => { box.style.display = 'none'; }, 200);
+  });
 }
+
+function selectLote(lote){
+  document.getElementById('expSelect').value = lote;
+  document.getElementById('loteSuggestions').style.display = 'none';
+  loadExpediente(lote);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setupAutocomplete();
+
+  // Populate stages
+  const stSel = document.getElementById('stageSelect');
+  STAGES.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; stSel.appendChild(o); });
+
+  document.getElementById('viewMode').addEventListener('change', () => {
+    const vm = document.getElementById('viewMode').value;
+    document.getElementById('stageSelect').style.display = vm === 'etapa' ? 'inline-block' : 'none';
+    if(currentId) renderDocs(getStored().statuses || {});
+  });
+
+  document.getElementById('stageSelect').addEventListener('change', () => {
+    if(currentId) renderDocs(getStored().statuses || {});
+  });
+
+  document.getElementById('clear').addEventListener('click', () => {
+    document.getElementById('expSelect').value = '';
+    document.getElementById('docs').innerHTML = '';
+    document.getElementById('barFill').style.width = '0%';
+    document.getElementById('pct').textContent = '0% completo';
+    currentId = '';
+    localStorage.removeItem('cdvLastLote');
+  });
+
+  document.getElementById('addDoc').addEventListener('click', () => {
+    const inp = document.getElementById('newDoc');
+    const name = inp.value.trim();
+    if(!name || !currentId) return;
+    const stored = getStored();
+    if(!stored.statuses) stored.statuses = {};
+    stored.statuses[name] = 'Pendiente';
+    localStorage.setItem(storageKey(currentId), JSON.stringify(stored));
+    renderDocs(stored.statuses);
+    updateProgress();
+    inp.value = '';
+  });
+
+  // Restore last lote
+  const last = localStorage.getItem('cdvLastLote');
+  if(last){
+    document.getElementById('expSelect').value = last;
+    loadExpediente(last);
+  }
+});
 </script>
 </body>
 </html>
