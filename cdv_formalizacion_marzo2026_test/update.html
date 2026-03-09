@@ -385,16 +385,16 @@ function updatePct(){
   const pct=Math.round((done/total)*100);
   document.getElementById('pct').textContent=`${pct}% completo (${done}/${total})`;
   document.getElementById('barFill').style.width=pct+'%';
-  // summary refresh
-  const data = load(currentId, /*silent*/true);
-  updateSummary(data);
 }
 
 function save(silent){
   if(!currentId) return;
-  const prev = load(currentId, /*silent*/true);
-  const data=getCurrentData();
-  data.files = data.files && Object.keys(data.files).length? data.files : (prev.files||{});
+  const data = getCurrentData();
+  // Preserve files from localStorage (not re-rendered in DOM)
+  try {
+    const stored = JSON.parse(localStorage.getItem(key(currentId)) || '{}');
+    if(stored.files) data.files = stored.files;
+  } catch(e){}
   // Save locally first (always fast)
   localStorage.setItem(key(currentId), JSON.stringify(data));
   if(!silent) showToast('💾 Guardando...');
