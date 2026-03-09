@@ -95,6 +95,8 @@
   </div>
 <script>
 // Definición definitiva con adjuntos requeridos/opcionales
+const SYNC_URL = 'https://script.google.com/macros/s/AKfycbw6WJK2KZr79e6AjfbN4BCX1n1JSsymuvAiniFO6nE_fnMD7d5D5gtGoIx53Prs44vwhA/exec';
+const SYNC_TOKEN = 'Adelante2025';
 const STAGES = ['Preanálisis','Contrato','Análisis','Banco','Firma','Obra/Entrega'];
 const DOCS = [
   // Preanálisis
@@ -329,8 +331,35 @@ function load(id, silent){
     migrated[doc.name] = migrateStatus(prev, doc);
   });
   data.statuses = migrated;
-  if(!silent){ renderRows(data); updatePct(); }
+  if(!silent){
+    renderRows(data); updatePct();
+    // Try to load fresher data from cloud
+    if(SYNC_URL && currentId) syncFromCloud();
+  }
   return data;
+}
+
+function syncFromCloud(){
+  if(!SYNC_URL || !currentId) return;
+  fetch(SYNC_URL + '?expedienteId=' + encodeURIComponent(currentId))
+    .then(r => r.json())
+    .then(res => {
+      if(res.status === 'ok' && res.data){
+        const cloudData = res.data;
+        // Merge: cloud wins over localStorage
+        const migrated={};
+        DOCS.forEach(doc=>{
+          const prev = cloudData.statuses ? cloudData.statuses[doc.name] : undefined;
+          migrated[doc.name] = migrateStatus(prev, doc);
+        });
+        cloudData.statuses = migrated;
+        // Save cloud data to localStorage
+        localStorage.setItem(key(currentId), JSON.stringify(cloudData));
+        renderRows(cloudData); updatePct();
+        showToast('☁️ Sincronizado desde la nube');
+      }
+    })
+    .catch(() => { /* offline — localStorage already shown */ });
 }
 
 function updateSummary(data){
@@ -377,8 +406,29 @@ function save(silent){
   const prev = load(currentId, /*silent*/true);
   const data=getCurrentData();
   data.files = data.files && Object.keys(data.files).length? data.files : (prev.files||{});
+  // Save locally first (always fast)
   localStorage.setItem(key(currentId), JSON.stringify(data));
-  if(!silent) showToast('✅ Guardado automáticamente');
+  if(!silent) showToast('💾 Guardando...');
+  // Push to cloud async
+  syncToCloud(data, silent);
+}
+
+function syncToCloud(data, silent){
+  if(!SYNC_URL) return;
+  const payload = { token: SYNC_TOKEN, expedienteId: currentId, data: data };
+  fetch(SYNC_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' }
+  }).then(r => r.json()).then(res => {
+    if(res.status === 'ok'){
+      if(!silent) showToast('✅ Guardado en la nube');
+    } else {
+      if(!silent) showToast('⚠️ Guardado local (fallo nube)');
+    }
+  }).catch(() => {
+    if(!silent) showToast('✅ Guardado local');
+  });
 }
 
 function showToast(msg){
