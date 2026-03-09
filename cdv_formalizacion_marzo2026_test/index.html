@@ -264,7 +264,7 @@ body {
   border-bottom: 1px solid var(--border);
   padding: 0 40px;
   position: sticky;
-  top: 84px;
+  top: 0px; /* JS overrides */
   z-index: 99;
   box-shadow: var(--shadow-sm);
 }
@@ -306,7 +306,7 @@ body {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-light);
   position: sticky;
-  top: 128px; /* header(84) + nav(44) */
+  top: 0px; /* JS overrides */
   z-index: 98;
 }
 
@@ -3492,29 +3492,30 @@ applyFilters(); // This will filter by default month (March) and render
     function updateSticky() {
       var mobile = window.innerWidth <= 768;
       var scrolled = !mobile && window.scrollY > 30;
+      // Always measure actual header height
+      var hH = header.offsetHeight;
+      var nH = navBar ? navBar.offsetHeight : 0;
       if(scrolled) {
         header.classList.add('scrolled');
-        // Desktop compact: header ~56px + nav ~44px = 100px for filters
-        if(navBar)    navBar.style.top = '56px';
-        if(filterBar) filterBar.style.top = '100px';
+        // After adding .scrolled, re-measure
+        var hHs = header.offsetHeight;
+        if(navBar)    navBar.style.top = hHs + 'px';
+        if(filterBar) filterBar.style.top = (hHs + nH) + 'px';
       } else {
         header.classList.remove('scrolled');
-        if(mobile) {
-          // Mobile: measure actual heights
-          var hH = header.offsetHeight;
-          var nH = navBar ? navBar.offsetHeight : 0;
-          if(navBar)    navBar.style.top = hH + 'px';
-          if(filterBar) filterBar.style.top = (hH + nH) + 'px';
-        } else {
-          // Desktop full: header ~84px + nav ~44px = 128px for filters
-          if(navBar)    navBar.style.top = '';
-          if(filterBar) filterBar.style.top = '';
-        }
+        // Let browser re-layout then measure
+        requestAnimationFrame(function(){
+          var hH2 = header.offsetHeight;
+          var nH2 = navBar ? navBar.offsetHeight : 0;
+          if(navBar)    navBar.style.top = hH2 + 'px';
+          if(filterBar) filterBar.style.top = (hH2 + nH2) + 'px';
+        });
       }
     }
     window.addEventListener('scroll', updateSticky, {passive: true});
     window.addEventListener('resize', updateSticky, {passive: true});
-    updateSticky();
+    // Run after page fully renders
+    setTimeout(updateSticky, 100);
   }
 
   function init(){
