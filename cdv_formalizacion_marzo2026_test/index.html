@@ -2679,11 +2679,11 @@ function saveEdits() {
     localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
     // Push to cloud async
     if(SYNC_URL_INFORME) {
-      fetch(SYNC_URL_INFORME, {
-        method: 'POST',
-        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits }),
-        mode: 'no-cors'
-      }).catch(() => {});
+      // GAS GET save (evita CORS con POST)
+      const params = new URLSearchParams({
+        token: SYNC_TOKEN, action: 'save_casas', data: JSON.stringify(edits)
+      });
+      fetch(SYNC_URL_INFORME + '?' + params.toString()).catch(() => {});
     }
   } catch(e) { console.error('Save err:', e); }
 }

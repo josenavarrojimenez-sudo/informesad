@@ -406,17 +406,23 @@ function save(silent){
 }
 
 function syncToCloud(data, silent){
-  if(!SYNC_URL) return;
-  const payload = { token: SYNC_TOKEN, expedienteId: currentId, data: data };
-  fetch(SYNC_URL, {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    mode: 'no-cors'
-  }).then(() => {
-    if(!silent) showToast('✅ Guardado en la nube');
-  }).catch(() => {
-    if(!silent) showToast('✅ Guardado local');
+  if(!SYNC_URL || !currentId) return;
+  // GAS no acepta CORS POST con JSON — usamos GET con payload codificado
+  const stripped = { statuses: data.statuses, updatedAt: new Date().toISOString() };
+  const params = new URLSearchParams({
+    token: SYNC_TOKEN,
+    expedienteId: currentId,
+    action: 'save',
+    data: JSON.stringify(stripped)
   });
+  fetch(SYNC_URL + '?' + params.toString())
+    .then(r => r.json())
+    .then(res => {
+      if(!silent) showToast(res.status === 'ok' ? '✅ Guardado en la nube' : '✅ Guardado local');
+    })
+    .catch(() => {
+      if(!silent) showToast('✅ Guardado local');
+    });
 }
 
 function showToast(msg){
