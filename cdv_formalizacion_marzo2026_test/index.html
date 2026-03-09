@@ -1084,9 +1084,9 @@ tbody td {
     padding: 0 8px; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
-    position: sticky;
-    top: 90px; /* fallback; JS overrides */
-    z-index: 99;
+    position: relative;
+    top: auto;
+    z-index: auto;
   }
   .nav-inner { gap: 0; }
   .nav-tab { 
@@ -1095,7 +1095,7 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; position: sticky; top: 134px; /* fallback; JS overrides */ z-index: 98; }
+  .filters-bar { padding: 12px 12px; position: relative; top: auto; z-index: auto; }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
