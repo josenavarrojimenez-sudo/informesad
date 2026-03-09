@@ -1248,6 +1248,7 @@ tbody td {
     <div class="nav-tab" data-view="flujo" onclick="switchView('flujo')">💰 Flujo de Desembolsos</div>
     <div class="nav-tab" data-view="kanban" onclick="switchView('kanban')">📅 Kanban por Fecha</div>
     <div class="nav-tab" data-view="formalizador" onclick="switchView('formalizador')">👤 Por Formalizador</div>
+    <div class="nav-tab" data-view="vendedor" onclick="switchView('vendedor')">🏷️ Por Vendedor</div>
   </div>
 </div>
 
@@ -1599,6 +1600,7 @@ tbody td {
   <div id="viewFlujo" class="view-panel"></div>
   <div id="viewKanban" class="view-panel"></div>
   <div id="viewFormalizador" class="view-panel"></div>
+  <div id="viewVendedor" class="view-panel"></div>
 </div>
 
 <script>
@@ -2452,12 +2454,80 @@ function renderFormalizador() {
   document.getElementById('viewFormalizador').innerHTML = html;
 }
 
+function renderVendedor() {
+  const groups = {};
+  filteredData.forEach(c => {
+    if (!groups[c.vendedor]) groups[c.vendedor] = [];
+    groups[c.vendedor].push(c);
+  });
+
+  const vendedorColors = {
+    'Olman': 'background:#DBEAFE;color:#1E40AF',
+    'Irving': 'background:#FDE7F3;color:#9D174D',
+    'Hannia': 'background:#D1FAE5;color:#065F46',
+    'Randall': 'background:#FEF3C7;color:#92400E',
+    'Xinia': 'background:#E0E7FF;color:#3730A3',
+    'Daniela': 'background:#FCE7F3;color:#BE185D',
+    'Mery': 'background:#FEE2E2;color:#991B1B',
+    'Marco': 'background:#CCFBF1;color:#115E59'
+  };
+
+  let html2 = '<div class="form-grid">';
+  for (const [name, items] of Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))) {
+    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
+    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
+    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
+    const terminadas = items.filter(c => c.terminada).length;
+    const colorStyle = vendedorColors[name] || 'background:#F3F4F6;color:#374151';
+
+    html2 += `
+      <div class="form-section">
+        <div class="form-section-header">
+          <span class="formalizador-tag" style="font-size:16px;padding:6px 14px;${colorStyle}">${name}</span>
+          <div class="form-section-stats">
+            <span>${items.length} casos</span>
+            <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
+            <span style="color:var(--claude-dark);font-weight:700">Casas+AD: ${fmt(totalCasa + totalLoteAD)}</span>
+            <span style="color:#3730A3;font-weight:600">QFI: ${fmt(totalLoteQFI)}</span>
+          </div>
+        </div>
+        <div class="form-section-body">
+    `;
+
+    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+    items.forEach(c => {
+      html2 += `
+        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+          <div class="form-case-header">
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+          </div>
+          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
+          <div style="margin-top:8px">${desembolsoBlock(c, true)}</div>
+          <div style="margin-top:6px">${expedienteBar(c.lote)}</div>
+          <div class="form-case-row" style="margin-top:8px">
+            <span class="bank-tag">${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
+            <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="font-size:11px;padding:2px 8px">${c.formalizador}</span>
+            <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+          </div>
+          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+        </div>
+      `;
+    });
+    html2 += '</div></div>';
+  }
+  html2 += '</div>';
+  document.getElementById('viewVendedor').innerHTML = html2;
+}
+
 function renderAll() {
   renderKPIs();
   renderTable();
   renderFlow();
   renderKanban();
   renderFormalizador();
+  renderVendedor();
 }
 
 // EXPORT TO EXCEL
