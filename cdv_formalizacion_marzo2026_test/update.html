@@ -61,10 +61,7 @@
     <div class="card">
       <div class="row">
         <label for="expSelect" style="min-width:130px">Lote / Expediente</label>
-        <select id="expSelect"><option value="">Cargando lotes…</option></select>
-        <input id="expediente" type="text" placeholder="O escribir manual (Ej: F.18)" />
-        <button id="refreshLots">Refrescar lotes</button>
-        <button id="load" class="primary">Cargar</button>
+        <select id="expSelect"><option value="">Seleccionar lote…</option></select>
         <button id="clear">Limpiar</button>
       </div>
       <div class="row">
@@ -74,7 +71,6 @@
         </div>
         <div class="footer">
           
-          <button id="refreshLots">Refrescar lotes</button>
           <select id="viewMode">
             <option value="todos">Vista: Todos</option>
             <option value="etapa">Vista: Por etapa</option>
@@ -447,17 +443,13 @@ function addDoc(){
 }
 
 // wire
-const exp=document.getElementById('expediente');
 const sel=document.getElementById('expSelect');
-document.getElementById('load').onclick=()=>{
-  const v = sel.value || exp.value.trim();
-  if(!v) return; load(v);
-};
-document.getElementById('clear').onclick=()=>{exp.value='';sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
+
+document.getElementById('clear').onclick=()=>{sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 // auto-save: no manual save button
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
-sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
+sel.addEventListener('change',()=>{ if(sel.value) { load(sel.value); } });
 const viewMode=document.getElementById('viewMode');
 const stageSel=document.getElementById('stageSelect');
 viewMode.addEventListener('change',()=>{
@@ -479,7 +471,7 @@ if(lastLote){
     if([...s.options].some(o=>o.value===lastLote)){
       s.value = lastLote;
     } else {
-      document.getElementById('expediente').value = lastLote;
+      // lote not in select, just load it directly
     }
     load(lastLote);
   }, 100);
