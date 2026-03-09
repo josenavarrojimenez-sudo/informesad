@@ -227,10 +227,19 @@ function showToast(msg){
 }
 
 function updateProgress(){
-  const sels = [...document.querySelectorAll('.doc-row select.status-sel')];
-  const total = sels.length || 1;
-  const done = sels.filter(s => s.value === 'Completado').length;
-  const pct = Math.round(done / total * 100);
+  const rows = [...document.querySelectorAll('.doc-row')];
+  let total = 0, done = 0;
+  rows.forEach(row => {
+    const sel = row.querySelector('select.status-sel');
+    if(!sel) return;
+    const isOptional = row.dataset.optional === 'true';
+    const val = sel.value;
+    // Optional: only count if status changed from Pendiente
+    if(isOptional && val === 'Pendiente') return;
+    total++;
+    if(val === 'Completado') done++;
+  });
+  const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('pct').textContent = pct + '% completo (' + done + '/' + total + ')';
   document.getElementById('barFill').style.width = pct + '%';
 }
@@ -272,6 +281,7 @@ function makeRow(doc, statuses){
   const row = document.createElement('div');
   row.className = 'doc doc-row';
   row.dataset.name = doc.name;
+  row.dataset.optional = doc.optional ? 'true' : 'false';
 
   const name = document.createElement('div');
   name.className = 'name';
@@ -296,6 +306,56 @@ function makeRow(doc, statuses){
   chip.textContent = savedVal;
   row.appendChild(chip);
   updateRowChip(row);
+
+  // File attachment (if doc requires files)
+  if(doc.files){
+    const stored = getStored();
+    const files = (stored.files && stored.files[doc.name]) || [];
+
+    const fileWrap = document.createElement('div');
+    fileWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px;width:100%';
+
+    const fileCount = document.createElement('span');
+    fileCount.className = 'file-chip chip-pend';
+    fileCount.style.cssText = 'font-size:11px;cursor:default';
+    fileCount.textContent = files.length ? '📎 ' + files.length + ' archivo(s)' : '📎 Sin archivos';
+    fileWrap.appendChild(fileCount);
+
+    const upBtn = document.createElement('label');
+    upBtn.textContent = '+ Adjuntar';
+    upBtn.style.cssText = 'font-size:12px;padding:4px 10px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#f9f9f9';
+    const upInp = document.createElement('input');
+    upInp.type = 'file'; upInp.multiple = true; upInp.style.display = 'none';
+    upBtn.appendChild(upInp);
+    fileWrap.appendChild(upBtn);
+
+    upInp.addEventListener('change', evt => {
+      const newFiles = Array.from(evt.target.files || []);
+      if(!newFiles.length) return;
+      let pending = newFiles.length;
+      newFiles.forEach(f => {
+        const r = new FileReader();
+        r.onload = () => {
+          const stored2 = getStored();
+          if(!stored2.files) stored2.files = {};
+          if(!stored2.files[doc.name]) stored2.files[doc.name] = [];
+          stored2.files[doc.name].push({name: f.name, type: f.type, size: f.size, data: r.result});
+          localStorage.setItem(storageKey(currentId), JSON.stringify(stored2));
+          pending--;
+          if(pending === 0){
+            const updated = (stored2.files[doc.name] || []).length;
+            fileCount.textContent = '📎 ' + updated + ' archivo(s)';
+            fileCount.className = 'file-chip chip-done';
+            showToast('✅ Archivo(s) adjuntado(s)');
+          }
+        };
+        r.readAsDataURL(f);
+      });
+      evt.target.value = '';
+    });
+
+    row.appendChild(fileWrap);
+  }
 
   return row;
 }
