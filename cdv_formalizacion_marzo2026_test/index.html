@@ -2009,7 +2009,7 @@ const casas = [
     "montoCasa": 14000000,
     "loteAD": 8605988,
     "loteQFI": 6836407.2,
-    "fecha": "2026-03-12",
+    "fecha": "2026-03-13",
     "banco": "BN",
     "formalizador": "Willem",
     "vendedor": "Olman",
@@ -2018,7 +2018,7 @@ const casas = [
     "capacidad": "FINALIZADO✅",
     "pendientes": "Avalúo (cambio modelo); hoy en cambio de láminas; espera miércoles para pedir avalúo",
     "terminada": false,
-    "expo": true
+    "expo": false
   },
   {
     "lote": "L.31",
@@ -3129,6 +3129,7 @@ function applyEditsData(edits) {
     if (e.banco) c.banco = e.banco;
     if (e.traspaso !== undefined) c.traspaso = e.traspaso;
     if (e.permisos !== undefined) c.permisos = e.permisos;
+    if (e.expo !== undefined) c.expo = e.expo;
     if (e.pendientes !== undefined) c.pendientes = e.pendientes;
     if (e.vendedor) c.vendedor = e.vendedor;
   });
