@@ -84,40 +84,72 @@ body {
   font-weight: 400;
 }
 
-.month-toggle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 10px;
-  padding: 4px;
-  border: 1px solid rgba(255,255,255,0.1);
+.month-picker {
+  position: relative;
 }
 
-.month-btn {
-  padding: 5px 10px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: #BFA88E;
-  background: transparent;
-  border: none;
+.month-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #F5E6D3;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.month-picker-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.month-picker-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: #2D2014;
+  border: 1px solid rgba(245,230,211,0.2);
+  border-radius: 10px;
+  padding: 12px;
+  z-index: 999;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  min-width: 180px;
+}
+
+.month-picker-dropdown.open { display: block; }
+
+.month-picker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.month-chk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
   border-radius: 6px;
   cursor: pointer;
-  transition: var(--transition);
-  font-family: inherit;
-  min-width: 34px;
-  text-align: center;
+  color: #BFA88E;
+  font-size: 13px;
+  font-weight: 400;
+  transition: background 0.15s;
 }
 
-.month-btn:hover {
-  color: #F5E6D3;
-  background: rgba(255,255,255,0.08);
-}
-
-.month-btn.active {
-  color: #2D2014;
-  background: #F5E6D3;
-  font-weight: 700;
+.month-chk:hover { background: rgba(255,255,255,0.07); color: #F5E6D3; }
+.month-chk.active { color: #F5E6D3; font-weight: 600; }
+.month-chk input[type=checkbox] {
+  accent-color: #D97706;
+  width: 15px; height: 15px;
+  cursor: pointer;
 }
 
 .header-stats {
@@ -1254,19 +1286,27 @@ tbody td {
       <div class="header-subtitle" id="headerSubtitle">Estado de Casas por Formalizar — 2026</div></div></div>
     </div>
     <div style="display:flex;align-items:center;gap:24px">
-      <div class="month-toggle" id="monthToggle">
-        <button class="month-btn" data-month="1"  onclick="toggleMonth(1)">Ene</button>
-        <button class="month-btn" data-month="2"  onclick="toggleMonth(2)">Feb</button>
-        <button class="month-btn active" data-month="3"  onclick="toggleMonth(3)">Mar</button>
-        <button class="month-btn" data-month="4"  onclick="toggleMonth(4)">Abr</button>
-        <button class="month-btn" data-month="5"  onclick="toggleMonth(5)">May</button>
-        <button class="month-btn" data-month="6"  onclick="toggleMonth(6)">Jun</button>
-        <button class="month-btn" data-month="7"  onclick="toggleMonth(7)">Jul</button>
-        <button class="month-btn" data-month="8"  onclick="toggleMonth(8)">Ago</button>
-        <button class="month-btn" data-month="9"  onclick="toggleMonth(9)">Sep</button>
-        <button class="month-btn" data-month="10" onclick="toggleMonth(10)">Oct</button>
-        <button class="month-btn" data-month="11" onclick="toggleMonth(11)">Nov</button>
-        <button class="month-btn" data-month="12" onclick="toggleMonth(12)">Dic</button>
+      <div class="month-picker" id="monthPicker">
+        <button class="month-picker-btn" onclick="openMonthPicker(event)" id="monthPickerBtn">
+          <span id="monthPickerLabel">Marzo 2026</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="month-picker-dropdown" id="monthPickerDropdown">
+          <div class="month-picker-grid">
+            <label class="month-chk"><input type="checkbox" value="1"  onchange="toggleMonth(1)">  Enero</label>
+            <label class="month-chk"><input type="checkbox" value="2"  onchange="toggleMonth(2)">  Febrero</label>
+            <label class="month-chk active"><input type="checkbox" value="3"  onchange="toggleMonth(3)" checked> Marzo</label>
+            <label class="month-chk"><input type="checkbox" value="4"  onchange="toggleMonth(4)">  Abril</label>
+            <label class="month-chk"><input type="checkbox" value="5"  onchange="toggleMonth(5)">  Mayo</label>
+            <label class="month-chk"><input type="checkbox" value="6"  onchange="toggleMonth(6)">  Junio</label>
+            <label class="month-chk"><input type="checkbox" value="7"  onchange="toggleMonth(7)">  Julio</label>
+            <label class="month-chk"><input type="checkbox" value="8"  onchange="toggleMonth(8)">  Agosto</label>
+            <label class="month-chk"><input type="checkbox" value="9"  onchange="toggleMonth(9)">  Septiembre</label>
+            <label class="month-chk"><input type="checkbox" value="10" onchange="toggleMonth(10)"> Octubre</label>
+            <label class="month-chk"><input type="checkbox" value="11" onchange="toggleMonth(11)"> Noviembre</label>
+            <label class="month-chk"><input type="checkbox" value="12" onchange="toggleMonth(12)"> Diciembre</label>
+          </div>
+        </div>
       </div>
       <div class="header-stats" id="headerStats"></div>
     </div>
@@ -2195,16 +2235,40 @@ function switchMonth(month) {
   // legacy (kept for compat)
 }
 
+function openMonthPicker(e) {
+  e.stopPropagation();
+  document.getElementById('monthPickerDropdown').classList.toggle('open');
+}
+
+document.addEventListener('click', function() {
+  const dd = document.getElementById('monthPickerDropdown');
+  if (dd) dd.classList.remove('open');
+});
+
+const MONTH_NAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function updateMonthLabel() {
+  const sorted = [...selectedMonths].sort((a,b)=>a-b);
+  const label = sorted.map(m => MONTH_NAMES[m]).join(', ') + ' 2026';
+  document.getElementById('monthPickerLabel').textContent = label;
+  // sync checkboxes active class
+  document.querySelectorAll('.month-chk').forEach(lbl => {
+    const val = parseInt(lbl.querySelector('input').value);
+    lbl.classList.toggle('active', selectedMonths.has(val));
+  });
+}
+
 function toggleMonth(month) {
   if (selectedMonths.has(month)) {
     if (selectedMonths.size === 1) return; // siempre mantener al menos uno
     selectedMonths.delete(month);
+    // uncheck
+    const cb = document.querySelector(`.month-chk input[value="${month}"]`);
+    if (cb) cb.checked = false;
   } else {
     selectedMonths.add(month);
   }
-  document.querySelectorAll('.month-btn').forEach(b => {
-    b.classList.toggle('active', selectedMonths.has(parseInt(b.dataset.month)));
-  });
+  updateMonthLabel();
   initFilters();
   applyFilters();
 }
