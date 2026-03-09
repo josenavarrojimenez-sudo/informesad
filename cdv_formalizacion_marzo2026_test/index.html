@@ -1095,7 +1095,7 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; position: sticky; top: 134px; /* fallback; JS overrides */ z-index: 98; }
+  .filters-bar { padding: 12px 12px; position: relative !important; top: auto !important; z-index: auto !important; }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
@@ -3492,29 +3492,36 @@ applyFilters(); // This will filter by default month (March) and render
     function updateSticky() {
       var mobile = window.innerWidth <= 768;
       var scrolled = !mobile && window.scrollY > 30;
-      // Always measure actual header height
-      var hH = header.offsetHeight;
-      var nH = navBar ? navBar.offsetHeight : 0;
+
       if(scrolled) {
         header.classList.add('scrolled');
-        // After adding .scrolled, re-measure
-        var hHs = header.offsetHeight;
-        if(navBar)    navBar.style.top = hHs + 'px';
-        if(filterBar) filterBar.style.top = (hHs + nH) + 'px';
+        requestAnimationFrame(function(){
+          var hHs = header.offsetHeight;
+          var nHs = navBar ? navBar.offsetHeight : 0;
+          if(navBar)    navBar.style.top = hHs + 'px';
+          if(filterBar) filterBar.style.top = (hHs + nHs) + 'px';
+        });
       } else {
         header.classList.remove('scrolled');
-        // Let browser re-layout then measure
         requestAnimationFrame(function(){
           var hH2 = header.offsetHeight;
           var nH2 = navBar ? navBar.offsetHeight : 0;
-          if(navBar)    navBar.style.top = hH2 + 'px';
-          if(filterBar) filterBar.style.top = (hH2 + nH2) + 'px';
+          if(navBar) navBar.style.top = hH2 + 'px';
+          if(filterBar) {
+            if(mobile) {
+              // Mobile: filters NOT sticky — reset
+              filterBar.style.position = 'relative';
+              filterBar.style.top = 'auto';
+            } else {
+              filterBar.style.position = '';
+              filterBar.style.top = (hH2 + nH2) + 'px';
+            }
+          }
         });
       }
     }
     window.addEventListener('scroll', updateSticky, {passive: true});
     window.addEventListener('resize', updateSticky, {passive: true});
-    // Run after page fully renders
     setTimeout(updateSticky, 100);
   }
 
