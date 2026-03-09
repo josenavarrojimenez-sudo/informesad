@@ -3220,17 +3220,31 @@ function parseMoneyInput(input, fallback) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div'); t.id = 'toast';
+    t.style = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:12px 24px;border-radius:100px;font-size:14px;z-index:10000;transition:opacity 0.3s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);font-family:sans-serif;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t.timer); t.timer = setTimeout(() => t.style.opacity = '0', 3000);
+}
+
 function saveEdits() {
   try {
+    // Mapear TODOS los campos para no perder info de nuevos casos
     const edits = casas.map(c => ({
       lote: c.lote, cliente: c.cliente, fecha: c.fecha,
+      modelo: c.modelo, modeloBase: c.modeloBase,
       estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
       loteAD: c.loteAD, loteQFI: c.loteQFI,
-      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos, expo: c.expo,
-      pendientes: c.pendientes, vendedor: c.vendedor
+      banco: c.banco, formalizador: c.formalizador,
+      traspaso: c.traspaso, permisos: c.permisos, expo: c.expo,
+      pendientes: c.pendientes, vendedor: c.vendedor,
+      capacidad: c.capacidad, precioTotal: c.precioTotal, areaLote: c.areaLote
     }));
     localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
-    // Push to cloud async via POST (GET URL demasiado largo para GAS)
     if(SYNC_URL_INFORME) {
       fetch(SYNC_URL_INFORME, {
         method: 'POST',
