@@ -125,6 +125,64 @@ body {
 
 .month-picker-dropdown.open { display: block; }
 
+/* ── Header Search ──────────────────────────────────────── */
+.header-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.header-search input {
+  width: 0;
+  padding: 7px 0 7px 34px;
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #F5E6D3;
+  outline: none;
+  transition: width 0.3s ease, padding 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.header-search input::placeholder { color: rgba(245,230,211,0.5); }
+.header-search input:focus { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.13); }
+.header-search.open input {
+  width: 200px;
+  padding: 7px 10px 7px 34px;
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+}
+.header-search-icon {
+  position: absolute;
+  left: 9px;
+  color: #F5E6D3;
+  opacity: 0.8;
+  cursor: pointer;
+  z-index: 1;
+  background: none;
+  border: none;
+  padding: 5px;
+  border-radius: 6px;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.header-search-icon:hover { background: rgba(255,255,255,0.15); opacity: 1; }
+.header-search-clear {
+  position: absolute;
+  right: 8px;
+  color: #BFA88E;
+  cursor: pointer;
+  font-size: 13px;
+  display: none;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+}
+.header-search.open .header-search-clear { display: block; }
+
 .month-picker-grid {
   display: flex;
   flex-direction: column;
@@ -1358,6 +1416,13 @@ tbody td {
       <div class="header-subtitle" id="headerSubtitle">Estado de Casas por Formalizar — 2026</div></div></div>
     </div>
     <div style="display:flex;align-items:center;gap:24px">
+      <div class="header-search" id="headerSearch">
+        <button class="header-search-icon" onclick="toggleHeaderSearch()" title="Buscar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+        <input type="text" id="headerSearchInput" placeholder="Buscar lote, cliente, banco…" oninput="applyFilters()" />
+        <button class="header-search-clear" onclick="clearHeaderSearch()">✕</button>
+      </div>
       <div class="month-picker" id="monthPicker">
         <button class="month-picker-btn" onclick="openMonthPicker(event)" id="monthPickerBtn">
           <span id="monthPickerLabel">Marzo 2026</span>
@@ -2371,17 +2436,43 @@ function populateFilters() {
   vendedores.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; fV.appendChild(o); });
 }
 
+function toggleHeaderSearch() {
+  const wrap = document.getElementById('headerSearch');
+  const inp  = document.getElementById('headerSearchInput');
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) {
+    setTimeout(() => inp.focus(), 300);
+  } else {
+    inp.value = '';
+    applyFilters();
+  }
+}
+
+function clearHeaderSearch() {
+  const inp = document.getElementById('headerSearchInput');
+  inp.value = '';
+  document.getElementById('headerSearch').classList.remove('open');
+  applyFilters();
+}
+
 function applyFilters() {
-  const f = document.getElementById('filterFormalizador').value;
-  const s = document.getElementById('filterSemana').value;
-  const b = document.getElementById('filterBanco').value;
-  const m = document.getElementById('filterModelo').value;
-  const v = document.getElementById('filterVendedor').value;
+  const f  = document.getElementById('filterFormalizador').value;
+  const s  = document.getElementById('filterSemana').value;
+  const b  = document.getElementById('filterBanco').value;
+  const m  = document.getElementById('filterModelo').value;
+  const v  = document.getElementById('filterVendedor').value;
   const ex = document.getElementById('filterExpo').value;
+  const q  = (document.getElementById('headerSearchInput')?.value || '').toLowerCase().trim();
 
   filteredData = casas.filter(c => {
     // Month filter (always active)
     if (!selectedMonths.has(getMonthNumber(c.fecha))) return false;
+    // Search filter
+    if (q) {
+      const hay = [c.lote, c.cliente, c.banco, c.vendedor, c.formalizador, c.pendientes]
+        .map(v => (v || '').toLowerCase()).join(' ');
+      if (!hay.includes(q)) return false;
+    }
     if (f && c.formalizador !== f) return false;
     if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
     if (b && c.banco !== b) return false;
