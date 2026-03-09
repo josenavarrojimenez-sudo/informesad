@@ -395,7 +395,7 @@ body {
 .main {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 24px 40px 60px;
+  padding: 32px 40px 60px;
 }
 
 /* KPI CARDS */
@@ -1084,7 +1084,7 @@ tbody td {
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
     position: sticky;
-    top: 100px; /* header móvil ~100px */
+    top: 90px; /* fallback; JS overrides */
     z-index: 99;
   }
   .nav-inner { gap: 0; }
@@ -1094,7 +1094,7 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; position: sticky; top: 144px; z-index: 98; }
+  .filters-bar { padding: 12px 12px; position: sticky; top: 134px; /* fallback; JS overrides */ z-index: 98; }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
@@ -1106,7 +1106,7 @@ tbody td {
   .btn-export { width: 100%; justify-content: center; padding: 10px 16px; }
   .filters-inner > div[style*="flex:1"] { display: none !important; }
 
-  .main { padding: 12px; }
+  .main { padding: 12px; padding-top: 16px; }
 
   .kpi-row { 
     grid-template-columns: 1fr 1fr; 
@@ -3488,22 +3488,32 @@ applyFilters(); // This will filter by default month (March) and render
     var navBar = document.querySelector('.nav-bar');
     var filterBar = document.querySelector('.filters-bar');
     if(!header) return;
-    function updateSticky(scrolled) {
+    function updateSticky() {
+      var mobile = window.innerWidth <= 768;
+      var scrolled = !mobile && window.scrollY > 30;
       if(scrolled) {
         header.classList.add('scrolled');
-        // Compact: header ~56px, nav ~44px → filters top = 100px
+        // Desktop compact: header ~56px + nav ~44px = 100px for filters
         if(navBar)    navBar.style.top = '56px';
         if(filterBar) filterBar.style.top = '100px';
       } else {
         header.classList.remove('scrolled');
-        // Full: header ~84px, nav ~44px → filters top = 128px
-        if(navBar)    navBar.style.top = '';
-        if(filterBar) filterBar.style.top = '';
+        if(mobile) {
+          // Mobile: measure actual heights
+          var hH = header.offsetHeight;
+          var nH = navBar ? navBar.offsetHeight : 0;
+          if(navBar)    navBar.style.top = hH + 'px';
+          if(filterBar) filterBar.style.top = (hH + nH) + 'px';
+        } else {
+          // Desktop full: header ~84px + nav ~44px = 128px for filters
+          if(navBar)    navBar.style.top = '';
+          if(filterBar) filterBar.style.top = '';
+        }
       }
     }
-    window.addEventListener('scroll', function(){
-      updateSticky(window.scrollY > 30);
-    }, {passive: true});
+    window.addEventListener('scroll', updateSticky, {passive: true});
+    window.addEventListener('resize', updateSticky, {passive: true});
+    updateSticky();
   }
 
   function init(){
