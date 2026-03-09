@@ -71,12 +71,15 @@ function doGet(e) {
 
       for (let i = 0; i < rows.length; i++) {
         const [rowEmail, rowCode, rowExpiry, rowUsed] = rows[i];
-        if (rowEmail === email && rowCode === code && rowUsed === "false") {
+        const codeMatch = String(rowCode).trim() === String(code).trim();
+        const emailMatch = String(rowEmail).trim().toLowerCase() === email;
+        const notUsed = rowUsed === false || rowUsed === "false" || rowUsed === "FALSE";
+        if (emailMatch && codeMatch && notUsed) {
           if (new Date() > new Date(rowExpiry)) {
             return response({ status: "error", message: "Código expirado." });
           }
           // Marcar como usado
-          sheet.getRange(i + 2, 4).setValue("true");
+          sheet.getRange(i + 2, 4).setValue(true);
           return response({ status: "ok", email: email });
         }
       }
