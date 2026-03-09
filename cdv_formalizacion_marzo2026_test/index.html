@@ -1943,7 +1943,9 @@ function renderKPIs() {
 // TABLE VIEW
 function renderTable() {
   const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  let rows = sorted.map(c => `
+  let rows = sorted.map((c, idx) => {
+    idx = casas.indexOf(c); // use original casas index for edits
+    return `
     <tr class="${c.terminada ? 'casa-terminada' : ''}">
       <td data-label="Lote"><span class="lote-badge">${c.lote}</span>${c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : ''}</td>
       <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
@@ -1966,7 +1968,7 @@ function renderTable() {
       </td>
       <td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(${idx})" title="Click para editar">${c.pendientes}</div></td>
     </tr>
-  `).join('');
+  `;}).join('');
 
   document.getElementById('viewTabla').innerHTML = `
     <div class="table-container">
