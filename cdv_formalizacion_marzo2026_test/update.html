@@ -73,7 +73,7 @@
           <div class="muted" id="pct">0% completo</div>
         </div>
         <div class="footer">
-          <button id="save" class="primary">Guardar</button>
+          
           <button id="refreshLots">Refrescar lotes</button>
           <select id="viewMode">
             <option value="todos">Vista: Todos</option>
@@ -186,6 +186,7 @@ function makeRow(doc, data){
     }
     updatePct();
     updateChip(row, doc, data);
+    save(true);
   });
   row.appendChild(sel);
 
@@ -203,7 +204,7 @@ function makeRow(doc, data){
       const list = data.files[doc.name] || (data.files[doc.name]=[]);
       files.forEach(f=>{
         const r=new FileReader();
-        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); };
+        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); save(true); };
         r.readAsDataURL(f);
       });
     };
@@ -273,7 +274,7 @@ function renderFiles(row, doc, data){
   items.forEach((fi,idx)=>{
     const wrap=document.createElement('span'); wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.marginRight='10px'; wrap.style.marginBottom='6px';
     const a=document.createElement('a'); a.textContent=fi.name; a.style.marginRight='6px'; a.style.fontSize='12px'; a.href=fi.data; a.download=fi.name; wrap.appendChild(a);
-    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); };
+    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); save(true); };
     wrap.appendChild(rm);
     list.appendChild(wrap);
   });
@@ -371,14 +372,23 @@ function updatePct(){
   updateSummary(data);
 }
 
-function save(){
-  if(!currentId){alert('Definí primero el ID de expediente');return}
+function save(silent){
+  if(!currentId) return;
   const prev = load(currentId, /*silent*/true);
   const data=getCurrentData();
-  // keep files map from prev if missing
   data.files = data.files && Object.keys(data.files).length? data.files : (prev.files||{});
   localStorage.setItem(key(currentId), JSON.stringify(data));
-  alert('Guardado localmente.');
+  if(!silent) showToast('✅ Guardado automáticamente');
+}
+
+function showToast(msg){
+  let t = document.getElementById('autoSaveToast');
+  if(!t){ t=document.createElement('div'); t.id='autoSaveToast';
+    t.style.cssText='position:fixed;bottom:80px;right:16px;background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;z-index:9999;pointer-events:none';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>{ t.style.opacity='0'; }, 2000);
 }
 
 function addDoc(){
@@ -400,7 +410,7 @@ document.getElementById('load').onclick=()=>{
   if(!v) return; load(v);
 };
 document.getElementById('clear').onclick=()=>{exp.value='';sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
-document.getElementById('save').onclick=save;
+// auto-save: no manual save button
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
 sel.addEventListener('change',()=>{ if(sel.value) { exp.value=''; load(sel.value); } });
