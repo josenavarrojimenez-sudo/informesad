@@ -414,7 +414,6 @@ function syncToCloud(data, silent){
     mode: 'no-cors'
   }).then(() => {
     if(!silent) showToast('✅ Guardado en la nube');
-  }
   }).catch(() => {
     if(!silent) showToast('✅ Guardado local');
   });
