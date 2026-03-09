@@ -450,7 +450,7 @@ document.getElementById('clear').onclick=()=>{
   sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 // auto-save: no manual save button
 document.getElementById('addDoc').onclick=addDoc;
-document.getElementById('refreshLots').onclick=populateLots;
+// refreshLots button removed
 sel.addEventListener('input',()=>{
   const v = sel.value.trim().toLowerCase();
   const box = document.getElementById('loteSuggestions');
