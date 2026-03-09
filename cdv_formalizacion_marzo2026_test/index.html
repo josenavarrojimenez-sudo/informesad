@@ -86,28 +86,32 @@ body {
 
 .month-toggle {
   display: flex;
-  gap: 0;
-  background: rgba(255,255,255,0.08);
-  border-radius: 8px;
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 4px;
   border: 1px solid rgba(255,255,255,0.1);
 }
 
 .month-btn {
-  padding: 8px 20px;
-  font-size: 13px;
+  padding: 5px 10px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #BFA88E;
   background: transparent;
   border: none;
+  border-radius: 6px;
   cursor: pointer;
   transition: var(--transition);
   font-family: inherit;
+  min-width: 34px;
+  text-align: center;
 }
 
 .month-btn:hover {
   color: #F5E6D3;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.08);
 }
 
 .month-btn.active {
@@ -1250,9 +1254,19 @@ tbody td {
       <div class="header-subtitle" id="headerSubtitle">Estado de Casas por Formalizar — 2026</div></div></div>
     </div>
     <div style="display:flex;align-items:center;gap:24px">
-      <div class="month-toggle">
-        <button class="month-btn active" data-month="3" onclick="switchMonth(3)">Marzo</button>
-        <button class="month-btn" data-month="4" onclick="switchMonth(4)">Abril</button>
+      <div class="month-toggle" id="monthToggle">
+        <button class="month-btn" data-month="1"  onclick="toggleMonth(1)">Ene</button>
+        <button class="month-btn" data-month="2"  onclick="toggleMonth(2)">Feb</button>
+        <button class="month-btn active" data-month="3"  onclick="toggleMonth(3)">Mar</button>
+        <button class="month-btn" data-month="4"  onclick="toggleMonth(4)">Abr</button>
+        <button class="month-btn" data-month="5"  onclick="toggleMonth(5)">May</button>
+        <button class="month-btn" data-month="6"  onclick="toggleMonth(6)">Jun</button>
+        <button class="month-btn" data-month="7"  onclick="toggleMonth(7)">Jul</button>
+        <button class="month-btn" data-month="8"  onclick="toggleMonth(8)">Ago</button>
+        <button class="month-btn" data-month="9"  onclick="toggleMonth(9)">Sep</button>
+        <button class="month-btn" data-month="10" onclick="toggleMonth(10)">Oct</button>
+        <button class="month-btn" data-month="11" onclick="toggleMonth(11)">Nov</button>
+        <button class="month-btn" data-month="12" onclick="toggleMonth(12)">Dic</button>
       </div>
       <div class="header-stats" id="headerStats"></div>
     </div>
@@ -2130,7 +2144,7 @@ const casas = [
 ];
 
 // Helpers
-let selectedMonth = 3; // Default: March
+const selectedMonths = new Set([3]); // Default: March (multi-select)
 
 function fmt(n) {
   return '₡' + n.toLocaleString('es-CR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -2178,10 +2192,20 @@ function formatDate(dateStr) {
 
 // Month switching
 function switchMonth(month) {
-  selectedMonth = month;
-  document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.month-btn[data-month="${month}"]`).classList.add('active');
-  document.getElementById('headerSubtitle').textContent = `Estado de Casas por Formalizar — 2026`;
+  // legacy (kept for compat)
+}
+
+function toggleMonth(month) {
+  if (selectedMonths.has(month)) {
+    if (selectedMonths.size === 1) return; // siempre mantener al menos uno
+    selectedMonths.delete(month);
+  } else {
+    selectedMonths.add(month);
+  }
+  document.querySelectorAll('.month-btn').forEach(b => {
+    b.classList.toggle('active', selectedMonths.has(parseInt(b.dataset.month)));
+  });
+  initFilters();
   applyFilters();
 }
 
@@ -2217,7 +2241,7 @@ function applyFilters() {
 
   filteredData = casas.filter(c => {
     // Month filter (always active)
-    if (getMonthNumber(c.fecha) !== selectedMonth) return false;
+    if (!selectedMonths.has(getMonthNumber(c.fecha))) return false;
     if (f && c.formalizador !== f) return false;
     if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
     if (b && c.banco !== b) return false;
