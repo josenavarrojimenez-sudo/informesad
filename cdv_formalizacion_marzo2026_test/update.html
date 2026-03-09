@@ -61,7 +61,8 @@
     <div class="card">
       <div class="row">
         <label for="expSelect" style="min-width:130px">Lote / Expediente</label>
-        <select id="expSelect"><option value="">Seleccionar lote…</option></select>
+        <input id="expSelect" type="text" list="lotesList" placeholder="Escribí el lote (ej: K.18)…" autocomplete="off" style="min-width:200px;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:15px" />
+        <datalist id="lotesList"></datalist>
         <button id="clear">Limpiar</button>
       </div>
       <div class="row">
@@ -149,10 +150,10 @@ const LOTS_LIST = ["1-01 Barani", "D.21", "F.18", "I.13", "I.30", "I.36", "I.39"
 function fetchLots(){ return LOTS_LIST; }
 
 function populateLots(){
-  const sel=document.getElementById('expSelect');
-  sel.innerHTML = '<option value="">Seleccionar lote…</option>';
+  const dl=document.getElementById('lotesList');
+  dl.innerHTML='';
   const lots = LOTS_LIST.slice().sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
-  lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
+  lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; dl.appendChild(o); });
 }
 
 function populateStages(){
@@ -445,11 +446,15 @@ function addDoc(){
 // wire
 const sel=document.getElementById('expSelect');
 
-document.getElementById('clear').onclick=()=>{sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
+document.getElementById('clear').onclick=()=>{
+  sel.value='';document.getElementById('docs').innerHTML='';document.getElementById('barFill').style.width='0%';document.getElementById('pct').textContent='0% completo'};
 // auto-save: no manual save button
 document.getElementById('addDoc').onclick=addDoc;
 document.getElementById('refreshLots').onclick=populateLots;
-sel.addEventListener('change',()=>{ if(sel.value) { load(sel.value); } });
+sel.addEventListener('input',()=>{
+  const v = sel.value.trim();
+  if(LOTS_LIST.includes(v)){ load(v); }
+});
 const viewMode=document.getElementById('viewMode');
 const stageSel=document.getElementById('stageSelect');
 viewMode.addEventListener('change',()=>{
@@ -468,11 +473,7 @@ if(lastLote){
   // Esperar a que el select esté poblado
   setTimeout(()=>{
     const s = document.getElementById('expSelect');
-    if([...s.options].some(o=>o.value===lastLote)){
-      s.value = lastLote;
-    } else {
-      // lote not in select, just load it directly
-    }
+    sel.value = lastLote;
     load(lastLote);
   }, 100);
 }
