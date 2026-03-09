@@ -177,7 +177,7 @@ function makeRow(doc, data){
     }
     updatePct();
     updateChip(row, doc, data);
-    save(true);
+    save(false);
   });
   row.appendChild(sel);
 
@@ -195,7 +195,7 @@ function makeRow(doc, data){
       const list = data.files[doc.name] || (data.files[doc.name]=[]);
       files.forEach(f=>{
         const r=new FileReader();
-        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); save(true); };
+        r.onload=()=>{ list.push({name:f.name,type:f.type||'',size:f.size||0,data:r.result}); renderFiles(row, doc, data); updatePct(); save(false); };
         r.readAsDataURL(f);
       });
     };
@@ -265,7 +265,7 @@ function renderFiles(row, doc, data){
   items.forEach((fi,idx)=>{
     const wrap=document.createElement('span'); wrap.style.display='inline-flex'; wrap.style.alignItems='center'; wrap.style.marginRight='10px'; wrap.style.marginBottom='6px';
     const a=document.createElement('a'); a.textContent=fi.name; a.style.marginRight='6px'; a.style.fontSize='12px'; a.href=fi.data; a.download=fi.name; wrap.appendChild(a);
-    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); save(true); };
+    const rm=document.createElement('button'); rm.textContent='✕'; rm.title='Eliminar'; rm.style.fontSize='11px'; rm.style.padding='2px 6px'; rm.onclick=()=>{ items.splice(idx,1); renderFiles(row, doc, data); updatePct(); save(false); };
     wrap.appendChild(rm);
     list.appendChild(wrap);
   });
