@@ -326,16 +326,27 @@ function setupAutocomplete(){
     if(!v){ box.style.display = 'none'; return; }
     const matches = LOTS_LIST.filter(l => l.toLowerCase().includes(v));
     if(!matches.length){ box.style.display = 'none'; return; }
-    box.innerHTML = matches.map(l =>
-      '<div style="padding:10px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee" ' +
-      'onmousedown="event.preventDefault()" ' +
-      'onclick="selectLote('' + l + '')">' + l + '</div>'
-    ).join('');
+    box.innerHTML = '';
+    matches.forEach(l => {
+      const d = document.createElement('div');
+      d.textContent = l;
+      d.style.cssText = 'padding:10px 12px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee';
+      d.addEventListener('mousedown', e => e.preventDefault());
+      d.addEventListener('click', () => selectLote(l));
+      box.appendChild(d);
+    });
     box.style.display = 'block';
   });
 
   inp.addEventListener('blur', () => {
     setTimeout(() => { box.style.display = 'none'; }, 200);
+  });
+
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Enter'){
+      const v = inp.value.trim();
+      if(LOTS_LIST.includes(v)) selectLote(v);
+    }
   });
 }
 
