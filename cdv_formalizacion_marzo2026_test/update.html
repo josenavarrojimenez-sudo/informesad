@@ -23,10 +23,12 @@
   .row{display:flex;gap:12px;align-items:center;margin:8px 0;flex-wrap:wrap}
   .row input[type=text], .row select{flex:1;min-width:180px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:14px}
   .docs{margin-top:12px}
-  .doc{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding:12px 0;flex-wrap:wrap}
-  .doc.dragover{outline:2px dashed var(--accent);outline-offset:4px;background:#FFFBEB}
-  .doc:last-child{border-bottom:none}
-  .doc .name{flex:1;min-width:200px;font-weight:600}
+  .doc{display:flex;align-items:center;gap:10px;padding:12px 14px;flex-wrap:wrap;border-radius:10px;margin-bottom:4px;border:1px solid transparent;transition:background .15s}
+  .doc:nth-child(odd){background:#FAF8F5;border-color:#EDE9E3}
+  .doc:nth-child(even){background:#FFFFFF;border-color:#EDE9E3}
+  .doc:hover{background:#F3EFE8;border-color:#D4C9B8}
+  .doc.dragover{outline:2px dashed var(--accent);outline-offset:2px;background:#FFFBEB}
+  .doc .name{flex:1;min-width:200px;font-weight:600;color:#2D1F0F}
   .status{display:flex;gap:8px;align-items:center}
   select{padding:10px;border:1px solid var(--line);border-radius:10px}
   input[type=file]{font-size:13px}
@@ -267,7 +269,7 @@ function renderDocs(statuses){
     docs.forEach(d => { if(!grouped[d.stage]) grouped[d.stage] = []; grouped[d.stage].push(d); });
     Object.entries(grouped).forEach(([stageName, stageDocs]) => {
       const h = document.createElement('div');
-      h.style.cssText = 'font-weight:700;color:#3D2E1F;margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.5px';
+      h.style.cssText = 'font-weight:700;color:#fff;background:linear-gradient(90deg,#3D2E1F,#6B4C30);margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:1px;padding:6px 14px;border-radius:8px';
       h.textContent = stageName;
       cont.appendChild(h);
       stageDocs.forEach(doc => cont.appendChild(makeRow(doc, statuses)));
