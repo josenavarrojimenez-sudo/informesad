@@ -1272,6 +1272,9 @@ tbody td {
     <select class="filter-select" id="filterModelo" onchange="applyFilters()">
       <option value="">Todos los modelos</option>
     </select>
+    <select class="filter-select" id="filterVendedor" onchange="applyFilters()">
+      <option value="">Todos los vendedores</option>
+    </select>
     <button class="filter-clear" onclick="clearFilters()">✕ Limpiar filtros</button>
     <div style="flex:1"></div>
     <button class="btn-nuevo-caso" onclick="openNuevoCaso()">
@@ -2153,6 +2156,10 @@ function populateFilters() {
 
   const fM = document.getElementById('filterModelo');
   modelos.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; fM.appendChild(o); });
+
+  const vendedores = [...new Set(casas.map(c => c.vendedor).filter(Boolean))].sort();
+  const fV = document.getElementById('filterVendedor');
+  vendedores.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; fV.appendChild(o); });
 }
 
 function applyFilters() {
@@ -2160,6 +2167,7 @@ function applyFilters() {
   const s = document.getElementById('filterSemana').value;
   const b = document.getElementById('filterBanco').value;
   const m = document.getElementById('filterModelo').value;
+  const v = document.getElementById('filterVendedor').value;
 
   filteredData = casas.filter(c => {
     // Month filter (always active)
@@ -2168,6 +2176,7 @@ function applyFilters() {
     if (s && getWeekNumber(c.fecha) !== parseInt(s)) return false;
     if (b && c.banco !== b) return false;
     if (m && c.modeloBase !== m) return false;
+    if (v && c.vendedor !== v) return false;
     return true;
   });
 
@@ -2179,6 +2188,7 @@ function clearFilters() {
   document.getElementById('filterSemana').value = '';
   document.getElementById('filterBanco').value = '';
   document.getElementById('filterModelo').value = '';
+  document.getElementById('filterVendedor').value = '';
   applyFilters();
 }
 
