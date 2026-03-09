@@ -2682,7 +2682,7 @@ function saveEdits() {
       fetch(SYNC_URL_INFORME, {
         method: 'POST',
         body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits }),
-        headers: { 'Content-Type': 'application/json' }
+        mode: 'no-cors'
       }).catch(() => {});
     }
   } catch(e) { console.error('Save err:', e); }

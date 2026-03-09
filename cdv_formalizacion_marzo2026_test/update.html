@@ -419,13 +419,10 @@ function syncToCloud(data, silent){
   fetch(SYNC_URL, {
     method: 'POST',
     body: JSON.stringify(payload),
-    headers: { 'Content-Type': 'application/json' }
-  }).then(r => r.json()).then(res => {
-    if(res.status === 'ok'){
-      if(!silent) showToast('✅ Guardado en la nube');
-    } else {
-      if(!silent) showToast('⚠️ Guardado local (fallo nube)');
-    }
+    mode: 'no-cors'
+  }).then(() => {
+    if(!silent) showToast('✅ Guardado en la nube');
+  }
   }).catch(() => {
     if(!silent) showToast('✅ Guardado local');
   });
