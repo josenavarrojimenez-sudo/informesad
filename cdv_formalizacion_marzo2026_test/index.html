@@ -3491,19 +3491,25 @@ applyFilters(); // This will filter by default month (March) and render
     if(!header) return;
     function updateSticky() {
       var mobile = window.innerWidth <= 768;
-      var scrolled = !mobile && window.scrollY > 30;
-      // Always measure actual header height
-      var hH = header.offsetHeight;
-      var nH = navBar ? navBar.offsetHeight : 0;
+      if(mobile) {
+        // Móvil: sin sticky, sin top dinámico — scroll normal
+        header.classList.remove('scrolled');
+        if(navBar)    navBar.style.top = '';
+        if(filterBar) filterBar.style.top = '';
+        return;
+      }
+      // Solo desktop
+      var scrolled = window.scrollY > 30;
       if(scrolled) {
         header.classList.add('scrolled');
-        // After adding .scrolled, re-measure
-        var hHs = header.offsetHeight;
-        if(navBar)    navBar.style.top = hHs + 'px';
-        if(filterBar) filterBar.style.top = (hHs + nH) + 'px';
+        requestAnimationFrame(function(){
+          var hHs = header.offsetHeight;
+          var nHs = navBar ? navBar.offsetHeight : 0;
+          if(navBar)    navBar.style.top = hHs + 'px';
+          if(filterBar) filterBar.style.top = (hHs + nHs) + 'px';
+        });
       } else {
         header.classList.remove('scrolled');
-        // Let browser re-layout then measure
         requestAnimationFrame(function(){
           var hH2 = header.offsetHeight;
           var nH2 = navBar ? navBar.offsetHeight : 0;
@@ -3513,8 +3519,7 @@ applyFilters(); // This will filter by default month (March) and render
       }
     }
     window.addEventListener('scroll', updateSticky, {passive: true});
-    window.addEventListener('resize', updateSticky, {passive: true});
-    // Run after page fully renders
+    window.addEventListener('resize', function(){ setTimeout(updateSticky, 50); }, {passive: true});
     setTimeout(updateSticky, 100);
   }
 
