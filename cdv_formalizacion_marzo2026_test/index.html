@@ -1943,32 +1943,26 @@ function renderKPIs() {
 // TABLE VIEW
 function renderTable() {
   const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  let rows = sorted.map((c, idx) => {
-    idx = casas.indexOf(c); // use original casas index for edits
-    return `
-    <tr class="${c.terminada ? 'casa-terminada' : ''}">
-      <td data-label="Lote"><span class="lote-badge">${c.lote}</span>${c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : ''}</td>
-      <td data-label="Modelo" style="font-size:12px">${c.modelo}</td>
-      <td data-label="Cliente"><strong>${c.cliente}</strong></td>
-      <td data-label="💰 Desembolso">
-        <div style="cursor:pointer" onclick="editMontos(${idx})" title="Click para editar montos">${desembolsoBlock(c, false)}</div>
-      </td>
-      <td data-label="Fecha Est.">
-        <span style="cursor:pointer;text-decoration:underline dotted;color:var(--claude-dark)" onclick="editFecha(${idx})" title="Click para editar">${formatDate(c.fecha)}</span>
-      </td>
-      <td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(${idx})" title="Click para editar banco">${c.banco}</span></td>
-      <td data-label="Formalizador"><span class="formalizador-tag ${getFormClass(c.formalizador)}">${c.formalizador}</span></td>
-      <td data-label="Vendedor"><span style="font-size:12px;font-weight:500">${c.vendedor||''}</span></td>
-      <td data-label="Traspaso / Permisos">
-        <span style="cursor:pointer" onclick="toggleTraspaso(${idx})">${c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>'}</span>
-        <span style="cursor:pointer;margin-left:4px" onclick="togglePermisos(${idx})">${c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>'}</span>
-      </td>
-      <td data-label="Estado Casa">
-        <span style="cursor:pointer" onclick="changeEstadoCasa(${idx})" title="Click para cambiar estado">${getEstadoBadge(c.estadoCasa)}</span>
-      </td>
-      <td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(${idx})" title="Click para editar">${c.pendientes}</div></td>
-    </tr>
-  `;}).join('');
+  let rows = sorted.map(function(c) {
+    var i = casas.indexOf(c);
+    var r = '<tr class="' + (c.terminada ? 'casa-terminada' : '') + '">';
+    r += '<td data-label="Lote"><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : '') + '</td>';
+    r += '<td data-label="Modelo" style="font-size:12px">' + c.modelo + '</td>';
+    r += '<td data-label="Cliente"><strong>' + c.cliente + '</strong></td>';
+    r += '<td data-label="💰 Desembolso"><div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, false) + '</div></td>';
+    r += '<td data-label="Fecha Est."><span style="cursor:pointer;text-decoration:underline dotted" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
+    r += '<td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
+    r += '<td data-label="Formalizador"><span class="formalizador-tag ' + getFormClass(c.formalizador) + '">' + c.formalizador + '</span></td>';
+    r += '<td data-label="Vendedor"><span style="font-size:12px;font-weight:500">' + (c.vendedor||'') + '</span></td>';
+    r += '<td data-label="Traspaso / Permisos">';
+    r += '<span style="cursor:pointer" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
+    r += '<span style="cursor:pointer;margin-left:4px" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
+    r += '</td>';
+    r += '<td data-label="Estado Casa"><span style="cursor:pointer" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
+    r += '<td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(' + i + ')">' + (c.pendientes||'') + '</div></td>';
+    r += '</tr>';
+    return r;
+  }).join('');
 
   document.getElementById('viewTabla').innerHTML = `
     <div class="table-container">
