@@ -68,7 +68,10 @@ body {
   padding: 10px 40px;
 }
 .header.scrolled + .nav-bar {
-  top: 60px;
+  top: 56px;
+}
+.header.scrolled + .nav-bar + .filters-bar {
+  top: 100px; /* 56 + 44 */
 }
 .header-inner > div:first-child {
   transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
@@ -302,6 +305,9 @@ body {
   padding: 16px 40px;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 128px; /* header(84) + nav(44) */
+  z-index: 98;
 }
 
 .filters-inner {
@@ -1077,8 +1083,9 @@ tbody td {
     padding: 0 8px; 
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
-    top: auto;
-    position: relative;
+    position: sticky;
+    top: 100px; /* header móvil ~100px */
+    z-index: 99;
   }
   .nav-inner { gap: 0; }
   .nav-tab { 
@@ -1087,7 +1094,7 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; }
+  .filters-bar { padding: 12px 12px; position: sticky; top: 144px; z-index: 98; }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
@@ -3478,13 +3485,24 @@ applyFilters(); // This will filter by default month (March) and render
 
   function setupScrollHideLogo(){
     var header = document.querySelector('.header');
+    var navBar = document.querySelector('.nav-bar');
+    var filterBar = document.querySelector('.filters-bar');
     if(!header) return;
-    window.addEventListener('scroll', function(){
-      if(window.scrollY > 30){
+    function updateSticky(scrolled) {
+      if(scrolled) {
         header.classList.add('scrolled');
+        // Compact: header ~56px, nav ~44px → filters top = 100px
+        if(navBar)    navBar.style.top = '56px';
+        if(filterBar) filterBar.style.top = '100px';
       } else {
         header.classList.remove('scrolled');
+        // Full: header ~84px, nav ~44px → filters top = 128px
+        if(navBar)    navBar.style.top = '';
+        if(filterBar) filterBar.style.top = '';
       }
+    }
+    window.addEventListener('scroll', function(){
+      updateSticky(window.scrollY > 30);
     }, {passive: true});
   }
 
