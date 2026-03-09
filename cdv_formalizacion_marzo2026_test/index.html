@@ -2123,11 +2123,7 @@ function renderFlow() {
             </div>
             <div class="flow-info-modelo">${c.modelo} · <span class="bank-tag">${c.banco}</span> · <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="display:inline;padding:2px 6px">${c.formalizador}</span></div>
           </div>
-          <div class="flow-monto">
-            <div class="monto-highlight">${fmt(c.montoCasa)}</div>
-            <div class="monto-lote">Lote AD: ${fmt(c.loteAD||0)}</div>
-        <div class="monto-lote">Lote QFI: ${fmt(c.loteQFI||0)}</div>
-          </div>
+          <div class="flow-monto">${desembolsoBlock(c, true)}</div>
         </div>
       `;
     });
@@ -2188,7 +2184,7 @@ function renderKanban() {
             <span class="kanban-card-banco">${c.banco}</span>
           </div>
           <div class="kanban-card-client">${c.cliente}</div>
-          <div class="kanban-card-monto">${fmt(c.montoCasa)}</div>
+          <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
           <div class="kanban-card-modelo">${c.modeloBase}</div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
             <span class="kanban-card-form ${getFormClass(c.formalizador)}">${c.formalizador}</span>
@@ -2237,18 +2233,14 @@ function renderFormalizador() {
         <div class="form-case ${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
             <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
-            <span class="monto-highlight">${fmt(c.montoCasa)}</span>
           </div>
           <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
+          <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
           <div class="form-case-row">
             <span class="bank-tag">${c.banco}</span>
             <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
             <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
             <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
-          </div>
-          <div class="form-case-row" style="margin-top:4px">
-            <span style="font-size:11px;color:var(--text-secondary)">💳 AD: ${fmt(c.loteAD||0)}</span>
-            <span style="font-size:11px;color:var(--text-secondary)">💳 QFI: ${fmt(c.loteQFI||0)}</span>
           </div>
           <div class="form-case-pendientes">📌 ${c.pendientes}</div>
         </div>
