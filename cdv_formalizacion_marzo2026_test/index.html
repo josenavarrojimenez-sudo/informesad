@@ -2235,6 +2235,7 @@ function renderTable() {
     r += '<span style="cursor:pointer;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
     r += '<span style="cursor:pointer;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
     r += '</div></td>';
+    r += '<td data-label="📋 Expediente" style="vertical-align:middle">' + expedienteBar(c.lote) + '</td>';
     r += '<td data-label="Estado Casa"><span style="cursor:pointer" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
     r += '<td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(' + i + ')">' + (c.pendientes||'') + '</div></td>';
     r += '</tr>';
@@ -2261,6 +2262,7 @@ function renderTable() {
               <th>Formalizador</th>
               <th>Vendedor</th>
               <th>Trasp. / Perm.</th>
+              <th>📋 Expediente</th>
               <th>Estado Casa</th>
               <th>Pendientes</th>
             </tr>
@@ -2382,7 +2384,8 @@ function renderKanban() {
           <div class="kanban-card-client">${c.cliente}</div>
           <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
           <div class="kanban-card-modelo">${c.modeloBase}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <div style="margin-top:8px">${expedienteBar(c.lote)}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
             <span class="kanban-card-form ${getFormClass(c.formalizador)}">${c.formalizador}</span>
             ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
           </div>
@@ -2657,6 +2660,61 @@ function exportToExcel() {
 const EDIT_PASSWORD = 'Adelante2025';
 let isAuthenticated = false;
 const STORAGE_KEY_TEST = 'cdvFormTest_edits';
+const SYNC_URL_EXP = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
+// Cache de avance de expedientes: { "K.18": 75, "F.18": 40, ... }
+const expedienteAvance = {};
+
+// Total de requisitos obligatorios (no opcionales)
+const DOCS_OBLIGATORIOS = 25; // de los 33 docs, 8 son opcionales
+
+function calcPct(statuses) {
+  if(!statuses) return null;
+  let total = 0, done = 0;
+  const OPTIONAL_DOCS = ['Orden Patronal','Sicere','Comprobante de Prima','Estados de Tarjetas de Crédito',
+    'Declaración de Renta (Hacienda)','Morosidad Patronal CCSS','Cartas de Descargo',
+    'Certificación de Cancelación de Deudas','Grupo de Interés Económico','Liquidación Anticipada',
+    'Orden Extra','Croquis Extra'];
+  Object.entries(statuses).forEach(([name, val]) => {
+    const isOpt = OPTIONAL_DOCS.includes(name);
+    if(isOpt && val === 'Pendiente') return;
+    total++;
+    if(val === 'Completado') done++;
+  });
+  return total ? Math.round(done / total * 100) : 0;
+}
+
+function expedienteBar(lote) {
+  const pct = expedienteAvance[lote];
+  if(pct === undefined || pct === null) return '<span style="font-size:11px;color:#aaa">—</span>';
+  const color = pct === 100 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
+  return '<div style="min-width:80px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:#666;margin-bottom:2px">' +
+    '<span>Expediente</span><span style="font-weight:600;color:' + color + '">' + pct + '%</span></div>' +
+    '<div style="height:5px;background:#eee;border-radius:999px;overflow:hidden">' +
+    '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:999px;transition:width .3s"></div>' +
+    '</div></div>';
+}
+
+async function loadAllExpedientes() {
+  try {
+    const res = await fetch(SYNC_URL_EXP);
+    const json = await res.json();
+    if(!json.expedientes) return;
+    // Load each one
+    const promises = json.expedientes.map(id =>
+      fetch(SYNC_URL_EXP + '?expedienteId=' + encodeURIComponent(id))
+        .then(r => r.json())
+        .then(data => {
+          if(data.status === 'ok' && data.data && data.data.statuses) {
+            expedienteAvance[id] = calcPct(data.data.statuses);
+          }
+        })
+        .catch(() => {})
+    );
+    await Promise.all(promises);
+    applyFilters(); // re-render with avance data
+  } catch(e) {}
+}
 const SYNC_URL_INFORME = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
 const SYNC_TOKEN = 'Adelante2025';
 
@@ -2880,6 +2938,7 @@ function guardarNuevoCaso() {
 
 // Init
 loadEdits();
+loadAllExpedientes();
 populateFilters();
 applyFilters(); // This will filter by default month (March) and render
 
