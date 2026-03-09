@@ -547,6 +547,78 @@ tbody td {
   box-shadow: 0 1px 3px rgba(146,64,14,0.3);
 }
 
+/* ── Auth Modal ─────────────────────────────────────────────── */
+.auth-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(20,12,6,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+.auth-overlay.open { display: flex; }
+.auth-modal {
+  background: #FAF8F5;
+  border-radius: 16px;
+  padding: 32px 28px 28px;
+  width: min(380px, 92vw);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  text-align: center;
+}
+.auth-modal h3 {
+  font-family: 'Tiempos Fine', Georgia, serif;
+  font-size: 22px;
+  color: #3D2E1F;
+  margin: 0 0 6px;
+}
+.auth-modal p { font-size: 13px; color: #6B5744; margin: 0 0 20px; }
+.auth-input {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1.5px solid #D4C9B8;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #3D2E1F;
+  background: #fff;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.auth-input:focus { border-color: #D97706; }
+.auth-btn-primary {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, #78350F, #92400E);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity .2s;
+}
+.auth-btn-primary:hover { opacity: 0.88; }
+.auth-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.auth-btn-secondary {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  color: #9B7C5A;
+  border: 1px solid #D4C9B8;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 8px;
+}
+.auth-btn-secondary:hover { background: #F0EBE2; }
+.auth-error { color: #B91C1C; font-size: 12px; margin-top: 6px; min-height: 18px; }
+.auth-success-note { font-size: 12px; color: #065F46; background: #D1FAE5; border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; }
+
+
 @keyframes pulse-green {
   0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.3); }
   50% { box-shadow: 0 0 0 6px rgba(5, 150, 105, 0); }
@@ -2868,8 +2940,93 @@ function exportToExcel() {
 }
 
 // ── Variables globales de autenticación y caché de expedientes ──────────────
-let isAuthenticated = false;
-const EDIT_PASSWORD = 'Adelante2025';
+// ── Auth system ─────────────────────────────────────────────────────────────
+let authEmail = localStorage.getItem('cdvAuthEmail') || null;
+let authExpiry = parseInt(localStorage.getItem('cdvAuthExpiry') || '0');
+
+function isAuthenticated() {
+  return authEmail && Date.now() < authExpiry;
+}
+
+function setAuthSession(email) {
+  authEmail = email;
+  authExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24h
+  localStorage.setItem('cdvAuthEmail', email);
+  localStorage.setItem('cdvAuthExpiry', String(authExpiry));
+}
+
+function clearAuth() {
+  authEmail = null; authExpiry = 0;
+  localStorage.removeItem('cdvAuthEmail');
+  localStorage.removeItem('cdvAuthExpiry');
+}
+
+let _authCallback = null;
+
+function promptPassword(callback) {
+  if (isAuthenticated()) { callback(); return; }
+  _authCallback = callback;
+  document.getElementById('authOverlay').classList.add('open');
+  document.getElementById('authEmailInput').value = '';
+  document.getElementById('authEmailError').textContent = '';
+  document.getElementById('authStepEmail').style.display = '';
+  document.getElementById('authStepCode').style.display = 'none';
+  setTimeout(() => document.getElementById('authEmailInput').focus(), 100);
+}
+
+function authSendCode() {
+  const email = document.getElementById('authEmailInput').value.trim().toLowerCase();
+  const errEl = document.getElementById('authEmailError');
+  const btn = document.getElementById('authSendBtn');
+  if (!email) { errEl.textContent = 'Ingresá tu correo.'; return; }
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  errEl.textContent = '';
+  fetch(SYNC_URL_INFORME + '?action=send_code&email=' + encodeURIComponent(email))
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = 'Enviar código';
+      if (res.status === 'ok') {
+        document.getElementById('authEmailDisplay').textContent = email;
+        document.getElementById('authStepEmail').style.display = 'none';
+        document.getElementById('authStepCode').style.display = '';
+        document.getElementById('authCodeInput').value = '';
+        document.getElementById('authCodeError').textContent = '';
+        setTimeout(() => document.getElementById('authCodeInput').focus(), 100);
+      } else {
+        errEl.textContent = res.message || 'Error al enviar.';
+      }
+    })
+    .catch(() => { btn.disabled = false; btn.textContent = 'Enviar código'; errEl.textContent = 'Error de conexión.'; });
+}
+
+function authVerifyCode() {
+  const email = document.getElementById('authEmailDisplay').textContent;
+  const code = document.getElementById('authCodeInput').value.trim();
+  const errEl = document.getElementById('authCodeError');
+  const btn = document.getElementById('authVerifyBtn');
+  if (!code || code.length < 6) { errEl.textContent = 'Ingresá el código de 6 dígitos.'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando…';
+  errEl.textContent = '';
+  fetch(SYNC_URL_INFORME + '?action=verify_code&email=' + encodeURIComponent(email) + '&code=' + encodeURIComponent(code))
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = 'Verificar';
+      if (res.status === 'ok') {
+        setAuthSession(res.email || email);
+        document.getElementById('authOverlay').classList.remove('open');
+        if (_authCallback) { _authCallback(); _authCallback = null; }
+      } else {
+        errEl.textContent = res.message || 'Código incorrecto.';
+      }
+    })
+    .catch(() => { btn.disabled = false; btn.textContent = 'Verificar'; errEl.textContent = 'Error de conexión.'; });
+}
+
+function authBackToEmail() {
+  document.getElementById('authStepCode').style.display = 'none';
+  document.getElementById('authStepEmail').style.display = '';
+}
 const STORAGE_KEY_TEST = 'cdvFormTest_edits';
 const SYNC_URL_EXP = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
 // Cache de avance de expedientes: { "K.18": 75, "F.18": 40, ... }
@@ -2928,12 +3085,7 @@ async function loadAllExpedientes() {
 const SYNC_URL_INFORME = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
 const SYNC_TOKEN = 'Adelante2025';
 
-function promptPassword(callback) {
-  if (isAuthenticated) { callback(); return; }
-  const pw = prompt('Ingrese la clave para modificar:');
-  if (pw === EDIT_PASSWORD) { isAuthenticated = true; callback(); }
-  else if (pw !== null) { alert('Clave incorrecta.'); }
-}
+// promptPassword defined above (auth system)
 
 function parseMoneyInput(input, fallback) {
   if (input === null || input === undefined) return fallback;
@@ -3333,5 +3485,27 @@ window.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 </div>
+
+<!-- Auth Modal -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <div id="authStepEmail">
+      <h3>🔐 Acceso restringido</h3>
+      <p>Ingresá tu correo autorizado para recibir un código de acceso.</p>
+      <input class="auth-input" type="email" id="authEmailInput" placeholder="tu@correo.com" />
+      <div class="auth-error" id="authEmailError"></div>
+      <button class="auth-btn-primary" id="authSendBtn" onclick="authSendCode()">Enviar código</button>
+    </div>
+    <div id="authStepCode" style="display:none">
+      <h3>📩 Revisá tu correo</h3>
+      <p id="authCodeNote">Enviamos un código de 6 dígitos a <strong id="authEmailDisplay"></strong></p>
+      <input class="auth-input" type="text" id="authCodeInput" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:22px;text-align:center" />
+      <div class="auth-error" id="authCodeError"></div>
+      <button class="auth-btn-primary" id="authVerifyBtn" onclick="authVerifyCode()">Verificar</button>
+      <button class="auth-btn-secondary" onclick="authBackToEmail()">← Cambiar correo</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
