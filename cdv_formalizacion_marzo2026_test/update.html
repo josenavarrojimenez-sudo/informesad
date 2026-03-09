@@ -277,6 +277,50 @@ function renderDocs(statuses){
   }
 }
 
+function renderFileList(container, docName, stored){
+  // Remove existing file list items
+  container.querySelectorAll('.file-item').forEach(el => el.remove());
+  const files = (stored.files && stored.files[docName]) || [];
+  files.forEach((f, idx) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;background:#f5f5f5;border-radius:6px;padding:4px 8px;margin-top:2px;width:100%';
+
+    const fname = document.createElement('span');
+    fname.style.cssText = 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    fname.textContent = f.name;
+    item.appendChild(fname);
+
+    // Download button
+    const dl = document.createElement('a');
+    dl.textContent = '⬇️';
+    dl.title = 'Descargar';
+    dl.style.cssText = 'cursor:pointer;text-decoration:none;font-size:14px';
+    dl.href = f.data;
+    dl.download = f.name;
+    item.appendChild(dl);
+
+    // Delete button
+    const rm = document.createElement('button');
+    rm.textContent = '✕';
+    rm.title = 'Eliminar';
+    rm.style.cssText = 'font-size:11px;padding:2px 6px;border:1px solid #ccc;border-radius:4px;cursor:pointer;background:#fff;color:#dc2626';
+    rm.addEventListener('click', () => {
+      const stored2 = getStored();
+      if(stored2.files && stored2.files[docName]){
+        stored2.files[docName].splice(idx, 1);
+        localStorage.setItem(storageKey(currentId), JSON.stringify(stored2));
+        const countEl = container.querySelector('.file-count');
+        if(countEl) countEl.textContent = '📎 ' + stored2.files[docName].length + ' archivo(s)';
+        renderFileList(container, docName, stored2);
+      }
+    });
+    item.appendChild(rm);
+
+    container.appendChild(item);
+  });
+}
+
 function makeRow(doc, statuses){
   const row = document.createElement('div');
   row.className = 'doc doc-row';
@@ -295,6 +339,15 @@ function makeRow(doc, statuses){
   sel.value = savedVal;
 
   sel.addEventListener('change', () => {
+    // Block "Completado" if files required but none attached
+    if(sel.value === 'Completado' && doc.files){
+      const stored2 = getStored();
+      const attachedFiles = (stored2.files && stored2.files[doc.name]) || [];
+      if(!attachedFiles.length){
+        alert('Este requisito necesita al menos un archivo adjunto para marcarlo como Completado.');
+        sel.value = 'En Proceso';
+      }
+    }
     updateRowChip(row);
     updateProgress();
     doSave();
@@ -318,6 +371,7 @@ function makeRow(doc, statuses){
     const fileCount = document.createElement('span');
     fileCount.className = 'file-chip chip-pend';
     fileCount.style.cssText = 'font-size:11px;cursor:default';
+    fileCount.className = 'file-chip chip-pend file-count';
     fileCount.textContent = files.length ? '📎 ' + files.length + ' archivo(s)' : '📎 Sin archivos';
     fileWrap.appendChild(fileCount);
 
@@ -346,6 +400,7 @@ function makeRow(doc, statuses){
             const updated = (stored2.files[doc.name] || []).length;
             fileCount.textContent = '📎 ' + updated + ' archivo(s)';
             fileCount.className = 'file-chip chip-done';
+            renderFileList(fileWrap, doc.name, stored2);
             showToast('✅ Archivo(s) adjuntado(s)');
           }
         };
@@ -353,6 +408,9 @@ function makeRow(doc, statuses){
       });
       evt.target.value = '';
     });
+
+    // Render existing files
+    renderFileList(fileWrap, doc.name, getStored());
 
     row.appendChild(fileWrap);
   }
@@ -401,15 +459,22 @@ function setupAutocomplete(){
     setTimeout(() => { box.style.display = 'none'; }, 200);
   });
 
-  inp.addEventListener('input', () => {
-    // Auto-clear docs area when user starts a new search
-    if(currentId && inp.value.trim() !== currentId){
-      document.getElementById('docs').innerHTML = '';
-      document.getElementById('barFill').style.width = '0%';
-      document.getElementById('pct').textContent = '0% completo';
-      currentId = '';
+  // Auto-clear when user manually edits the input after a lote was loaded
+  let _clearing = false;
+  inp.addEventListener('keydown', () => {
+    if(currentId && !_clearing){
+      _clearing = true;
+      setTimeout(() => {
+        if(inp.value.trim() !== currentId){
+          document.getElementById('docs').innerHTML = '';
+          document.getElementById('barFill').style.width = '0%';
+          document.getElementById('pct').textContent = '0% completo';
+          currentId = '';
+        }
+        _clearing = false;
+      }, 50);
     }
-  }, true);
+  });
 
   inp.addEventListener('keydown', e => {
     if(e.key === 'Enter'){
