@@ -2649,6 +2649,8 @@ function exportToExcel() {
 const EDIT_PASSWORD = 'Adelante2025';
 let isAuthenticated = false;
 const STORAGE_KEY_TEST = 'cdvFormTest_edits';
+const SYNC_URL_INFORME = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
+const SYNC_TOKEN = 'Adelante2025';
 
 function promptPassword(callback) {
   if (isAuthenticated) { callback(); return; }
@@ -2675,28 +2677,52 @@ function saveEdits() {
       pendientes: c.pendientes, vendedor: c.vendedor
     }));
     localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
+    // Push to cloud async
+    if(SYNC_URL_INFORME) {
+      fetch(SYNC_URL_INFORME, {
+        method: 'POST',
+        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits }),
+        headers: { 'Content-Type': 'application/json' }
+      }).catch(() => {});
+    }
   } catch(e) { console.error('Save err:', e); }
 }
 
+function applyEditsData(edits) {
+  edits.forEach(e => {
+    const c = casas.find(x => x.lote === e.lote && x.cliente === e.cliente);
+    if (!c) return;
+    if (e.fecha) c.fecha = e.fecha;
+    if (e.estadoCasa) { c.estadoCasa = e.estadoCasa; c.terminada = (e.estadoCasa === 'Casa terminada'); }
+    if (e.montoCasa !== undefined) c.montoCasa = e.montoCasa;
+    if (e.loteAD !== undefined) c.loteAD = e.loteAD;
+    if (e.loteQFI !== undefined) c.loteQFI = e.loteQFI;
+    if (e.banco) c.banco = e.banco;
+    if (e.traspaso !== undefined) c.traspaso = e.traspaso;
+    if (e.permisos !== undefined) c.permisos = e.permisos;
+    if (e.pendientes !== undefined) c.pendientes = e.pendientes;
+  });
+}
+
 function loadEdits() {
+  // Load from localStorage first (instant)
   try {
     const saved = localStorage.getItem(STORAGE_KEY_TEST);
-    if (!saved) return;
-    const edits = JSON.parse(saved);
-    edits.forEach(e => {
-      const c = casas.find(x => x.lote === e.lote && x.cliente === e.cliente);
-      if (!c) return;
-      if (e.fecha) c.fecha = e.fecha;
-      if (e.estadoCasa) { c.estadoCasa = e.estadoCasa; c.terminada = (e.estadoCasa === 'Casa terminada'); }
-      if (e.montoCasa !== undefined) c.montoCasa = e.montoCasa;
-      if (e.loteAD !== undefined) c.loteAD = e.loteAD;
-      if (e.loteQFI !== undefined) c.loteQFI = e.loteQFI;
-      if (e.banco) c.banco = e.banco;
-      if (e.traspaso !== undefined) c.traspaso = e.traspaso;
-      if (e.permisos !== undefined) c.permisos = e.permisos;
-      if (e.pendientes !== undefined) c.pendientes = e.pendientes;
-    });
+    if (saved) applyEditsData(JSON.parse(saved));
   } catch(e) { console.warn('Load edits err:', e); }
+  // Then try cloud (fresher data)
+  if (SYNC_URL_INFORME) {
+    fetch(SYNC_URL_INFORME + '?type=casa_edits')
+      .then(r => r.json())
+      .then(res => {
+        if (res.status === 'ok' && res.data && Array.isArray(res.data)) {
+          localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(res.data));
+          applyEditsData(res.data);
+          applyFilters();
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 function editMontos(index) {

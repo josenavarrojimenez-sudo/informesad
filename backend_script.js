@@ -1,50 +1,67 @@
 /**
- * BACKEND SYNC - Expedientes CDV
- * 
+ * BACKEND UNIFICADO - Ciudad del Valle
+ * Maneja dos tipos de datos:
+ *   1. type=casa_edits  → ediciones del informe principal (estados, montos, fechas, pendientes)
+ *   2. expedienteId=X   → estados de requisitos por lote en update.html
+ *
  * INSTRUCCIONES:
- * 1. Abrí Google Sheets (el mismo de siempre)
+ * 1. Abrí el Google Sheet (CDV Expedientes)
  * 2. Extensiones → Apps Script → reemplazá todo con este código
  * 3. Guardá → Implementar → Administrar implementaciones → editar → Nueva versión → Implementar
- * 4. URL del backend: https://script.google.com/macros/s/AKfycbw6WJK2KZr79e6AjfbN4BCX1n1JSsymuvAiniFO6nE_fnMD7d5D5gtGoIx53Prs44vwhA/exec
+ * 4. URL: https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec
  */
 
 const SECRET_TOKEN = "Adelante2025";
-const SHEET_NAME = "EXPEDIENTES_DB";
+const SHEET_EXPEDIENTES = "EXPEDIENTES_DB";
+const SHEET_CASAS = "CASAS_DB";
 
 /**
- * GET: ?expedienteId=K.18
- * Returns the saved data for that expediente, or empty if not found.
+ * GET:
+ *   ?type=casa_edits          → retorna ediciones del informe principal
+ *   ?expedienteId=K.18        → retorna el expediente de ese lote
+ *   (sin params)              → lista todos los expedientes
  */
 function doGet(e) {
   try {
+    const type = e.parameter && e.parameter.type;
     const expedienteId = e.parameter && e.parameter.expedienteId;
-    const sheet = getOrCreateSheet();
-    const data = sheet.getDataRange().getValues();
 
-    if (data.length <= 1) {
-      return response({ status: "ok", data: null });
+    if (type === 'casa_edits') {
+      // Return all casa edits
+      const sheet = getOrCreateSheet(SHEET_CASAS, ["JSON_DATA"]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return response({ status: "ok", data: [] });
+      const raw = data[1][0];
+      const parsed = raw ? JSON.parse(raw) : [];
+      return response({ status: "ok", data: parsed });
     }
 
-    const rows = data.slice(1); // skip header
     if (expedienteId) {
       // Return specific expediente
+      const sheet = getOrCreateSheet(SHEET_EXPEDIENTES, ["EXPEDIENTE_ID", "JSON_DATA"]);
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return response({ status: "ok", data: null });
+      const rows = data.slice(1);
       const row = rows.find(r => r[0] === expedienteId);
       if (!row) return response({ status: "ok", data: null });
       return response({ status: "ok", data: JSON.parse(row[1]) });
-    } else {
-      // Return all expedientes (list of IDs)
-      const ids = rows.map(r => r[0]).filter(Boolean);
-      return response({ status: "ok", expedientes: ids });
     }
+
+    // List all expediente IDs
+    const sheet = getOrCreateSheet(SHEET_EXPEDIENTES, ["EXPEDIENTE_ID", "JSON_DATA"]);
+    const data = sheet.getDataRange().getValues();
+    const ids = data.slice(1).map(r => r[0]).filter(Boolean);
+    return response({ status: "ok", expedientes: ids });
+
   } catch (err) {
     return response({ status: "error", message: err.toString() });
   }
 }
 
 /**
- * POST: { token, expedienteId, data }
- * Saves/updates the data for that expediente.
- * data.files is excluded to avoid quota issues (files stay in localStorage only).
+ * POST:
+ *   { token, type: "casa_edits", data: [...] }   → guarda ediciones del informe principal
+ *   { token, expedienteId, data: {...} }          → guarda expediente de un lote
  */
 function doPost(e) {
   try {
@@ -54,22 +71,30 @@ function doPost(e) {
       return response({ status: "error", message: "Token inválido" });
     }
 
-    const expedienteId = params.expedienteId;
-    if (!expedienteId) {
-      return response({ status: "error", message: "Falta expedienteId" });
+    // CASA EDITS (informe principal)
+    if (params.type === 'casa_edits') {
+      const sheet = getOrCreateSheet(SHEET_CASAS, ["JSON_DATA"]);
+      sheet.clear();
+      sheet.appendRow(["JSON_DATA"]);
+      sheet.appendRow([JSON.stringify(params.data || [])]);
+      return response({ status: "ok", message: "Ediciones del informe guardadas" });
     }
 
-    // Strip files (too large for Sheets, keep only statuses)
+    // EXPEDIENTE (update.html)
+    const expedienteId = params.expedienteId;
+    if (!expedienteId) {
+      return response({ status: "error", message: "Falta expedienteId o type" });
+    }
+
     const saveData = {
       statuses: params.data ? params.data.statuses : {},
       updatedAt: new Date().toISOString()
     };
 
-    const sheet = getOrCreateSheet();
+    const sheet = getOrCreateSheet(SHEET_EXPEDIENTES, ["EXPEDIENTE_ID", "JSON_DATA"]);
     const data = sheet.getDataRange().getValues();
     const rows = data.slice(1);
 
-    // Find existing row
     let found = false;
     for (let i = 0; i < rows.length; i++) {
       if (rows[i][0] === expedienteId) {
@@ -78,23 +103,21 @@ function doPost(e) {
         break;
       }
     }
+    if (!found) sheet.appendRow([expedienteId, JSON.stringify(saveData)]);
 
-    if (!found) {
-      sheet.appendRow([expedienteId, JSON.stringify(saveData)]);
-    }
+    return response({ status: "ok", message: "Expediente guardado: " + expedienteId });
 
-    return response({ status: "ok", message: "Guardado: " + expedienteId });
   } catch (err) {
     return response({ status: "error", message: err.toString() });
   }
 }
 
-function getOrCreateSheet() {
+function getOrCreateSheet(name, headers) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(SHEET_NAME);
+  let sheet = ss.getSheetByName(name);
   if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(["EXPEDIENTE_ID", "JSON_DATA"]);
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   }
   return sheet;
