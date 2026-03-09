@@ -1054,7 +1054,7 @@ tbody td {
 
 /* RESPONSIVE */
 @media (max-width: 900px) {
-  .header { padding: 16px; position: sticky; top: 0; z-index: 100; }
+  .header { padding: 16px; position: relative; }
   .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
   .header-inner > div:last-child { 
     display: flex !important; 
@@ -1085,7 +1085,7 @@ tbody td {
     overflow-x: auto; 
     -webkit-overflow-scrolling: touch;
     position: sticky;
-    top: 0; /* JS overrides on load */
+    top: 90px; /* fallback; JS overrides */
     z-index: 99;
   }
   .nav-inner { gap: 0; }
@@ -1095,7 +1095,7 @@ tbody td {
     flex-shrink: 0;
   }
 
-  .filters-bar { padding: 12px 12px; position: sticky !important; top: 0; /* JS overrides */ z-index: 98 !important; }
+  .filters-bar { padding: 12px 12px; position: sticky; top: 134px; /* fallback; JS overrides */ z-index: 98; }
   .filters-inner { 
     gap: 8px; 
     flex-direction: column;
@@ -3458,7 +3458,18 @@ applyFilters(); // This will filter by default month (March) and render
     filtersBar.insertBefore(wrapper, filtersInner);
     wrapper.appendChild(filtersInner);
 
-    // Buttons stay inside the collapsible wrapper (no cloning outside)
+    // Keep export + nuevo buttons always visible
+    [exportBtn, nuevoBtn].forEach(function(btn){
+      if(!btn) return;
+      var clone = btn.cloneNode(true);
+      clone.style.marginTop = '8px';
+      clone.addEventListener('click', function(){
+        if(btn.classList.contains('btn-export')) exportToExcel();
+        else openNuevoCaso();
+      });
+      filtersBar.appendChild(clone);
+      btn.style.display = 'none';
+    });
 
     var toggleBtn = document.createElement('button');
     toggleBtn.className = 'mobile-filter-toggle';
@@ -3480,24 +3491,31 @@ applyFilters(); // This will filter by default month (March) and render
     if(!header) return;
     function updateSticky() {
       var mobile = window.innerWidth <= 768;
-      // Collapse logo on scroll (both desktop and mobile)
-      var shouldCollapse = window.scrollY > 30;
-      if(shouldCollapse) {
+      var scrolled = !mobile && window.scrollY > 30;
+      // Always measure actual header height
+      var hH = header.offsetHeight;
+      var nH = navBar ? navBar.offsetHeight : 0;
+      if(scrolled) {
         header.classList.add('scrolled');
+        // After adding .scrolled, re-measure
+        var hHs = header.offsetHeight;
+        if(navBar)    navBar.style.top = hHs + 'px';
+        if(filterBar) filterBar.style.top = (hHs + nH) + 'px';
       } else {
         header.classList.remove('scrolled');
+        // Let browser re-layout then measure
+        requestAnimationFrame(function(){
+          var hH2 = header.offsetHeight;
+          var nH2 = navBar ? navBar.offsetHeight : 0;
+          if(navBar)    navBar.style.top = hH2 + 'px';
+          if(filterBar) filterBar.style.top = (hH2 + nH2) + 'px';
+        });
       }
-      // After class change, recalculate positions
-      requestAnimationFrame(function(){
-        var hH = header.offsetHeight;
-        var nH = navBar ? navBar.offsetHeight : 0;
-        if(navBar)    navBar.style.top = hH + 'px';
-        if(filterBar) filterBar.style.top = (hH + nH) + 'px';
-      });
     }
     window.addEventListener('scroll', updateSticky, {passive: true});
-    window.addEventListener('resize', function(){ setTimeout(updateSticky, 50); }, {passive: true});
-    setTimeout(updateSticky, 150);
+    window.addEventListener('resize', updateSticky, {passive: true});
+    // Run after page fully renders
+    setTimeout(updateSticky, 100);
   }
 
   function init(){
