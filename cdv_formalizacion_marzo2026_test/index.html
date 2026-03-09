@@ -3105,13 +3105,14 @@ function saveEdits() {
       pendientes: c.pendientes, vendedor: c.vendedor
     }));
     localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
-    // Push to cloud async
+    // Push to cloud async via POST (GET URL demasiado largo para GAS)
     if(SYNC_URL_INFORME) {
-      // GAS GET save (evita CORS con POST)
-      const params = new URLSearchParams({
-        token: SYNC_TOKEN, action: 'save_casas', data: JSON.stringify(edits)
-      });
-      fetch(SYNC_URL_INFORME + '?' + params.toString()).catch(() => {});
+      fetch(SYNC_URL_INFORME, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits })
+      }).catch(() => {});
     }
   } catch(e) { console.error('Save err:', e); }
 }
