@@ -2259,14 +2259,18 @@ function updateMonthLabel() {
 }
 
 function toggleMonth(month) {
+  const cb = document.querySelector(`.month-chk input[value="${month}"]`);
   if (selectedMonths.has(month)) {
-    if (selectedMonths.size === 1) return; // siempre mantener al menos uno
+    if (selectedMonths.size === 1) {
+      // No se puede quitar el último — revertir visualmente el checkbox
+      if (cb) cb.checked = true;
+      return;
+    }
     selectedMonths.delete(month);
-    // uncheck
-    const cb = document.querySelector(`.month-chk input[value="${month}"]`);
     if (cb) cb.checked = false;
   } else {
     selectedMonths.add(month);
+    if (cb) cb.checked = true;
   }
   updateMonthLabel();
   populateFilters();
