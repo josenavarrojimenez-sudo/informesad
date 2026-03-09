@@ -148,22 +148,14 @@ const STATES = ['Pendiente','En Proceso','Completado'];
 let currentId = '';
 
 function key(id){return `expedienteProgress:v2:${id}`}
-async function fetchLots(){
-  try{
-    const res = await fetch('./index.html',{cache:'no-store'});
-    const html = await res.text();
-    const rx = /<span class="lote-badge">([^<]+)<\/span>/g;
-    const lots = new Set();
-    let m; while((m=rx.exec(html))){ lots.add(m[1].trim()); }
-    return Array.from(lots);
-  }catch(e){ return []; }
-}
-async function populateLots(){
+const LOTS_LIST = ["1-01 Barani", "D.21", "F.18", "I.13", "I.30", "I.36", "I.39", "I.40", "K.05", "K.14", "K.18", "K.19", "K.25", "K.26", "L.01", "L.31", "L.32", "L.33", "L.53", "M.05", "M.07", "M.16", "M.23"];
+
+function fetchLots(){ return LOTS_LIST; }
+
+function populateLots(){
   const sel=document.getElementById('expSelect');
-  sel.innerHTML = '<option value="">Seleccionar lote del informe…</option>';
-  const lots = await fetchLots();
-  if(!lots.length){ sel.innerHTML = '<option value="">(No se pudo leer lotes — usar entrada manual)</option>'; return; }
-  lots.sort((a,b)=>a.localeCompare(b, 'es', {numeric:true}));
+  sel.innerHTML = '<option value="">Seleccionar lote…</option>';
+  const lots = LOTS_LIST.slice().sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
   lots.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=l; sel.appendChild(o); });
 }
 
