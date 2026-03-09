@@ -523,12 +523,9 @@ document.addEventListener('DOMContentLoaded', () => {
     inp.value = '';
   });
 
-  // Restore last lote
-  const last = localStorage.getItem('cdvLastLote');
-  if(last){
-    document.getElementById('expSelect').value = last;
-    loadExpediente(last);
-  }
+  // Always start with empty field (don't restore last lote on refresh)
+  document.getElementById('expSelect').value = '';
+  localStorage.removeItem('cdvLastLote');
 });
 </script>
 </body>

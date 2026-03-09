@@ -379,7 +379,9 @@ tbody tr {
   transition: var(--transition);
 }
 
-tbody tr:hover { background: #FEFCF9; }
+tbody tr:nth-child(odd)  { background: #FAF8F5; }
+tbody tr:nth-child(even) { background: #FFFFFF; }
+tbody tr:hover { background: #F0EBE2; }
 
 tbody td {
   padding: 14px 16px;
@@ -565,17 +567,23 @@ tbody td {
 }
 
 .kanban-card {
-  background: var(--bg-secondary);
+  background: #FFFFFF;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   padding: 14px;
   transition: var(--transition);
   cursor: default;
+  border-left: 3px solid #D4C9B8;
 }
+
+.kanban-card:nth-child(odd) { background: #FAF8F5; }
+.kanban-card:nth-child(even) { background: #FFFFFF; }
 
 .kanban-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  border-left-color: var(--accent-primary);
+  background: #F3EFE8;
 }
 
 .kanban-card.terminada {
