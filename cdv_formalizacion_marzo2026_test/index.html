@@ -2417,13 +2417,22 @@ function renderKanban() {
             <span class="kanban-card-banco">${c.banco}</span>
           </div>
           <div class="kanban-card-client">${c.cliente}</div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">${c.modelo}</div>
           <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
-          <div class="kanban-card-modelo">${c.modeloBase}</div>
-          <div style="margin-top:8px">${expedienteBar(c.lote)}</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+          <div style="margin:4px 0">${precioVentaBlock(c)}</div>
+          <div style="margin-top:6px">${expedienteBar(c.lote)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:11px">
             <span class="kanban-card-form ${getFormClass(c.formalizador)}">${c.formalizador}</span>
-            ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
+            ${c.vendedor ? '<span style="background:#F3F4F6;color:#374151;padding:2px 8px;border-radius:999px;font-size:11px">🏷️ '+c.vendedor+'</span>' : ''}
+            <span style="color:#666">📅 ${formatDate(c.fecha)}</span>
           </div>
+          <div style="display:flex;gap:8px;margin-top:6px;font-size:11px">
+            <span>${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span>${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+            <span style="margin-left:auto">${getEstadoBadge(c.estadoCasa)}</span>
+          </div>
+          ${c.pendientes ? '<div style="font-size:11px;color:#666;margin-top:6px;border-top:1px solid #eee;padding-top:6px">📌 '+c.pendientes+'</div>' : ''}
+          ${c.terminada ? '<div style="text-align:right;margin-top:4px"><span class="terminada-badge">✓ TERMINADA</span></div>' : ''}
         </div>
       `;
     });
@@ -2464,19 +2473,24 @@ function renderFormalizador() {
     items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     items.forEach(c => {
       html += `
-        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+        <div class="form-case \${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
-            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="form-case-lote">\${c.lote} \${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span>\${getEstadoBadge(c.estadoCasa)}</span>
           </div>
-          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
-          <div style="margin:6px 0">${desembolsoBlock(c, true)}</div>
-          <div class="form-case-row">
-            <span class="bank-tag">${c.banco}</span>
-            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
-            <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
-            <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+          <div class="form-case-client">\${c.cliente} — \${c.modelo}</div>
+          <div style="margin:6px 0">\${desembolsoBlock(c, true)}</div>
+          <div style="margin:4px 0">\${precioVentaBlock(c)}</div>
+          <div style="margin-top:6px">\${expedienteBar(c.lote)}</div>
+          <div class="form-case-row" style="margin-top:8px">
+            <span class="bank-tag">\${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 \${formatDate(c.fecha)}</span>
+            \${c.vendedor ? '<span style="background:#F3F4F6;color:#374151;padding:2px 8px;border-radius:999px;font-size:11px">🏷️ '+c.vendedor+'</span>' : ''}
+            <span class="formalizador-tag \${getFormClass(c.formalizador)}" style="font-size:11px;padding:2px 8px">\${c.formalizador}</span>
+            <span class="form-status-item">\${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">\${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
           </div>
-          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+          \${c.pendientes ? '<div class="form-case-pendientes">📌 '+c.pendientes+'</div>' : ''}
         </div>
       `;
     });
@@ -2530,21 +2544,24 @@ function renderVendedor() {
     items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
     items.forEach(c => {
       html2 += `
-        <div class="form-case ${c.terminada ? 'terminada' : ''}">
+        <div class="form-case \${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
-            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="form-case-lote">\${c.lote} \${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span>\${getEstadoBadge(c.estadoCasa)}</span>
           </div>
-          <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
-          <div style="margin-top:8px">${desembolsoBlock(c, true)}</div>
-          <div style="margin-top:6px">${expedienteBar(c.lote)}</div>
+          <div class="form-case-client">\${c.cliente} — \${c.modelo}</div>
+          <div style="margin:6px 0">\${desembolsoBlock(c, true)}</div>
+          <div style="margin:4px 0">\${precioVentaBlock(c)}</div>
+          <div style="margin-top:6px">\${expedienteBar(c.lote)}</div>
           <div class="form-case-row" style="margin-top:8px">
-            <span class="bank-tag">${c.banco}</span>
-            <span style="font-size:12px;color:var(--text-secondary)">📅 ${formatDate(c.fecha)}</span>
-            <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="font-size:11px;padding:2px 8px">${c.formalizador}</span>
-            <span class="form-status-item">${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
-            <span class="form-status-item">${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
+            <span class="bank-tag">\${c.banco}</span>
+            <span style="font-size:12px;color:var(--text-secondary)">📅 \${formatDate(c.fecha)}</span>
+            \${c.vendedor ? '<span style="background:#F3F4F6;color:#374151;padding:2px 8px;border-radius:999px;font-size:11px">🏷️ '+c.vendedor+'</span>' : ''}
+            <span class="formalizador-tag \${getFormClass(c.formalizador)}" style="font-size:11px;padding:2px 8px">\${c.formalizador}</span>
+            <span class="form-status-item">\${c.traspaso ? '✅ Traspaso' : '⏳ Traspaso'}</span>
+            <span class="form-status-item">\${c.permisos ? '✅ Permisos' : '⏳ Permisos'}</span>
           </div>
-          <div class="form-case-pendientes">📌 ${c.pendientes}</div>
+          \${c.pendientes ? '<div class="form-case-pendientes">📌 '+c.pendientes+'</div>' : ''}
         </div>
       `;
     });
