@@ -496,6 +496,20 @@ tbody td {
   letter-spacing: 0.3px;
   animation: pulse-green 2s infinite;
 }
+.expo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(135deg, #92400e, #b45309);
+  color: #FEF3C7;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 1px solid #D97706;
+  box-shadow: 0 1px 3px rgba(146,64,14,0.3);
+}
 
 @keyframes pulse-green {
   0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.3); }
@@ -1278,6 +1292,11 @@ tbody td {
     <select class="filter-select" id="filterVendedor" onchange="applyFilters()">
       <option value="">Todos los vendedores</option>
     </select>
+    <select class="filter-select" id="filterExpo" onchange="applyFilters()">
+      <option value="">⭐ Todos</option>
+      <option value="expo">⭐ Solo EXPO</option>
+      <option value="no-expo">Sin EXPO</option>
+    </select>
     <button class="filter-clear" onclick="clearFilters()">✕ Limpiar filtros</button>
     <div style="flex:1"></div>
     <button class="btn-nuevo-caso" onclick="openNuevoCaso()">
@@ -1641,7 +1660,8 @@ const casas = [
     "permisos": true,
     "capacidad": "✅",
     "pendientes": "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa y con esto el cliente tenga capacidad",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.14",
@@ -1661,7 +1681,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Cliente con capacidad para ¢80.0MM; la diferencia hay que financiarla; ya tiene préstamo por ¢6.0MM",
     "pendientes": "Avalúo solicitado; a la espera de que Victor confirme que pasó la revisión legal.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "D.21",
@@ -1681,7 +1702,8 @@ const casas = [
     "permisos": true,
     "capacidad": "A espera de que cancele deuda para tener capacidad de pago",
     "pendientes": "Documentación actualizada",
-    "terminada": true
+    "terminada": true,
+  }  "expo": false
   },
   {
     "lote": "L.53",
@@ -1701,7 +1723,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Cliente pasó parte de la información; se está revisando.",
     "pendientes": "Revisándose información. Cliente independiente no factura y declara en cero; caso visto con Coopenae. Caso complicado: estados no reflejan ingresos.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "M.07",
@@ -1721,7 +1744,8 @@ const casas = [
     "permisos": true,
     "capacidad": "A espera de información del cliente",
     "pendientes": "Caso con Mucap; estados de cuenta pendientes; CPA y carta de referencia.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.26",
@@ -1741,7 +1765,8 @@ const casas = [
     "permisos": false,
     "capacidad": "Cliente transportista independiente",
     "pendientes": "A espera de información del cliente; ya envió una parte; contador preparando. Permisos en trámite (boleta electrónica CFIA).",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "F.18",
@@ -1761,7 +1786,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Maestra MEP; quiere trámite con Caja de Ande; con otras entidades posiblemente sin capacidad",
     "pendientes": "Cliente quiere esperar condiciones de Expo; no ha enviado información.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.25",
@@ -1781,7 +1807,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Cliente asalariado; según colillas y SUGEF sí tiene capacidad de pago",
     "pendientes": "Constancia y SICERE del cliente",
-    "terminada": true
+    "terminada": true,
+  }  "expo": false
   },
   {
     "lote": "M.05",
@@ -1801,7 +1828,8 @@ const casas = [
     "permisos": true,
     "capacidad": "PAGAR Y CERRAR PROMERICA ¢8.000.000",
     "pendientes": "FINALIZADO✅",
-    "terminada": true
+    "terminada": true,
+  }  "expo": false
   },
   {
     "lote": "L.32",
@@ -1821,7 +1849,8 @@ const casas = [
     "permisos": true,
     "capacidad": "FINALIZADO / puede variar dependiendo banco",
     "pendientes": "Esperar cliente se decida de banco; no ha querido firmar contratos para pedir avalúo. Permiso ya salió; pedir presupuesto.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "I.13",
@@ -1841,7 +1870,8 @@ const casas = [
     "permisos": true,
     "capacidad": "FINALIZADO✅",
     "pendientes": "Contrato laboral indefinido/plazo; se lo dan hasta 1 abril",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "M.16",
@@ -1861,7 +1891,8 @@ const casas = [
     "permisos": true,
     "capacidad": "FINALIZADO✅",
     "pendientes": "Avalúo (cambio modelo); hoy en cambio de láminas; espera miércoles para pedir avalúo",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "L.31",
@@ -1881,7 +1912,8 @@ const casas = [
     "permisos": false,
     "capacidad": "✅",
     "pendientes": "Permisos en CFIA. Pendientes completos; esperando tasas Expo (vendedora Mery).",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.19",
@@ -1901,7 +1933,8 @@ const casas = [
     "permisos": false,
     "capacidad": "Renunció; entra a nuevo trabajo el 16; gana ¢1.400.000 brutos; deuda ¢120.000; casa ¢92.000.000. Ajustado; esperar info para confirmar.",
     "pendientes": "Traspaso: hoy se solicita. Permisos: vamos a tramitarlo.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "L.33",
@@ -1921,7 +1954,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Positiva ✅",
     "pendientes": "No hay",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.18",
@@ -1941,7 +1975,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Positiva ✅ BN",
     "pendientes": "Valores avalúo",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "I.30",
@@ -1961,7 +1996,8 @@ const casas = [
     "permisos": true,
     "capacidad": "✅",
     "pendientes": "Contratos, formularios (quiere esperar Expo)",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "I.36",
@@ -1981,7 +2017,8 @@ const casas = [
     "permisos": true,
     "capacidad": "Positiva",
     "pendientes": "Actualizar información, contratos, formularios (quiere esperar Expo)",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "L.01",
@@ -2001,7 +2038,8 @@ const casas = [
     "permisos": false,
     "capacidad": "Debe aumentar salario y reportar a CCSS",
     "pendientes": "Sin folios ni catastros. Constancia, contratos, formularios",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "I.39",
@@ -2021,7 +2059,8 @@ const casas = [
     "permisos": true,
     "capacidad": "No se ha realizado",
     "pendientes": "Recopilando información",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "I.40",
@@ -2041,7 +2080,8 @@ const casas = [
     "permisos": false,
     "capacidad": "A espera de información del cliente",
     "pendientes": "Caso con Mucap; estados de cuenta pendientes; CPA y carta de referencia.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "K.05",
@@ -2063,7 +2103,8 @@ const casas = [
     "permisos": true,
     "capacidad": "✅",
     "pendientes": "Caso en aprobación; pendiente avalúo; contra avalúo se pasa opción de compra para cuadrar número en dólares.",
-    "terminada": false
+    "terminada": false,
+  }  "expo": false
   },
   {
     "lote": "1-01 Barani",
@@ -2083,7 +2124,8 @@ const casas = [
     "permisos": false,
     "capacidad": "✅",
     "pendientes": "Escritura, Catastro, Traspaso, Permisos, Avalúo; pasar opción de compra en dólares; precio real según adenda (extras).",
-    "terminada": true
+    "terminada": true,
+  }  "expo": false
   }
 ];
 
@@ -2171,6 +2213,7 @@ function applyFilters() {
   const b = document.getElementById('filterBanco').value;
   const m = document.getElementById('filterModelo').value;
   const v = document.getElementById('filterVendedor').value;
+  const ex = document.getElementById('filterExpo').value;
 
   filteredData = casas.filter(c => {
     // Month filter (always active)
@@ -2180,6 +2223,8 @@ function applyFilters() {
     if (b && c.banco !== b) return false;
     if (m && c.modeloBase !== m) return false;
     if (v && c.vendedor !== v) return false;
+    if (ex === 'expo' && !c.expo) return false;
+    if (ex === 'no-expo' && c.expo) return false;
     return true;
   });
 
@@ -2192,6 +2237,7 @@ function clearFilters() {
   document.getElementById('filterBanco').value = '';
   document.getElementById('filterModelo').value = '';
   document.getElementById('filterVendedor').value = '';
+  document.getElementById('filterExpo').value = '';
   applyFilters();
 }
 
@@ -2260,7 +2306,7 @@ function renderTable() {
   let rows = sorted.map(function(c) {
     var i = casas.indexOf(c);
     var r = '<tr class="' + (c.terminada ? 'casa-terminada' : '') + '">';
-    r += '<td data-label="Lote"><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : '') + '</td>';
+    r += '<td data-label="Lote"><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : '') + (c.expo ? ' <span class="expo-badge">⭐ EXPO</span>' : '') + '</td>';
     r += '<td data-label="Modelo" style="font-size:12px">' + c.modelo + '</td>';
     r += '<td data-label="Cliente"><strong>' + c.cliente + '</strong></td>';
     r += '<td data-label="💰 Desembolso"><div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, false) + '</div></td>';
@@ -2355,7 +2401,7 @@ function renderFlow() {
             <div class="flow-info-top">
               <span class="lote-badge">${c.lote}</span>
               <span class="flow-info-client">${c.cliente}</span>
-              ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}
+              ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}${c.expo ? ' <span class=\"expo-badge\">⭐ EXPO</span>' : ''}
             </div>
             <div class="flow-info-modelo">${c.modelo} · <span class="bank-tag">${c.banco}</span> · <span class="formalizador-tag ${getFormClass(c.formalizador)}" style="display:inline;padding:2px 6px">${c.formalizador}</span></div>
           </div>
@@ -2478,7 +2524,7 @@ function renderFormalizador() {
       html += `
         <div class="form-case ${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
-            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}${c.expo ? ' <span class=\"expo-badge\">⭐ EXPO</span>' : ''} ${c.expo ? \'<span class="expo-badge">⭐ EXPO</span>\' : \'\'}</span>
             <span>${getEstadoBadge(c.estadoCasa)}</span>
           </div>
           <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
@@ -2549,7 +2595,7 @@ function renderVendedor() {
       html2 += `
         <div class="form-case ${c.terminada ? 'terminada' : ''}">
           <div class="form-case-header">
-            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}</span>
+            <span class="form-case-lote">${c.lote} ${c.terminada ? '<span class="terminada-badge">✓ TERMINADA</span>' : ''}${c.expo ? ' <span class=\"expo-badge\">⭐ EXPO</span>' : ''} ${c.expo ? \'<span class="expo-badge">⭐ EXPO</span>\' : \'\'}</span>
             <span>${getEstadoBadge(c.estadoCasa)}</span>
           </div>
           <div class="form-case-client">${c.cliente} — ${c.modelo}</div>
@@ -2638,7 +2684,7 @@ function exportToExcel() {
 
   // ===== HOJA 1: Tabla General =====
   const headers1 = ['Lote','Modelo','Modelo Base','Cliente','Desembolso Casa (₡)','Lote AD (₡)','Lote QFI (₡)',
-    'Total Casa+AD (₡)','Fecha Est.','Banco','Formalizador','Vendedor','Traspaso','Permisos',
+    'Total Casa+AD (₡)','Fecha Est.','Banco','Formalizador','Vendedor','EXPO','Traspaso','Permisos',
     'Estado Casa','Pendientes'];
 
   const rows1data = filteredData.map(c => ({
@@ -2646,7 +2692,7 @@ function exportToExcel() {
     'Desembolso Casa (₡)': c.montoCasa, 'Lote AD (₡)': (c.loteAD||0), 'Lote QFI (₡)': (c.loteQFI||0),
     'Total Casa+AD (₡)': c.montoCasa + (c.loteAD||0),
     'Fecha Est.': c.fecha, 'Banco': c.banco, 'Formalizador': c.formalizador, 'Vendedor': c.vendedor||'',
-    'Traspaso': c.traspaso ? 'Sí' : 'Pendiente', 'Permisos': c.permisos ? 'Sí' : 'Pendiente',
+    'EXPO': c.expo ? '⭐ EXPO' : '', 'Traspaso': c.traspaso ? 'Sí' : 'Pendiente', 'Permisos': c.permisos ? 'Sí' : 'Pendiente',
     'Estado Casa': c.estadoCasa||'', 'Pendientes': c.pendientes||'',
     __terminada: c.terminada
   }));
@@ -2810,7 +2856,7 @@ function saveEdits() {
       lote: c.lote, cliente: c.cliente, fecha: c.fecha,
       estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
       loteAD: c.loteAD, loteQFI: c.loteQFI,
-      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
+      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos, expo: c.expo,
       pendientes: c.pendientes, vendedor: c.vendedor
     }));
     localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
@@ -2971,6 +3017,7 @@ function closeNuevoCaso() {
   document.getElementById('nc_formalizador').value = '';
   document.getElementById('nc_traspaso').checked = false;
   document.getElementById('nc_permisos').checked = false;
+  document.getElementById('nc_expo').checked = false;
 }
 
 function guardarNuevoCaso() {
@@ -2997,6 +3044,7 @@ function guardarNuevoCaso() {
     pendientes: document.getElementById('nc_pendientes').value.trim() || '',
     traspaso: document.getElementById('nc_traspaso').checked,
     permisos: document.getElementById('nc_permisos').checked,
+    expo: document.getElementById('nc_expo').checked,
     estadoCasa: 'Sin reunion de inicio',
     terminada: false
   };
@@ -3176,6 +3224,10 @@ window.addEventListener('DOMContentLoaded', function() {
       <div style="display:flex;gap:12px;align-items:center">
         <label class="nc-label" style="margin:0">Permisos</label>
         <input id="nc_permisos" type="checkbox" style="width:18px;height:18px;cursor:pointer" />
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <label class="nc-label" style="margin:0">⭐ EXPO</label>
+        <input id="nc_expo" type="checkbox" style="width:18px;height:18px;cursor:pointer" />
       </div>
     </div>
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end">
