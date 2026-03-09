@@ -777,11 +777,17 @@ tbody td {
 }
 
 .form-case {
-  padding: 14px 0;
+  padding: 14px 12px;
   border-bottom: 1px solid var(--border-light);
+  border-radius: 8px;
+  margin-bottom: 4px;
+  border: 1px solid #EDE9E3;
 }
 
-.form-case:last-child { border-bottom: none; }
+.form-case:nth-child(odd)  { background: #FAF8F5; }
+.form-case:nth-child(even) { background: #FFFFFF; }
+.form-case:hover { background: #F0EBE2; border-color: #D4C9B8; }
+.form-case:last-child { border-bottom: 1px solid #EDE9E3; }
 
 .form-case.terminada {
   background: linear-gradient(to right, #ECFDF5, transparent);
