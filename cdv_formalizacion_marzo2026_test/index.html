@@ -2591,208 +2591,146 @@ function renderAll() {
 function exportToExcel() {
   const wb = XLSX.utils.book_new();
 
+  // ── Paleta Adelante (estilo NOVARUM) ──────────────────────────────────────
+  // Header: marrón oscuro del informe
+  const HDR_BG   = { fgColor: { rgb: '3D2E1F' } };  // marrón oscuro
+  const HDR_FONT = { bold: true, color: { rgb: 'F5E6D3' }, sz: 11 };
+  // Fila impar: crema cálido (similar a A9D08E de NOVARUM pero en tono Adelante)
+  const ROW_ODD  = { fgColor: { rgb: 'FAF0E6' } };   // crema
+  const ROW_EVEN = { fgColor: { rgb: 'FFFFFF' } };   // blanco
+  // Totales: ámbar suave
+  const TOTAL_BG   = { fgColor: { rgb: 'D97706' } };
+  const TOTAL_FONT = { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 };
+  // Terminada: verde suave
+  const TERM_BG  = { fgColor: { rgb: 'D1FAE5' } };
+  const TERM_FONT= { bold: true, color: { rgb: '065F46' } };
+
+  function cellStyle(isHdr, isTotal, isOdd, isTerminada) {
+    if (isHdr)       return { fill: { patternType: 'solid', ...HDR_BG   }, font: HDR_FONT,   alignment: { horizontal: 'center', vertical: 'center', wrapText: true }, border: thinBorder() };
+    if (isTotal)     return { fill: { patternType: 'solid', ...TOTAL_BG }, font: TOTAL_FONT, alignment: { horizontal: 'left',   vertical: 'center' },                border: thinBorder() };
+    if (isTerminada) return { fill: { patternType: 'solid', ...TERM_BG  }, font: TERM_FONT,  alignment: { horizontal: 'left',   vertical: 'center' },                border: thinBorder() };
+    const rowFill = isOdd ? ROW_ODD : ROW_EVEN;
+    return { fill: { patternType: 'solid', ...rowFill }, font: { sz: 10 }, alignment: { horizontal: 'left', vertical: 'center', wrapText: false }, border: thinBorder() };
+  }
+
+  function thinBorder() {
+    const s = { style: 'thin', color: { rgb: 'D4C9B8' } };
+    return { top: s, bottom: s, left: s, right: s };
+  }
+
+  function applyStyles(ws, headers, rows, colWidths) {
+    // Header row (row 1)
+    headers.forEach((h, ci) => {
+      const addr = XLSX.utils.encode_cell({ r: 0, c: ci });
+      if (!ws[addr]) ws[addr] = { v: h, t: 's' };
+      ws[addr].s = cellStyle(true);
+    });
+    // Data rows
+    rows.forEach((row, ri) => {
+      const isTotal = row.__isTotal;
+      const isTerminada = row.__terminada;
+      const isOdd = ri % 2 === 0;
+      headers.forEach((h, ci) => {
+        const addr = XLSX.utils.encode_cell({ r: ri + 1, c: ci });
+        if (!ws[addr]) ws[addr] = { v: '', t: 's' };
+        ws[addr].s = cellStyle(false, isTotal, isOdd, isTerminada);
+      });
+    });
+    ws['!cols'] = colWidths.map(w => ({ wch: w }));
+    ws['!rows'] = [{ hpt: 30 }].concat(rows.map(() => ({ hpt: 20 })));
+  }
+
   // ===== HOJA 1: Tabla General =====
-  const tableData = filteredData.map(c => ({
-    'Lote': c.lote,
-    'Modelo': c.modelo,
-    'Modelo Base': c.modeloBase,
-    'Cliente': c.cliente,
-    'Desembolso Casa (₡)': c.montoCasa,
-    'Lote AD (₡)': (c.loteAD||0),
-    'Lote QFI (₡)': (c.loteQFI||0),
-    'Total Casa + Lote AD (₡)': c.montoCasa + (c.loteAD||0),
-    'Fecha Estimada': c.fecha,
-    'Banco': c.banco,
-    'Formalizador': c.formalizador,
-    'Traspaso': c.traspaso ? '✅' : '⏳ Pendiente',
-    'Permisos': c.permisos ? '✅' : '⏳ Pendiente',
-    'Capacidad de Pago': c.capacidad,
-    'Pendientes': c.pendientes,
-    'Casa Terminada': c.terminada ? '✅ TERMINADA' : 'En proceso'
+  const headers1 = ['Lote','Modelo','Modelo Base','Cliente','Desembolso Casa (₡)','Lote AD (₡)','Lote QFI (₡)',
+    'Total Casa+AD (₡)','Fecha Est.','Banco','Formalizador','Vendedor','Traspaso','Permisos',
+    'Estado Casa','Pendientes'];
+
+  const rows1data = filteredData.map(c => ({
+    'Lote': c.lote, 'Modelo': c.modelo, 'Modelo Base': c.modeloBase, 'Cliente': c.cliente,
+    'Desembolso Casa (₡)': c.montoCasa, 'Lote AD (₡)': (c.loteAD||0), 'Lote QFI (₡)': (c.loteQFI||0),
+    'Total Casa+AD (₡)': c.montoCasa + (c.loteAD||0),
+    'Fecha Est.': c.fecha, 'Banco': c.banco, 'Formalizador': c.formalizador, 'Vendedor': c.vendedor||'',
+    'Traspaso': c.traspaso ? 'Sí' : 'Pendiente', 'Permisos': c.permisos ? 'Sí' : 'Pendiente',
+    'Estado Casa': c.estadoCasa||'', 'Pendientes': c.pendientes||'',
+    __terminada: c.terminada
   }));
 
-  const ws1 = XLSX.utils.json_to_sheet(tableData);
-
-  // Column widths
-  ws1['!cols'] = [
-    { wch: 14 }, { wch: 30 }, { wch: 14 }, { wch: 32 },
-    { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 14 },
-    { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 12 },
-    { wch: 40 }, { wch: 50 }, { wch: 16 }
-  ];
+  const ws1 = XLSX.utils.json_to_sheet(rows1data, { header: headers1, skipHeader: false });
+  applyStyles(ws1, headers1, rows1data, [12,30,14,32,20,18,18,22,12,14,14,12,10,10,16,44]);
   XLSX.utils.book_append_sheet(wb, ws1, 'Tabla General');
 
   // ===== HOJA 2: Flujo por Semana =====
-  const sorted = [...filteredData].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-  const weeks = {};
-  sorted.forEach(c => {
-    const wk = getWeekLabel(c.fecha);
-    if (!weeks[wk]) weeks[wk] = [];
-    weeks[wk].push(c);
-  });
-
-  const flowRows = [];
-  let grandTotalCasa = 0, grandTotalLote = 0;
-
+  const headers2 = ['Sem','Fecha','Lote','Cliente','Modelo','Banco','Formalizador',
+    'Des. Casa (₡)','Lote AD (₡)','Lote QFI (₡)','Total Casa+AD (₡)','Estado'];
+  const sorted = [...filteredData].sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
+  const weeks = {}; sorted.forEach(c => { const wk=getWeekLabel(c.fecha); if(!weeks[wk])weeks[wk]=[]; weeks[wk].push(c); });
+  const rows2 = [];
   for (const [wk, items] of Object.entries(weeks)) {
-    const weekTotalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const weekTotalLote = items.reduce((s, c) => s + (c.loteAD||0), 0);
-    grandTotalCasa += weekTotalCasa;
-    grandTotalLote += weekTotalLote;
-
-    items.forEach(c => {
-      flowRows.push({
-        'Semana': wk,
-        'Fecha': c.fecha,
-        'Lote': c.lote,
-        'Cliente': c.cliente,
-        'Modelo': c.modeloBase,
-        'Banco': c.banco,
-        'Formalizador': c.formalizador,
-        'Desembolso Casa (₡)': c.montoCasa,
-        'Lote AD (₡)': (c.loteAD||0),
-    'Lote QFI (₡)': (c.loteQFI||0),
-        'Total Casa + Lote AD (₡)': c.montoCasa + (c.loteAD||0),
-        'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
-      });
-    });
-
-    // Subtotal row
-    flowRows.push({
-      'Semana': '',
-      'Fecha': '',
-      'Lote': '',
-      'Cliente': `TOTAL ${wk}`,
-      'Modelo': '',
-      'Banco': '',
-      'Formalizador': `${items.length} casos`,
-      'Desembolso Casa (₡)': weekTotalCasa,
-      'Lote AD (₡)': weekTotalLote,
-      'Total Casa + Lote AD (₡)': weekTotalCasa + weekTotalLote,
-      'Casa Terminada': ''
-    });
-
-    // Empty separator
-    flowRows.push({});
+    items.forEach(c => rows2.push({
+      'Sem': wk, 'Fecha': c.fecha, 'Lote': c.lote, 'Cliente': c.cliente,
+      'Modelo': c.modeloBase, 'Banco': c.banco, 'Formalizador': c.formalizador,
+      'Des. Casa (₡)': c.montoCasa, 'Lote AD (₡)': (c.loteAD||0), 'Lote QFI (₡)': (c.loteQFI||0),
+      'Total Casa+AD (₡)': c.montoCasa+(c.loteAD||0), 'Estado': c.terminada ? 'TERMINADA' : '',
+      __terminada: c.terminada
+    }));
+    const twc = items.reduce((s,c)=>s+c.montoCasa,0), tad = items.reduce((s,c)=>s+(c.loteAD||0),0);
+    rows2.push({ 'Sem':'','Fecha':'','Lote':'','Cliente': `TOTAL ${wk}`,'Modelo':'','Banco':'',
+      'Formalizador': `${items.length} casos`, 'Des. Casa (₡)': twc, 'Lote AD (₡)': tad,
+      'Lote QFI (₡)': items.reduce((s,c)=>s+(c.loteQFI||0),0),
+      'Total Casa+AD (₡)': twc+tad, 'Estado':'', __isTotal: true });
+    rows2.push({});
   }
-
-  // Grand total
-  flowRows.push({
-    'Semana': '',
-    'Fecha': '',
-    'Lote': '',
-    'Cliente': 'GRAN TOTAL',
-    'Modelo': '',
-    'Banco': '',
-    'Formalizador': `${filteredData.length} casos`,
-    'Desembolso Casa (₡)': grandTotalCasa,
-    'Lote AD (₡)': grandTotalLote,
-    'Total Casa + Lote AD (₡)': grandTotalCasa + grandTotalLote,
-    'Casa Terminada': ''
-  });
-
-  const ws2 = XLSX.utils.json_to_sheet(flowRows);
-  ws2['!cols'] = [
-    { wch: 24 }, { wch: 14 }, { wch: 14 }, { wch: 32 },
-    { wch: 14 }, { wch: 16 }, { wch: 14 }, { wch: 20 },
-    { wch: 20 }, { wch: 20 }, { wch: 16 }
-  ];
+  const ws2 = XLSX.utils.json_to_sheet(rows2, { header: headers2, skipHeader: false });
+  applyStyles(ws2, headers2, rows2, [24,12,10,32,14,14,14,18,18,18,22,12]);
   XLSX.utils.book_append_sheet(wb, ws2, 'Flujo por Semana');
 
   // ===== HOJA 3: Por Formalizador =====
-  const formRows = [];
-  const groups = {};
-  filteredData.forEach(c => {
-    if (!groups[c.formalizador]) groups[c.formalizador] = [];
-    groups[c.formalizador].push(c);
-  });
-
-  for (const [name, items] of Object.entries(groups)) {
-    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalAD = items.reduce((s, c) => s + (c.loteAD||0), 0);
-    const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
-    const terminadas = items.filter(c => c.terminada).length;
-
-    items.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-    items.forEach(c => {
-      formRows.push({
-        'Formalizador': name,
-        'Lote': c.lote,
-        'Cliente': c.cliente,
-        'Modelo': c.modelo,
-        'Desembolso Casa (₡)': c.montoCasa,
-        'Lote AD (₡)': (c.loteAD||0),
-    'Lote QFI (₡)': (c.loteQFI||0),
-        'Fecha': c.fecha,
-        'Banco': c.banco,
-        'Traspaso': c.traspaso ? '✅' : '⏳',
-        'Permisos': c.permisos ? '✅' : '⏳',
-        'Capacidad': c.capacidad,
-        'Pendientes': c.pendientes,
-        'Casa Terminada': c.terminada ? '✅ TERMINADA' : ''
-      });
-    });
-
-    formRows.push({
-      'Formalizador': `TOTAL ${name}`,
-      'Lote': `${items.length} casos (${terminadas} term.)`,
-      'Cliente': '',
-      'Modelo': '',
-      'Desembolso Casa (₡)': totalCasa,
-      'Lote AD (₡)': items.reduce((s, c) => s + (c.loteAD||0), 0),
-      'Fecha': '', 'Banco': '', 'Traspaso': '', 'Permisos': '',
-      'Capacidad': '', 'Pendientes': '', 'Casa Terminada': ''
-    });
-
-    formRows.push({});
+  const headers3 = ['Formalizador','Lote','Cliente','Modelo','Des. Casa (₡)','Lote AD (₡)','Lote QFI (₡)',
+    'Fecha','Banco','Vendedor','Traspaso','Permisos','Pendientes','Estado'];
+  const fgroups = {}; filteredData.forEach(c => { if(!fgroups[c.formalizador])fgroups[c.formalizador]=[]; fgroups[c.formalizador].push(c); });
+  const rows3 = [];
+  for (const [name, items] of Object.entries(fgroups)) {
+    items.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+    items.forEach(c => rows3.push({
+      'Formalizador': name, 'Lote': c.lote, 'Cliente': c.cliente, 'Modelo': c.modelo,
+      'Des. Casa (₡)': c.montoCasa, 'Lote AD (₡)': (c.loteAD||0), 'Lote QFI (₡)': (c.loteQFI||0),
+      'Fecha': c.fecha, 'Banco': c.banco, 'Vendedor': c.vendedor||'',
+      'Traspaso': c.traspaso?'Sí':'Pendiente','Permisos': c.permisos?'Sí':'Pendiente',
+      'Pendientes': c.pendientes||'', 'Estado': c.terminada?'TERMINADA':'', __terminada: c.terminada
+    }));
+    rows3.push({ 'Formalizador': `TOTAL ${name}`, 'Lote': `${items.length} casos`,
+      'Des. Casa (₡)': items.reduce((s,c)=>s+c.montoCasa,0), 'Lote AD (₡)': items.reduce((s,c)=>s+(c.loteAD||0),0), __isTotal: true });
+    rows3.push({});
   }
-
-  const ws3 = XLSX.utils.json_to_sheet(formRows);
-  ws3['!cols'] = [
-    { wch: 16 }, { wch: 14 }, { wch: 32 }, { wch: 30 },
-    { wch: 20 }, { wch: 20 }, { wch: 14 }, { wch: 16 },
-    { wch: 10 }, { wch: 10 }, { wch: 40 }, { wch: 50 }, { wch: 16 }
-  ];
+  const ws3 = XLSX.utils.json_to_sheet(rows3, { header: headers3, skipHeader: false });
+  applyStyles(ws3, headers3, rows3, [16,10,32,28,18,18,18,12,12,12,10,10,44,14]);
   XLSX.utils.book_append_sheet(wb, ws3, 'Por Formalizador');
 
   // ===== HOJA 4: Resumen =====
-  const summaryData = [
-    { 'Métrica': 'Total de Casas', 'Valor': filteredData.length },
-    { 'Métrica': 'Casas Terminadas', 'Valor': filteredData.filter(c => c.terminada).length },
-    { 'Métrica': 'Casas en Proceso', 'Valor': filteredData.filter(c => !c.terminada).length },
-    { 'Métrica': '% Completado', 'Valor': Math.round(filteredData.filter(c => c.terminada).length / filteredData.length * 100) + '%' },
-    { 'Métrica': 'Total Desembolso Casas (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa, 0) },
-    { 'Métrica': 'Total Lote AD (₡)', 'Valor': filteredData.reduce((s, c) => s + (c.loteAD||0), 0) },
-    { 'Métrica': 'Total Casa + Lote AD (₡)', 'Valor': filteredData.reduce((s, c) => s + c.montoCasa + (c.loteAD||0), 0) },
-    { 'Métrica': '', 'Valor': '' },
-    { 'Métrica': 'Formalizadores', 'Valor': '' },
+  const headers4 = ['Métrica','Valor'];
+  const totalT = filteredData.filter(c=>c.terminada).length;
+  const rows4 = [
+    {'Métrica':'Total de Casas','Valor': filteredData.length},
+    {'Métrica':'Casas Terminadas','Valor': totalT},
+    {'Métrica':'Casas en Proceso','Valor': filteredData.length - totalT},
+    {'Métrica':'% Completado','Valor': Math.round(totalT/filteredData.length*100)+'%'},
+    {'Métrica':'','Valor':''},
+    {'Métrica':'Total Desembolso Casas (₡)','Valor': filteredData.reduce((s,c)=>s+c.montoCasa,0)},
+    {'Métrica':'Total Lote AD (₡)','Valor': filteredData.reduce((s,c)=>s+(c.loteAD||0),0)},
+    {'Métrica':'Total Lote QFI (₡)','Valor': filteredData.reduce((s,c)=>s+(c.loteQFI||0),0)},
+    {'Métrica':'Total Casa + Lote AD (₡)','Valor': filteredData.reduce((s,c)=>s+c.montoCasa+(c.loteAD||0),0), __isTotal: true},
+    {'Métrica':'','Valor':''},
+    {'Métrica':'Por Formalizador','Valor':''},
   ];
-
-  for (const [name, items] of Object.entries(groups)) {
-    summaryData.push({
-      'Métrica': `  ${name}`,
-      'Valor': `${items.length} casos — ${fmt(items.reduce((s, c) => s + c.montoCasa, 0))}`
-    });
+  for (const [name, items] of Object.entries(fgroups)) {
+    rows4.push({'Métrica': `  ${name}`, 'Valor': `${items.length} casos — ${fmt(items.reduce((s,c)=>s+c.montoCasa,0))}`});
   }
-
-  const ws4 = XLSX.utils.json_to_sheet(summaryData);
-  ws4['!cols'] = [{ wch: 30 }, { wch: 40 }];
+  const ws4 = XLSX.utils.json_to_sheet(rows4, { header: headers4, skipHeader: false });
+  applyStyles(ws4, headers4, rows4, [34,44]);
   XLSX.utils.book_append_sheet(wb, ws4, 'Resumen');
 
-  // Download
-  XLSX.writeFile(wb, 'Ciudad_del_Valle_Formalizacion.xlsx');
+  XLSX.writeFile(wb, 'CDV_Formalizacion_Marzo2026.xlsx');
 }
-
-// ===== HELPERS: Password, edits, desembolsoBlock, estadoBadge =====
-const EDIT_PASSWORD = 'Adelante2025';
-let isAuthenticated = false;
-const STORAGE_KEY_TEST = 'cdvFormTest_edits';
-const SYNC_URL_EXP = 'https://script.google.com/macros/s/AKfycbwEvzDsez2XsaXPzxPQIXtJtcpq85zIWlVZqpaXp6NPSqukYuAc5d7NHkloBLX0FBvutw/exec';
-// Cache de avance de expedientes: { "K.18": 75, "F.18": 40, ... }
-const expedienteAvance = {};
-
-// Total de requisitos obligatorios (no opcionales)
-const DOCS_OBLIGATORIOS = 25; // de los 33 docs, 8 son opcionales
 
 function calcPct(statuses) {
   if(!statuses) return null;
