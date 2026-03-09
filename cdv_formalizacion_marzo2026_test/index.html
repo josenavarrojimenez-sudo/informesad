@@ -2497,9 +2497,9 @@ function renderVendedor() {
 
   let html2 = '<div class="form-grid">';
   for (const [name, items] of Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))) {
-    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
-    const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
+    const totalCasa = items.reduce((s, c) => s + (c.montoCasa||0), 0);
+    const totalLoteAD = items.reduce((s, c) => s + (c.loteAD||0), 0);
+    const totalLoteQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
     const terminadas = items.filter(c => c.terminada).length;
     const colorStyle = vendedorColors[name] || 'background:#F3F4F6;color:#374151';
 
