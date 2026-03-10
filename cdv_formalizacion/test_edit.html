@@ -2595,26 +2595,54 @@ function renderTable() {
   let rows = sorted.map(function(c) {
     var i = casas.indexOf(c);
     var r = '<tr class="' + (c.terminada ? 'casa-terminada' : '') + '">';
-    r += '<td data-label="Lote"><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge">✓ TERMINADA</span>' : '') + (c.expo ? ' <span class="expo-badge">⭐ EXPO</span>' : '') + '</td>';
-    r += '<td data-label="Modelo" style="font-size:12px">' + c.modelo + '</td>';
-    r += '<td data-label="Cliente"><strong>' + c.cliente + '</strong></td>';
-    r += '<td data-label="💰 Desembolso"><div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, false) + '</div></td>';
-    r += '<td data-label="🏷️ Precio Venta">' + precioVentaBlock(c) + '</td>';
-    r += '<td data-label="Fecha Est."><span style="cursor:pointer;text-decoration:underline dotted" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
-    r += '<td data-label="Banco"><span class="bank-tag" style="cursor:pointer" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
-    r += '<td data-label="Formalizador"><span class="formalizador-tag ' + getFormClass(c.formalizador) + '">' + c.formalizador + '</span></td>';
-    r += '<td data-label="Vendedor"><span style="font-size:12px;font-weight:500">' + (c.vendedor||'') + '</span></td>';
-    r += '<td data-label="Traspaso / Permisos"><div style="display:flex;flex-direction:column;gap:4px">';
-    r += '<span style="cursor:pointer;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '<span class="status-check">✅ Traspaso</span>' : '<span class="status-pending">⏳ Traspaso</span>') + '</span>';
-    r += '<span style="cursor:pointer;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '<span class="status-check">✅ Permisos</span>' : '<span class="status-pending">⏳ Permisos</span>') + '</span>';
-    r += '<span style="cursor:pointer;white-space:nowrap;margin-top:2px" onclick="toggleExpo(' + i + ')" title="Marcar/desmarcar EXPO">' + (c.expo ? '<span class="expo-badge" style="cursor:pointer">⭐ EXPO ✕</span>' : '<span style="font-size:11px;color:#9CA3AF;border:1px dashed #D1D5DB;border-radius:20px;padding:2px 8px">☆ EXPO</span>') + '</span>';
+
+    // COL 1: Lote / Modelo / Cliente
+    r += '<td data-label="Lote / Cliente" style="min-width:160px">';
+    r += '<div style="display:flex;flex-direction:column;gap:2px">';
+    r += '<div><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge" style="font-size:9px;padding:1px 6px">✓</span>' : '') + (c.expo ? ' <span class="expo-badge">⭐</span>' : '') + '</div>';
+    r += '<strong style="font-size:12px;color:var(--text-primary);line-height:1.3">' + c.cliente + '</strong>';
+    r += '<span style="font-size:10px;color:var(--text-tertiary);line-height:1.3">' + c.modelo + '</span>';
     r += '</div></td>';
-    r += '<td data-label="📋 Expediente" style="vertical-align:middle">' + expedienteBar(c.lote) + '</td>';
-    r += '<td data-label="Estado Casa"><span style="cursor:pointer" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
-    r += '<td data-label="Pendientes"><div class="pendientes-text" style="cursor:pointer" onclick="editPendientes(' + i + ')">' + (c.pendientes||'') + '</div></td>';
-    r += '<td data-label="Acciones"><div style="display:flex;gap:8px">';
-    r += '<button onclick="openEditCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#D97706;padding:4px" title="Editar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
-    r += '<button onclick="deleteCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#DC2626;padding:4px" title="Eliminar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>';
+
+    // COL 2: Desembolso / Precio de Venta
+    r += '<td data-label="Desembolso / Precio" style="min-width:170px">';
+    r += '<div style="display:flex;flex-direction:column;gap:4px">';
+    r += '<div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, true) + '</div>';
+    if (c.precioTotal) r += precioVentaBlock(c);
+    r += '</div></td>';
+
+    // COL 3: Fecha Est.
+    r += '<td data-label="Fecha" style="white-space:nowrap"><span style="cursor:pointer;text-decoration:underline dotted;font-size:12px" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
+
+    // COL 4: Banco
+    r += '<td data-label="Banco"><span class="bank-tag" style="cursor:pointer;font-size:10px" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
+
+    // COL 5: Formalizador / Vendedor
+    r += '<td data-label="Responsables" style="min-width:100px">';
+    r += '<div style="display:flex;flex-direction:column;gap:3px">';
+    r += '<span class="formalizador-tag ' + getFormClass(c.formalizador) + '" style="font-size:10px;padding:2px 7px">' + c.formalizador + '</span>';
+    if (c.vendedor) r += '<span style="font-size:10px;color:var(--text-secondary)">🏷️ ' + c.vendedor + '</span>';
+    r += '</div></td>';
+
+    // COL 6: Trasp / Perm
+    r += '<td data-label="Trasp./Perm." style="min-width:80px"><div style="display:flex;flex-direction:column;gap:2px">';
+    r += '<span style="cursor:pointer;font-size:11px;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '✅ Trasp.' : '⏳ Trasp.') + '</span>';
+    r += '<span style="cursor:pointer;font-size:11px;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '✅ Perm.' : '⏳ Perm.') + '</span>';
+    r += '</div></td>';
+
+    // COL 7: Expediente
+    r += '<td data-label="Expediente" style="min-width:90px">' + expedienteBar(c.lote) + '</td>';
+
+    // COL 8: Estado
+    r += '<td data-label="Estado"><span style="cursor:pointer;font-size:11px" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
+
+    // COL 9: Pendientes
+    r += '<td data-label="Pendientes" style="max-width:160px"><div style="font-size:11px;color:var(--text-secondary);max-height:52px;overflow:hidden;cursor:pointer;line-height:1.4" onclick="editPendientes(' + i + ')" title="' + (c.pendientes||'').replace(/"/g,"'") + '">' + (c.pendientes||'') + '</div></td>';
+
+    // COL 10: Acciones
+    r += '<td data-label="Acciones"><div style="display:flex;gap:4px">';
+    r += '<button onclick="openEditCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#D97706;padding:2px" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    r += '<button onclick="deleteCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#DC2626;padding:2px" title="Eliminar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>';
     r += '</div></td>';
     r += '</tr>';
     return r;
@@ -2627,22 +2655,18 @@ function renderTable() {
         <span class="table-count">${filteredData.length} registros</span>
       </div>
       <div style="overflow-x:auto">
-        <table>
+        <table style="font-size:12px">
           <thead>
             <tr>
-              <th>Lote</th>
-              <th>Modelo</th>
-              <th>Cliente</th>
-              <th>💰 Desembolso</th>
-              <th>🏷️ Precio Venta</th>
-              <th>Fecha Est.</th>
+              <th style="min-width:160px">Lote / Modelo / Cliente</th>
+              <th style="min-width:170px">💰 Desembolso / Precio</th>
+              <th>Fecha</th>
               <th>Banco</th>
-              <th>Formalizador</th>
-              <th>Vendedor</th>
-              <th>Trasp. / Perm.</th>
-              <th>📋 Expediente</th>
-              <th>Estado Casa</th>
-              <th>Pendientes</th>
+              <th style="min-width:100px">Formalizador / Vendedor</th>
+              <th>Trasp./Perm.</th>
+              <th style="min-width:90px">📋 Expediente</th>
+              <th>Estado</th>
+              <th style="min-width:140px">Pendientes</th>
               <th>Acciones</th>
             </tr>
           </thead>
