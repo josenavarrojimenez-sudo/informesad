@@ -2718,9 +2718,14 @@ function guardarCambiosCasa(index) {
   saveEdits();
   // Restaurar modal
   document.querySelector('#modalNuevoCaso h2').textContent = '＋ Nuevo Caso';
-  const btnGuardar = document.querySelector('#modalNuevoCaso button[style*="font-weight: 700"]');
-  btnGuardar.textContent = 'Agregar Caso';
-  btnGuardar.onclick = guardarNuevoCaso;
+  const btnGuardar = document.querySelector('#modalNuevoCaso button[onclick="guardarNuevoCaso()"]') ||
+                     document.querySelector('#modalNuevoCaso button[type="submit"]') ||
+                     [...document.querySelectorAll('#modalNuevoCaso button')].find(b => b.textContent.includes('Agregar') || b.textContent.includes('Guardar'));
+  if (btnGuardar) {
+    btnGuardar.textContent = 'Agregar Caso';
+    btnGuardar.onclick = guardarNuevoCaso;
+    btnGuardar.setAttribute('onclick', 'guardarNuevoCaso()');
+  }
   
   closeNuevoCaso();
   applyFilters();
