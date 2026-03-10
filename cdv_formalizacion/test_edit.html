@@ -3485,10 +3485,8 @@ function desembolsoBlock(c, compact) {
 
 function precioVentaBlock(c) {
   if (!c.precioTotal) return '<span style="font-size:12px;color:var(--text-tertiary)">—</span>';
-  var areaStr = c.areaLote ? (c.areaLote.toLocaleString('es-CR') + ' m²') : '—';
   return '<div class="precio-venta-block">' +
     '<div class="precio-venta-row"><span class="pv-label">Precio Venta</span><span class="pv-amount">' + fmt(c.precioTotal) + '</span></div>' +
-    '<div class="precio-area-row"><span>Área lote</span><strong>' + areaStr + '</strong></div>' +
     '</div>';
 }
 
