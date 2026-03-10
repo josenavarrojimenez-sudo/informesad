@@ -60,33 +60,10 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 20px rgba(0,0,0,0.15);
-  transition: padding 0.3s ease;
+  
 }
 
-/* Compact header on scroll (desktop + mobile) */
-.header.scrolled {
-  padding: 10px 40px;
-}
-.header.scrolled + .nav-bar {
-  top: 56px;
-}
-.header.scrolled + .nav-bar + .filters-bar {
-  top: 100px; /* 56 + 44 */
-}
-.header-inner > div:first-child {
-  transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
-  overflow: hidden;
-  max-height: 120px;
-  opacity: 1;
-}
-.header.scrolled .header-inner > div:first-child {
-  max-height: 0;
-  opacity: 0;
-  margin: 0;
-}
-.header.scrolled .header-inner {
-  gap: 12px;
-}
+/* Header stays fixed size - no scroll animation */
 
 .header-inner {
   max-width: 1440px;
@@ -1431,12 +1408,7 @@ tbody td {
     max-height: 80px; opacity: 1; overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
   }
-  .header.scrolled .header-inner > div:first-child {
-    max-height: 0; opacity: 0; margin: 0; padding: 0;
-  }
-  .header.scrolled .header-inner { gap: 0; }
-  .header.scrolled { padding: 10px 16px !important; }
-  .header.scrolled + .nav-bar { top: 56px !important; }
+  /* scrolled overrides removed */
   .btn-nuevo-caso { width: 100%; justify-content: center; padding: 10px 16px; }
 }
 </style>
@@ -3645,33 +3617,17 @@ applyFilters(); // This will filter by default month (March) and render
     function updateSticky() {
       var mobile = window.innerWidth <= 768;
       if(mobile) {
-        // Móvil: sin sticky, sin top dinámico — scroll normal
         header.classList.remove('scrolled');
         if(navBar)    navBar.style.top = '';
         if(filterBar) filterBar.style.top = '';
         return;
       }
-      // Solo desktop
-      var scrolled = window.scrollY > 30;
-      if(scrolled) {
-        header.classList.add('scrolled');
-        requestAnimationFrame(function(){
-          var hHs = header.offsetHeight;
-          var nHs = navBar ? navBar.offsetHeight : 0;
-          if(navBar)    navBar.style.top = hHs + 'px';
-          if(filterBar) filterBar.style.top = (hHs + nHs) + 'px';
-        });
-      } else {
-        header.classList.remove('scrolled');
-        requestAnimationFrame(function(){
-          var hH2 = header.offsetHeight;
-          var nH2 = navBar ? navBar.offsetHeight : 0;
-          if(navBar)    navBar.style.top = hH2 + 'px';
-          if(filterBar) filterBar.style.top = (hH2 + nH2) + 'px';
-        });
-      }
+      // Desktop: just set correct top positions, no class toggle
+      var hH = header.offsetHeight;
+      var nH = navBar ? navBar.offsetHeight : 0;
+      if(navBar)    navBar.style.top = hH + 'px';
+      if(filterBar) filterBar.style.top = (hH + nH) + 'px';
     }
-    window.addEventListener('scroll', updateSticky, {passive: true});
     window.addEventListener('resize', function(){ setTimeout(updateSticky, 50); }, {passive: true});
     setTimeout(updateSticky, 100);
   }
