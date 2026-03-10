@@ -3480,7 +3480,7 @@ function desembolsoBlock(c, compact) {
       <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa</span><span class="desembolso-amount">${fmt(c.montoCasa)}</span></div>
       <div class="desembolso-row desembolso-ad"><span class="desembolso-label">Lote GM</span><span class="desembolso-amount">${fmt(c.loteGM||0)}</span></div>
       <div class="desembolso-row desembolso-qfi"><span class="desembolso-label">Lote QFI</span><span class="desembolso-amount">${fmt(c.loteQFI||0)}</span></div>
-      <div class="desembolso-total"><div class="desembolso-total-row"><span>Casa + AD</span><strong>${fmt(c.montoCasa + (c.loteGM||0))}</strong></div></div>
+      <div class="desembolso-total"><div class="desembolso-total-row"><span>Ingreso para AD</span><strong>${fmt(c.montoCasa + (c.loteGM||0))}</strong></div></div>
     </div>`;
 }
 
