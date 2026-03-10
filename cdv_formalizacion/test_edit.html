@@ -2596,51 +2596,53 @@ function renderTable() {
     var i = casas.indexOf(c);
     var r = '<tr class="' + (c.terminada ? 'casa-terminada' : '') + '">';
 
-    // COL 1: Lote / Modelo / Cliente
-    r += '<td data-label="Lote / Cliente" style="width:140px">';
-    r += '<div style="display:flex;flex-direction:column;gap:1px">';
-    r += '<div><span class="lote-badge" style="padding:2px 5px;font-size:10px">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge" style="font-size:8px;padding:1px 4px">✓</span>' : '') + (c.expo ? ' <span class="expo-badge" style="font-size:8px;padding:1px 4px">⭐</span>' : '') + '</div>';
-    r += '<strong style="font-size:11px;color:var(--text-primary);line-height:1.2">' + c.cliente + '</strong>';
-    r += '<span style="font-size:9px;color:var(--text-tertiary);line-height:1.2">' + c.modelo + '</span>';
+    // COL 1: Lote / Modelo / Cliente (15%)
+    r += '<td data-label="Lote / Cliente">';
+    r += '<div style="display:flex;flex-direction:column;gap:2px">';
+    r += '<div><span class="lote-badge">' + c.lote + '</span>' + (c.terminada ? ' <span class="terminada-badge" style="font-size:9px;padding:1px 5px">✓</span>' : '') + (c.expo ? ' <span class="expo-badge" style="font-size:9px">⭐</span>' : '') + '</div>';
+    r += '<strong style="font-size:12px;color:var(--text-primary);line-height:1.3">' + c.cliente + '</strong>';
+    r += '<span style="font-size:10px;color:var(--text-tertiary)">' + c.modelo + '</span>';
     r += '</div></td>';
 
-    // COL 2: Desembolso / Precio de Venta
-    r += '<td data-label="Desembolso / Precio" style="width:150px">';
-    r += '<div style="display:flex;flex-direction:column;gap:2px">';
+    // COL 2: Desembolso / Precio de Venta (18%)
+    r += '<td data-label="Montos">';
+    r += '<div style="display:flex;flex-direction:column;gap:3px">';
     r += '<div style="cursor:pointer" onclick="editMontos(' + i + ')" title="Click para editar montos">' + desembolsoBlock(c, true) + '</div>';
     if (c.precioTotal) r += precioVentaBlock(c);
     r += '</div></td>';
 
-    // COL 3: Fecha Est.
-    r += '<td data-label="Fecha" style="white-space:nowrap;width:50px"><span style="cursor:pointer;text-decoration:underline dotted;font-size:11px" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
+    // COL 3: Fecha (7%)
+    r += '<td data-label="Fecha" style="white-space:nowrap"><span style="cursor:pointer;text-decoration:underline dotted;font-size:12px" onclick="editFecha(' + i + ')">' + formatDate(c.fecha) + '</span></td>';
 
-    // COL 4: Banco
-    r += '<td data-label="Banco" style="width:55px"><span class="bank-tag" style="cursor:pointer;font-size:9px;padding:2px 4px;white-space:nowrap" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
+    // COL 4: Banco (7%)
+    r += '<td data-label="Banco"><span class="bank-tag" style="cursor:pointer;font-size:10px;padding:2px 6px" onclick="editBanco(' + i + ')">' + c.banco + '</span></td>';
 
-    // COL 5: Formalizador / Vendedor
-    r += '<td data-label="Responsables" style="width:85px">';
+    // COL 5: Formalizador / Vendedor (10%)
+    r += '<td data-label="Responsables">';
     r += '<div style="display:flex;flex-direction:column;gap:2px">';
-    r += '<span class="formalizador-tag ' + getFormClass(c.formalizador) + '" style="font-size:9px;padding:2px 4px">' + c.formalizador + '</span>';
-    if (c.vendedor) r += '<span style="font-size:9px;color:var(--text-secondary)">🏷️ ' + c.vendedor + '</span>';
+    r += '<span class="formalizador-tag ' + getFormClass(c.formalizador) + '" style="font-size:10px;padding:2px 6px">' + c.formalizador + '</span>';
+    if (c.vendedor) r += '<span style="font-size:10px;color:var(--text-secondary)">🏷️ ' + c.vendedor + '</span>';
     r += '</div></td>';
 
-    // COL 6: Trasp / Perm / Expediente (merged)
-    r += '<td data-label="T./P./Exp." style="width:100px"><div style="display:flex;flex-direction:column;gap:3px">';
-    r += '<span style="cursor:pointer;font-size:10px;white-space:nowrap" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '✅ Trasp' : '⏳ Trasp') + '</span>';
-    r += '<span style="cursor:pointer;font-size:10px;white-space:nowrap" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '✅ Perm' : '⏳ Perm') + '</span>';
+    // COL 6: Trasp / Perm / Expediente (13%)
+    r += '<td data-label="T./P./Exp."><div style="display:flex;flex-direction:column;gap:3px">';
+    r += '<div style="display:flex;gap:6px;font-size:11px">';
+    r += '<span style="cursor:pointer" onclick="toggleTraspaso(' + i + ')">' + (c.traspaso ? '✅ Trasp' : '⏳ Trasp') + '</span>';
+    r += '<span style="cursor:pointer" onclick="togglePermisos(' + i + ')">' + (c.permisos ? '✅ Perm' : '⏳ Perm') + '</span>';
+    r += '</div>';
     r += expedienteBar(c.lote);
     r += '</div></td>';
 
-    // COL 7: Estado
-    r += '<td data-label="Estado" style="width:90px"><span style="cursor:pointer;font-size:10px" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
+    // COL 7: Estado (9%)
+    r += '<td data-label="Estado"><span style="cursor:pointer;font-size:11px" onclick="changeEstadoCasa(' + i + ')">' + getEstadoBadge(c.estadoCasa) + '</span></td>';
 
-    // COL 9: Pendientes
-    r += '<td data-label="Pendientes" style="max-width:180px"><div style="font-size:10px;color:var(--text-secondary);max-height:45px;overflow:hidden;cursor:pointer;line-height:1.3" onclick="editPendientes(' + i + ')" title="' + (c.pendientes||'').replace(/"/g,"'") + '">' + (c.pendientes||'') + '</div></td>';
+    // COL 8: Pendientes (auto ~18%)
+    r += '<td data-label="Pendientes"><div style="font-size:11px;color:var(--text-secondary);max-height:50px;overflow:hidden;cursor:pointer;line-height:1.4" onclick="editPendientes(' + i + ')" title="' + (c.pendientes||'').replace(/"/g,"'") + '">' + (c.pendientes||'') + '</div></td>';
 
-    // COL 10: Acciones
-    r += '<td data-label="Acciones" style="width:50px"><div style="display:flex;gap:2px">';
-    r += '<button onclick="openEditCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#D97706;padding:1px" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
-    r += '<button onclick="deleteCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#DC2626;padding:1px" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>';
+    // COL 9: Acciones (3%)
+    r += '<td data-label="Acc."><div style="display:flex;gap:3px">';
+    r += '<button onclick="openEditCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#D97706;padding:2px" title="Editar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+    r += '<button onclick="deleteCasa(' + i + ')" style="background:none;border:none;cursor:pointer;color:#DC2626;padding:2px" title="Eliminar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>';
     r += '</div></td>';
     r += '</tr>';
     return r;
@@ -2653,17 +2655,18 @@ function renderTable() {
         <span class="table-count">${filteredData.length} registros</span>
       </div>
       <div style="overflow-x:hidden">
-        <table style="font-size:11px;table-layout:fixed;width:100%">
+        <table style="font-size:12px;table-layout:fixed;width:100%">
           <thead>
             <tr>
-              <th style="width:130px">Lote / Cliente</th>
-              <th style="width:150px">💰 Montos</th>
-              <th style="width:90px">Fecha / Banco</th>
-              <th style="width:85px">Responsables</th>
-              <th style="width:105px">Trasp/Perm/Exp</th>
-              <th style="width:90px">Estado</th>
+              <th style="width:15%">Lote / Cliente</th>
+              <th style="width:18%">💰 Montos</th>
+              <th style="width:7%">Fecha</th>
+              <th style="width:7%">Banco</th>
+              <th style="width:10%">Responsables</th>
+              <th style="width:13%">Trasp/Perm/Exp</th>
+              <th style="width:9%">Estado</th>
               <th style="width:auto">Pendientes</th>
-              <th style="width:45px">Acc.</th>
+              <th style="width:3%">Acc.</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
