@@ -2669,10 +2669,33 @@ function deleteCasa(index) {
   promptPassword(() => {
     const c = casas[index];
     if (confirm(`¿Está seguro de que desea eliminar el caso del lote ${c.lote} (${c.cliente})?`)) {
+      // 1. Eliminar del array local
       casas.splice(index, 1);
+      
+      // 2. Guardar el estado actual (sin el registro)
       saveEdits();
-      applyFilters();
-      showToast('🗑️ Caso eliminado');
+      
+      // 3. Forzar actualización inmediata en la nube (POST)
+      const edits = casas.map(c => ({
+        lote: c.lote, cliente: c.cliente, fecha: c.fecha,
+        modelo: c.modelo, modeloBase: c.modeloBase,
+        estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
+        loteGM: c.loteGM, loteQFI: c.loteQFI,
+        banco: c.banco, formalizador: c.formalizador,
+        traspaso: c.traspaso, permisos: c.permisos, expo: c.expo,
+        pendientes: c.pendientes, vendedor: c.vendedor,
+        capacidad: c.capacidad, precioTotal: c.precioTotal, areaLote: c.areaLote
+      }));
+
+      fetch(SYNC_URL_INFORME, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits })
+      }).then(() => {
+        applyFilters();
+        showToast('🗑️ Caso eliminado correctamente');
+      });
     }
   });
 }
