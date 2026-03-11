@@ -2526,12 +2526,12 @@ function renderKPIs() {
   const terminadas = filteredData.filter(c => c.terminada).length;
   
   // 1) Venta total por formalizar = Casa + Lote QFI + Lote GM
-  const totalVentas = filteredData.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+  const totalVentas = filteredData.reduce((s, c) => s + (parseFloat(c.montoCasa)||0) + (parseFloat(c.loteGM)||0) + (parseFloat(c.loteQFI)||0), 0);
   
   // 2) Ingreso por Desembolso este mes = (30% o 100% Casa) + Lote QFI
   const totalDesembolsoProyectado = filteredData.reduce((s, c) => {
     const factorCasa = c.terminada ? 1.0 : 0.3;
-    return s + ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+    return s + ((parseFloat(c.montoCasa)||0) * factorCasa) + (parseFloat(c.loteQFI)||0);
   }, 0);
 
   document.getElementById('kpiRow').innerHTML = `
@@ -2783,8 +2783,8 @@ function renderFlow() {
 
   let html = '<div class="flow-grid">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalVentasSemana = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
-    const totalDesProySemana = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+    const totalVentasSemana = items.reduce((s, c) => s + (parseFloat(c.montoCasa)||0) + (parseFloat(c.loteGM)||0) + (parseFloat(c.loteQFI)||0), 0);
+    const totalDesProySemana = items.reduce((s, c) => s + ((parseFloat(c.montoCasa)||0) * (c.terminada ? 1.0 : 0.3)) + (parseFloat(c.loteQFI)||0), 0);
 
     html += `
       <div class="flow-week">
@@ -2850,8 +2850,8 @@ function renderKanban() {
 
   let html = '<div class="kanban-container">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalVentasSemana = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
-    const totalDesProySemana = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+    const totalVentasSemana = items.reduce((s, c) => s + (parseFloat(c.montoCasa)||0) + (parseFloat(c.loteGM)||0) + (parseFloat(c.loteQFI)||0), 0);
+    const totalDesProySemana = items.reduce((s, c) => s + ((parseFloat(c.montoCasa)||0) * (c.terminada ? 1.0 : 0.3)) + (parseFloat(c.loteQFI)||0), 0);
     
     html += `
       <div class="kanban-column">
@@ -3515,15 +3515,19 @@ function getEstadoBadge(estado) {
 
 function desembolsoBlock(c, compact) {
   const cls = compact ? 'desembolso-compact' : 'desembolso-block';
+  const mCasa = parseFloat(c.montoCasa) || 0;
+  const mGM = parseFloat(c.loteGM) || 0;
+  const mQFI = parseFloat(c.loteQFI) || 0;
+  
   const factorCasa = c.terminada ? 1.0 : 0.3;
-  const desembolsoProy = ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
-  const ventaTotal = (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0);
+  const desembolsoProy = (mCasa * factorCasa) + mQFI;
+  const ventaTotal = mCasa + mGM + mQFI;
   
   return `
     <div class="${cls}">
-      <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa (${Math.round(factorCasa*100)}%)</span><span class="desembolso-amount">${fmt(c.montoCasa)}</span></div>
-      <div class="desembolso-row desembolso-ad"><span class="desembolso-label">Lote GM</span><span class="desembolso-amount">${fmt(c.loteGM||0)}</span></div>
-      <div class="desembolso-row desembolso-qfi"><span class="desembolso-label">Lote QFI</span><span class="desembolso-amount">${fmt(c.loteQFI||0)}</span></div>
+      <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa (${Math.round(factorCasa*100)}%)</span><span class="desembolso-amount">${fmt(mCasa)}</span></div>
+      <div class="desembolso-row desembolso-ad"><span class="desembolso-label">Lote GM</span><span class="desembolso-amount">${fmt(mGM)}</span></div>
+      <div class="desembolso-row desembolso-qfi"><span class="desembolso-label">Lote QFI</span><span class="desembolso-amount">${fmt(mQFI)}</span></div>
       <div class="desembolso-total">
         <div class="desembolso-total-row"><span>Venta Total</span><strong>${fmt(ventaTotal)}</strong></div>
         <div class="desembolso-total-row" style="margin-top:2px;border-top:1px solid rgba(0,0,0,0.05);padding-top:2px">
