@@ -2524,25 +2524,31 @@ function switchView(view) {
 function renderKPIs() {
   const total = filteredData.length;
   const terminadas = filteredData.filter(c => c.terminada).length;
-  const totalDesembolso = filteredData.reduce((s, c) => s + c.montoCasa, 0);
-  const totalLoteAD = filteredData.reduce((s, c) => s + (c.loteGM||0), 0);
-  const totalLoteQFI = filteredData.reduce((s, c) => s + (c.loteQFI||0), 0);
+  
+  // 1) Ingreso total por venta = Casa + Lote QFI + Lote GM
+  const totalVentas = filteredData.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+  
+  // 2) Flujo de Desembolso proyectado = (30% o 100% Casa) + Lote QFI
+  const totalDesembolsoProyectado = filteredData.reduce((s, c) => {
+    const factorCasa = c.terminada ? 1.0 : 0.3;
+    return s + ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+  }, 0);
 
   document.getElementById('kpiRow').innerHTML = `
-<div class="kpi-card">
+    <div class="kpi-card kpi-highlight">
+      <div class="kpi-card-label">Ingresos Totales por Ventas</div>
+      <div class="kpi-card-value">${fmt(totalVentas)}</div>
+      <div class="kpi-card-sub">Casa + Lote QFI + Lote GM</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-card-label">Ingresos por Desembolso</div>
+      <div class="kpi-card-value" style="color:var(--claude-accent)">${fmt(totalDesembolsoProyectado)}</div>
+      <div class="kpi-card-sub">30%/100% Casa + Lote QFI</div>
+    </div>
+    <div class="kpi-card">
       <div class="kpi-card-label">Total Casas</div>
       <div class="kpi-card-value">${total}</div>
       <div class="kpi-card-sub">${terminadas} terminadas</div>
-    </div>
-    <div class="kpi-card kpi-highlight">
-      <div class="kpi-card-label">Total Desembolso Casas</div>
-      <div class="kpi-card-value">${fmt(totalDesembolso)}</div>
-      <div class="kpi-card-sub">Monto acumulado</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-card-label">Total Lotes GM</div>
-      <div class="kpi-card-value">${fmt(totalLoteAD)}</div>
-      <div class="kpi-card-sub">Monto acumulado</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-card-label">Casas Terminadas</div>
@@ -2558,15 +2564,15 @@ function renderKPIs() {
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${terminadas}</div>
-      <div class="header-stat-label">TERMINADAS</div>
+      <div class="header-stat-label">TERM.</div>
     </div>
     <div class="header-stat">
-      <div class="header-stat-value">${fmt(totalDesembolso + totalLoteAD)}</div>
-      <div class="header-stat-label">TOTAL CASAS + LOTES</div>
+      <div class="header-stat-value">${fmt(totalVentas)}</div>
+      <div class="header-stat-label">VENTAS TOTALES</div>
     </div>
     <div class="header-stat">
-      <div class="header-stat-value">${fmt(totalLoteQFI)}</div>
-      <div class="header-stat-label">TOTAL LOTES QFI</div>
+      <div class="header-stat-value">${fmt(totalDesembolsoProyectado)}</div>
+      <div class="header-stat-label">DESEMBOLSO PROY.</div>
     </div>
   `;
 }
@@ -2754,23 +2760,18 @@ function renderFlow() {
 
   let html = '<div class="flow-grid">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalAD = items.reduce((s, c) => s + (c.loteGM||0), 0);
-    const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
-    const totalGlobal = totalCasa + totalAD; // only Casa + Lote GM
-
+    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
 
     html += `
       <div class="flow-week">
         <div class="flow-week-header">
           <div>
             <div class="flow-week-title">📅 ${wk}</div>
-            <div class="kanban-col-total">Total semana: ${fmt(totalGlobal)}</div>
+            <div class="kanban-col-total">Ventas Totales: ${fmt(totalVentas)}</div>
           </div>
           <div class="flow-week-totals">
-            <div class="flow-total-item">Casas: <strong>${fmt(totalCasa)}</strong></div>
-            <div class="flow-total-item">Lote GM: <strong>${fmt(totalAD)}</strong></div>
-            <div class="flow-total-item">Lote QFI: <strong>${fmt(totalQFI)}</strong></div>
+            <div class="flow-total-item">Desembolso Proy: <strong style="color:var(--claude-accent)">${fmt(totalDesProy)}</strong></div>
             <div class="flow-total-item" style="font-weight:700;color:var(--text-primary)">${items.length} casos</div>
           </div>
         </div>
@@ -2798,15 +2799,15 @@ function renderFlow() {
   }
 
   // Grand totals
-  const grandCasa = filteredData.reduce((s, c) => s + c.montoCasa, 0);
-  const grandLote = filteredData.reduce((s, c) => s + (c.loteGM||0), 0);
+  const grandVentas = filteredData.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+  const grandDesProy = filteredData.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+
   html += `
     <div style="background:linear-gradient(135deg,#2D2014,#4A3728);border-radius:var(--radius-md);padding:20px 24px;color:#F5E6D3;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
       <div style="font-size:16px;font-weight:700">📊 Totales Generales</div>
       <div style="display:flex;gap:24px;flex-wrap:wrap">
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Casas</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa)}</div></div>
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Lotes</div><div style="font-size:22px;font-weight:700">${fmt(grandLote)}</div></div>
-        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Total Global</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandCasa + grandLote)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Ventas Totales</div><div style="font-size:22px;font-weight:700;color:#FCD34D">${fmt(grandVentas)}</div></div>
+        <div><div style="font-size:11px;opacity:0.7;text-transform:uppercase">Desembolso Proyectado</div><div style="font-size:22px;font-weight:700;color:var(--claude-primary)">${fmt(grandDesProy)}</div></div>
       </div>
     </div>
   `;
@@ -2826,15 +2827,16 @@ function renderKanban() {
 
   let html = '<div class="kanban-container">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalAD = items.reduce((s, c) => s + (c.loteGM||0), 0);
-    const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
+    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+    
     html += `
       <div class="kanban-column">
         <div class="kanban-col-header">
           <div>
             <div class="kanban-col-title">${wk}</div>
-            <div class="kanban-col-total" style="font-weight:700">Ingresos para AD: ${fmt(totalCasa + totalAD)}</div>
+            <div class="kanban-col-total" style="font-weight:700">Ventas: ${fmt(totalVentas)}</div>
+            <div style="font-size:10px;color:var(--claude-accent);margin-top:2px">Desembolso: ${fmt(totalDesProy)}</div>
           </div>
           <span class="kanban-col-count">${items.length}</span>
         </div>
@@ -2883,9 +2885,8 @@ function renderFormalizador() {
 
   let html = '<div class="form-grid">';
   for (const [name, items] of Object.entries(groups)) {
-    const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
-    const totalAD = items.reduce((s, c) => s + (c.loteGM||0), 0);
-    const totalQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
+    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
     const terminadas = items.filter(c => c.terminada).length;
 
     html += `
@@ -2895,7 +2896,8 @@ function renderFormalizador() {
           <div class="form-section-stats">
             <span>${items.length} casos</span>
             <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
-            <span style="color:var(--claude-dark);font-weight:700">${fmt(totalCasa)}</span>
+            <span style="color:var(--claude-dark);font-weight:700">Ventas: ${fmt(totalVentas)}</span>
+            <span style="color:var(--claude-accent);font-weight:600">Desembolso: ${fmt(totalDesProy)}</span>
           </div>
         </div>
         <div class="form-section-body">
@@ -2952,9 +2954,8 @@ function renderVendedor() {
 
   let html2 = '<div class="form-grid">';
   for (const [name, items] of Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0]))) {
-    const totalCasa = items.reduce((s, c) => s + (c.montoCasa||0), 0);
-    const totalLoteAD = items.reduce((s, c) => s + (c.loteGM||0), 0);
-    const totalLoteQFI = items.reduce((s, c) => s + (c.loteQFI||0), 0);
+    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
     const terminadas = items.filter(c => c.terminada).length;
     const colorStyle = vendedorColors[name] || 'background:#F3F4F6;color:#374151';
 
@@ -2965,7 +2966,8 @@ function renderVendedor() {
           <div class="form-section-stats">
             <span>${items.length} casos</span>
             <span style="color:var(--success);font-weight:600">${terminadas} term.</span>
-            <span style="color:var(--claude-dark);font-weight:700">Ingresos para AD: ${fmt(totalCasa + totalLoteAD)}</span>
+            <span style="color:var(--claude-dark);font-weight:700">Ventas: ${fmt(totalVentas)}</span>
+            <span style="color:var(--claude-accent);font-weight:600">Desembolso: ${fmt(totalDesProy)}</span>
           </div>
         </div>
         <div class="form-section-body">
@@ -3064,84 +3066,115 @@ function exportToExcel() {
   }
 
   // ===== HOJA 1: Tabla General =====
-  const headers1 = ['Lote','Modelo','Modelo Base','Cliente','Desembolso Casa (₡)','Lote GM (₡)','Lote QFI (₡)',
-    'Total Casa+AD (₡)','Fecha Est.','Banco','Formalizador','Vendedor','EXPO','Traspaso','Permisos',
+  const headers1 = ['Lote','Modelo','Modelo Base','Cliente','Venta Total (₡)','Desembolso Proy (₡)','Des. Casa (₡)','Lote GM (₡)','Lote QFI (₡)',
+    'Fecha Est.','Banco','Formalizador','Vendedor','EXPO','Traspaso','Permisos',
     'Estado Casa','Pendientes'];
 
-  const rows1data = filteredData.map(c => ({
-    'Lote': c.lote, 'Modelo': c.modelo, 'Modelo Base': c.modeloBase, 'Cliente': c.cliente,
-    'Desembolso Casa (₡)': c.montoCasa, 'Lote GM (₡)': (c.loteGM||0), 'Lote QFI (₡)': (c.loteQFI||0),
-    'Total Casa+AD (₡)': c.montoCasa + (c.loteGM||0),
-    'Fecha Est.': c.fecha, 'Banco': c.banco, 'Formalizador': c.formalizador, 'Vendedor': c.vendedor||'',
-    'EXPO': c.expo ? '⭐ EXPO' : '', 'Traspaso': c.traspaso ? 'Sí' : 'Pendiente', 'Permisos': c.permisos ? 'Sí' : 'Pendiente',
-    'Estado Casa': c.estadoCasa||'', 'Pendientes': c.pendientes||'',
-    __terminada: c.terminada
-  }));
+  const rows1data = filteredData.map(c => {
+    const factorCasa = c.terminada ? 1.0 : 0.3;
+    const desembolsoProy = ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+    const ventaTotal = (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0);
+    
+    return {
+      'Lote': c.lote, 'Modelo': c.modelo, 'Modelo Base': c.modeloBase, 'Cliente': c.cliente,
+      'Venta Total (₡)': ventaTotal,
+      'Desembolso Proy (₡)': desembolsoProy,
+      'Des. Casa (₡)': c.montoCasa, 'Lote GM (₡)': (c.loteGM||0), 'Lote QFI (₡)': (c.loteQFI||0),
+      'Fecha Est.': c.fecha, 'Banco': c.banco, 'Formalizador': c.formalizador, 'Vendedor': c.vendedor||'',
+      'EXPO': c.expo ? '⭐ EXPO' : '', 'Traspaso': c.traspaso ? 'Sí' : 'Pendiente', 'Permisos': c.permisos ? 'Sí' : 'Pendiente',
+      'Estado Casa': c.estadoCasa||'', 'Pendientes': c.pendientes||'',
+      __terminada: c.terminada
+    };
+  });
 
   const ws1 = XLSX.utils.json_to_sheet(rows1data, { header: headers1, skipHeader: false });
-  applyStyles(ws1, headers1, rows1data, [12,30,14,32,20,18,18,22,12,14,14,12,10,10,16,44]);
+  applyStyles(ws1, headers1, rows1data, [12,30,14,32,20,20,18,18,18,12,14,14,12,10,10,16,44]);
   XLSX.utils.book_append_sheet(wb, ws1, 'Tabla General');
 
   // ===== HOJA 2: Flujo por Semana =====
   const headers2 = ['Sem','Fecha','Lote','Cliente','Modelo','Banco','Formalizador',
-    'Des. Casa (₡)','Lote GM (₡)','Lote QFI (₡)','Total Casa+AD (₡)','Estado'];
+    'Venta Total (₡)','Desembolso Proy (₡)','Estado'];
   const sorted = [...filteredData].sort((a,b) => new Date(a.fecha)-new Date(b.fecha));
   const weeks = {}; sorted.forEach(c => { const wk=getWeekLabel(c.fecha); if(!weeks[wk])weeks[wk]=[]; weeks[wk].push(c); });
   const rows2 = [];
   for (const [wk, items] of Object.entries(weeks)) {
-    items.forEach(c => rows2.push({
-      'Sem': wk, 'Fecha': c.fecha, 'Lote': c.lote, 'Cliente': c.cliente,
-      'Modelo': c.modeloBase, 'Banco': c.banco, 'Formalizador': c.formalizador,
-      'Des. Casa (₡)': c.montoCasa, 'Lote GM (₡)': (c.loteGM||0), 'Lote QFI (₡)': (c.loteQFI||0),
-      'Total Casa+AD (₡)': c.montoCasa+(c.loteGM||0), 'Estado': c.terminada ? 'TERMINADA' : '',
-      __terminada: c.terminada
-    }));
-    const twc = items.reduce((s,c)=>s+c.montoCasa,0), tad = items.reduce((s,c)=>s+(c.loteGM||0),0);
+    items.forEach(c => {
+      const factorCasa = c.terminada ? 1.0 : 0.3;
+      const desembolsoProy = ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+      const ventaTotal = (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0);
+      
+      rows2.push({
+        'Sem': wk, 'Fecha': c.fecha, 'Lote': c.lote, 'Cliente': c.cliente,
+        'Modelo': c.modeloBase, 'Banco': c.banco, 'Formalizador': c.formalizador,
+        'Venta Total (₡)': ventaTotal,
+        'Desembolso Proy (₡)': desembolsoProy,
+        'Estado': c.terminada ? 'TERMINADA' : '',
+        __terminada: c.terminada
+      });
+    });
+    
+    const twv = items.reduce((s,c)=>s+(c.montoCasa||0)+(c.loteGM||0)+(c.loteQFI||0),0);
+    const twd = items.reduce((s,c)=>s+((c.montoCasa||0)*(c.terminada?1:0.3))+(c.loteQFI||0),0);
+    
     rows2.push({ 'Sem':'','Fecha':'','Lote':'','Cliente': `TOTAL ${wk}`,'Modelo':'','Banco':'',
-      'Formalizador': `${items.length} casos`, 'Des. Casa (₡)': twc, 'Lote GM (₡)': tad,
-      'Lote QFI (₡)': items.reduce((s,c)=>s+(c.loteQFI||0),0),
-      'Total Casa+AD (₡)': twc+tad, 'Estado':'', __isTotal: true });
+      'Formalizador': `${items.length} casos`, 
+      'Venta Total (₡)': twv,
+      'Desembolso Proy (₡)': twd,
+      'Estado':'', __isTotal: true });
     rows2.push({});
   }
   const ws2 = XLSX.utils.json_to_sheet(rows2, { header: headers2, skipHeader: false });
-  applyStyles(ws2, headers2, rows2, [24,12,10,32,14,14,14,18,18,18,22,12]);
+  applyStyles(ws2, headers2, rows2, [24,12,10,32,14,14,14,20,20,12]);
   XLSX.utils.book_append_sheet(wb, ws2, 'Flujo por Semana');
 
   // ===== HOJA 3: Por Formalizador =====
-  const headers3 = ['Formalizador','Lote','Cliente','Modelo','Des. Casa (₡)','Lote GM (₡)','Lote QFI (₡)',
+  const headers3 = ['Formalizador','Lote','Cliente','Modelo','Venta Total (₡)','Desembolso Proy (₡)',
     'Fecha','Banco','Vendedor','Traspaso','Permisos','Pendientes','Estado'];
   const fgroups = {}; filteredData.forEach(c => { if(!fgroups[c.formalizador])fgroups[c.formalizador]=[]; fgroups[c.formalizador].push(c); });
   const rows3 = [];
   for (const [name, items] of Object.entries(fgroups)) {
     items.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
-    items.forEach(c => rows3.push({
-      'Formalizador': name, 'Lote': c.lote, 'Cliente': c.cliente, 'Modelo': c.modelo,
-      'Des. Casa (₡)': c.montoCasa, 'Lote GM (₡)': (c.loteGM||0), 'Lote QFI (₡)': (c.loteQFI||0),
-      'Fecha': c.fecha, 'Banco': c.banco, 'Vendedor': c.vendedor||'',
-      'Traspaso': c.traspaso?'Sí':'Pendiente','Permisos': c.permisos?'Sí':'Pendiente',
-      'Pendientes': c.pendientes||'', 'Estado': c.terminada?'TERMINADA':'', __terminada: c.terminada
-    }));
+    items.forEach(c => {
+      const factorCasa = c.terminada ? 1.0 : 0.3;
+      const desembolsoProy = ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+      const ventaTotal = (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0);
+      
+      rows3.push({
+        'Formalizador': name, 'Lote': c.lote, 'Cliente': c.cliente, 'Modelo': c.modelo,
+        'Venta Total (₡)': ventaTotal,
+        'Desembolso Proy (₡)': desembolsoProy,
+        'Fecha': c.fecha, 'Banco': c.banco, 'Vendedor': c.vendedor||'',
+        'Traspaso': c.traspaso?'Sí':'Pendiente','Permisos': c.permisos?'Sí':'Pendiente',
+        'Pendientes': c.pendientes||'', 'Estado': c.terminada?'TERMINADA':'', __terminada: c.terminada
+      });
+    });
+    
+    const tfv = items.reduce((s,c)=>s+(c.montoCasa||0)+(c.loteGM||0)+(c.loteQFI||0),0);
+    const tfd = items.reduce((s,c)=>s+((c.montoCasa||0)*(c.terminada?1:0.3))+(c.loteQFI||0),0);
+
     rows3.push({ 'Formalizador': `TOTAL ${name}`, 'Lote': `${items.length} casos`,
-      'Des. Casa (₡)': items.reduce((s,c)=>s+c.montoCasa,0), 'Lote GM (₡)': items.reduce((s,c)=>s+(c.loteGM||0),0), __isTotal: true });
+      'Venta Total (₡)': tfv,
+      'Desembolso Proy (₡)': tfd, __isTotal: true });
     rows3.push({});
   }
   const ws3 = XLSX.utils.json_to_sheet(rows3, { header: headers3, skipHeader: false });
-  applyStyles(ws3, headers3, rows3, [16,10,32,28,18,18,18,12,12,12,10,10,44,14]);
+  applyStyles(ws3, headers3, rows3, [16,10,32,28,20,20,12,12,12,10,10,44,14]);
   XLSX.utils.book_append_sheet(wb, ws3, 'Por Formalizador');
 
   // ===== HOJA 4: Resumen =====
   const headers4 = ['Métrica','Valor'];
   const totalT = filteredData.filter(c=>c.terminada).length;
+  const grandVentas = filteredData.reduce((s,c)=>s+(c.montoCasa||0)+(c.loteGM||0)+(c.loteQFI||0),0);
+  const grandDesProy = filteredData.reduce((s,c)=>s+((c.montoCasa||0)*(c.terminada?1:0.3))+(c.loteQFI||0),0);
+
   const rows4 = [
     {'Métrica':'Total de Casas','Valor': filteredData.length},
     {'Métrica':'Casas Terminadas','Valor': totalT},
     {'Métrica':'Casas en Proceso','Valor': filteredData.length - totalT},
     {'Métrica':'% Completado','Valor': Math.round(totalT/filteredData.length*100)+'%'},
     {'Métrica':'','Valor':''},
-    {'Métrica':'Total Desembolso Casas (₡)','Valor': filteredData.reduce((s,c)=>s+c.montoCasa,0)},
-    {'Métrica':'Total Lote GM (₡)','Valor': filteredData.reduce((s,c)=>s+(c.loteGM||0),0)},
-    {'Métrica':'Total Lote QFI (₡)','Valor': filteredData.reduce((s,c)=>s+(c.loteQFI||0),0)},
-    {'Métrica':'Total Casa + Lote GM (₡)','Valor': filteredData.reduce((s,c)=>s+c.montoCasa+(c.loteGM||0),0), __isTotal: true},
+    {'Métrica':'Ingresos Totales por Ventas (₡)','Valor': grandVentas, __isTotal: true},
+    {'Métrica':'Ingresos por Desembolso Proyectado (₡)','Valor': grandDesProy, __isTotal: true},
     {'Métrica':'','Valor':''},
     {'Métrica':'Por Formalizador','Valor':''},
   ];
@@ -3459,12 +3492,21 @@ function getEstadoBadge(estado) {
 
 function desembolsoBlock(c, compact) {
   const cls = compact ? 'desembolso-compact' : 'desembolso-block';
+  const factorCasa = c.terminada ? 1.0 : 0.3;
+  const desembolsoProy = ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
+  const ventaTotal = (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0);
+  
   return `
     <div class="${cls}">
-      <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa</span><span class="desembolso-amount">${fmt(c.montoCasa)}</span></div>
+      <div class="desembolso-row desembolso-casa"><span class="desembolso-label">Casa (${Math.round(factorCasa*100)}%)</span><span class="desembolso-amount">${fmt(c.montoCasa)}</span></div>
       <div class="desembolso-row desembolso-ad"><span class="desembolso-label">Lote GM</span><span class="desembolso-amount">${fmt(c.loteGM||0)}</span></div>
       <div class="desembolso-row desembolso-qfi"><span class="desembolso-label">Lote QFI</span><span class="desembolso-amount">${fmt(c.loteQFI||0)}</span></div>
-      <div class="desembolso-total"><div class="desembolso-total-row"><span>Ingreso para AD</span><strong>${fmt(c.montoCasa + (c.loteGM||0))}</strong></div></div>
+      <div class="desembolso-total">
+        <div class="desembolso-total-row"><span>Venta Total</span><strong>${fmt(ventaTotal)}</strong></div>
+        <div class="desembolso-total-row" style="margin-top:2px;border-top:1px solid rgba(0,0,0,0.05);padding-top:2px">
+          <span title="(${Math.round(factorCasa*100)}% Casa) + Lote QFI">Desembolso Proy.</span><strong>${fmt(desembolsoProy)}</strong>
+        </div>
+      </div>
     </div>`;
 }
 
