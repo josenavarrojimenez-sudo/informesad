@@ -3861,9 +3861,14 @@ window.addEventListener('DOMContentLoaded', function() {
   function updateFab(){
     if(isMob() && window.scrollY > 60){
       fab.style.display = 'flex';
+      // Mantenemos el valor sincronizado si el buscador estaba abierto
+      if(open){
+        inp.value = document.getElementById('headerSearchInput').value;
+      }
     } else {
       fab.style.display = 'none';
-      closeMobileSearch();
+      // NO reseteamos la búsqueda aquí, solo cerramos el FAB visualmente
+      // closeMobileSearch(); 
     }
   }
 
