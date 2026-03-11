@@ -1947,12 +1947,12 @@ function renderKPIs() {
       <div class="kpi-card-sub">${terminadas} terminadas</div>
     </div>
     <div class="kpi-card kpi-highlight">
-      <div class="kpi-card-label">Ingresos Totales por Ventas (Mes)</div>
+      <div class="kpi-card-label">Venta total por formalizar (Mes)</div>
       <div class="kpi-card-value">${fmt(totalDesembolso + totalLotesAD + totalLotesQFI)}</div>
       <div class="kpi-card-sub">Casa + Lote AD + Lote QFI</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-card-label">Ingresos por Desembolso (Mes)</div>
+      <div class="kpi-card-label">Ingreso por Desembolso este mes</div>
       <div class="kpi-card-value" style="color:var(--claude-dark)">${fmt(totalFlujoDesembolso)}</div>
       <div class="kpi-card-sub">Basado en reglas de formalización</div>
     </div>
@@ -1970,11 +1970,11 @@ function renderKPIs() {
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalDesembolso + totalLotesAD + totalLotesQFI)}</div>
-      <div class="header-stat-label">Ingresos Totales (Venta)</div>
+      <div class="header-stat-label">Venta total por formalizar</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value" style="color:#FCD34D">${fmt(totalFlujoDesembolso)}</div>
-      <div class="header-stat-label">Ingresos Desembolso</div>
+      <div class="header-stat-label">Ingreso por Desembolso este mes</div>
     </div>
     <div id="syncStatus" style="font-size:12px;color:#FCD34D;margin-left:20px;display:flex;align-items:center;gap:5px;font-weight:600"></div>
   `;
@@ -2239,18 +2239,27 @@ function renderFlow() {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
     const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
     const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
+    
+    // Regla de flujo por semana
+    const totalFlujoSemana = items.reduce((s, c) => {
+      let monto = c.montoLoteQFI;
+      if (c.estadoCasa === 'Casa terminada') {
+        monto += c.montoCasa;
+      } else {
+        monto += (c.montoCasa * 0.30);
+      }
+      return s + monto;
+    }, 0);
 
     html += `
       <div class="flow-week">
         <div class="flow-week-header">
           <div>
             <div class="flow-week-title">📅 ${wk}</div>
-            <div class="kanban-col-total">Casas + Lotes AD: ${fmt(totalCasa + totalLoteAD)}</div>
+            <div class="kanban-col-total">Venta total por formalizar semana: ${fmt(totalCasa + totalLoteAD + totalLoteQFI)}</div>
+            <div style="font-size:12px;color:var(--success);font-weight:700;margin-top:4px">Ingreso por Desembolso semana: ${fmt(totalFlujoSemana)}</div>
           </div>
           <div class="flow-week-totals">
-            <div class="flow-total-item">Casas: <strong>${fmt(totalCasa)}</strong></div>
-            <div class="flow-total-item">Lotes AD: <strong>${fmt(totalLoteAD)}</strong></div>
-            <div class="flow-total-item">Lotes QFI: <strong>${fmt(totalLoteQFI)}</strong></div>
             <div class="flow-total-item" style="font-weight:700;color:var(--text-primary)">${items.length} casos</div>
           </div>
         </div>
@@ -2313,13 +2322,21 @@ function renderKanban() {
     const totalCasa = items.reduce((s, c) => s + c.montoCasa, 0);
     const totalLoteAD = items.reduce((s, c) => s + c.montoLote, 0);
     const totalLoteQFI = items.reduce((s, c) => s + c.montoLoteQFI, 0);
+
+    const totalFlujoSemana = items.reduce((s, c) => {
+      let monto = c.montoLoteQFI;
+      if (c.estadoCasa === 'Casa terminada') monto += c.montoCasa;
+      else monto += (c.montoCasa * 0.30);
+      return s + monto;
+    }, 0);
+
     html += `
       <div class="kanban-column">
         <div class="kanban-col-header">
           <div>
             <div class="kanban-col-title">${wk}</div>
-            <div class="kanban-col-total">Casas+AD: ${fmt(totalCasa + totalLoteAD)}</div>
-            <div style="font-size:10px;color:var(--text-secondary);margin-top:2px">QFI: ${fmt(totalLoteQFI)}</div>
+            <div class="kanban-col-total" style="font-size:10px">Venta total semana: ${fmt(totalCasa + totalLoteAD + totalLoteQFI)}</div>
+            <div style="font-size:10px;color:var(--success);margin-top:2px;font-weight:700">Desembolso semana: ${fmt(totalFlujoSemana)}</div>
           </div>
           <span class="kanban-col-count">${items.length}</span>
         </div>
