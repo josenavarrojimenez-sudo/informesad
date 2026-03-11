@@ -2525,10 +2525,10 @@ function renderKPIs() {
   const total = filteredData.length;
   const terminadas = filteredData.filter(c => c.terminada).length;
   
-  // 1) Ingreso total por venta = Casa + Lote QFI + Lote GM
+  // 1) Venta total por formalizar = Casa + Lote QFI + Lote GM
   const totalVentas = filteredData.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
   
-  // 2) Flujo de Desembolso proyectado = (30% o 100% Casa) + Lote QFI
+  // 2) Ingreso por Desembolso este mes = (30% o 100% Casa) + Lote QFI
   const totalDesembolsoProyectado = filteredData.reduce((s, c) => {
     const factorCasa = c.terminada ? 1.0 : 0.3;
     return s + ((c.montoCasa||0) * factorCasa) + (c.loteQFI||0);
@@ -2536,12 +2536,12 @@ function renderKPIs() {
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi-card kpi-highlight">
-      <div class="kpi-card-label">Ingresos Totales por Ventas</div>
+      <div class="kpi-card-label">Venta total por formalizar (Mes)</div>
       <div class="kpi-card-value">${fmt(totalVentas)}</div>
       <div class="kpi-card-sub">Casa + Lote QFI + Lote GM</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-card-label">Ingresos por Desembolso</div>
+      <div class="kpi-card-label">Ingreso por Desembolso este mes</div>
       <div class="kpi-card-value" style="color:var(--claude-accent)">${fmt(totalDesembolsoProyectado)}</div>
       <div class="kpi-card-sub">30%/100% Casa + Lote QFI</div>
     </div>
@@ -2568,11 +2568,11 @@ function renderKPIs() {
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalVentas)}</div>
-      <div class="header-stat-label">VENTAS TOTALES</div>
+      <div class="header-stat-label">Venta total por formalizar</div>
     </div>
     <div class="header-stat">
       <div class="header-stat-value">${fmt(totalDesembolsoProyectado)}</div>
-      <div class="header-stat-label">DESEMBOLSO PROY.</div>
+      <div class="header-stat-label">Ingreso por Desembolso este mes</div>
     </div>
   `;
 }
@@ -2760,18 +2760,18 @@ function renderFlow() {
 
   let html = '<div class="flow-grid">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
-    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+    const totalVentasSemana = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProySemana = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
 
     html += `
       <div class="flow-week">
         <div class="flow-week-header">
           <div>
             <div class="flow-week-title">📅 ${wk}</div>
-            <div class="kanban-col-total">Ventas Totales: ${fmt(totalVentas)}</div>
+            <div class="kanban-col-total">Venta total por formalizar semana: ${fmt(totalVentasSemana)}</div>
+            <div style="font-size:12px;color:var(--claude-accent);font-weight:700;margin-top:4px">Ingreso por Desembolso semana: ${fmt(totalDesProySemana)}</div>
           </div>
           <div class="flow-week-totals">
-            <div class="flow-total-item">Desembolso Proy: <strong style="color:var(--claude-accent)">${fmt(totalDesProy)}</strong></div>
             <div class="flow-total-item" style="font-weight:700;color:var(--text-primary)">${items.length} casos</div>
           </div>
         </div>
@@ -2827,16 +2827,16 @@ function renderKanban() {
 
   let html = '<div class="kanban-container">';
   for (const [wk, items] of Object.entries(weeks)) {
-    const totalVentas = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
-    const totalDesProy = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
+    const totalVentasSemana = items.reduce((s, c) => s + (c.montoCasa||0) + (c.loteGM||0) + (c.loteQFI||0), 0);
+    const totalDesProySemana = items.reduce((s, c) => s + ((c.montoCasa||0) * (c.terminada ? 1.0 : 0.3)) + (c.loteQFI||0), 0);
     
     html += `
       <div class="kanban-column">
         <div class="kanban-col-header">
           <div>
             <div class="kanban-col-title">${wk}</div>
-            <div class="kanban-col-total" style="font-weight:700">Ventas: ${fmt(totalVentas)}</div>
-            <div style="font-size:10px;color:var(--claude-accent);margin-top:2px">Desembolso: ${fmt(totalDesProy)}</div>
+            <div class="kanban-col-total" style="font-weight:700">Venta semana: ${fmt(totalVentasSemana)}</div>
+            <div style="font-size:10px;color:var(--claude-accent);margin-top:2px;font-weight:700">Desembolso semana: ${fmt(totalDesProySemana)}</div>
           </div>
           <span class="kanban-col-count">${items.length}</span>
         </div>
