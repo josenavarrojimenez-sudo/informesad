@@ -2672,10 +2672,7 @@ function deleteCasa(index) {
       // 1. Eliminar del array local
       casas.splice(index, 1);
       
-      // 2. Guardar el estado actual (sin el registro)
-      saveEdits();
-      
-      // 3. Forzar actualización inmediata en la nube (POST)
+      // 2. Mapear el estado actualizado para enviarlo
       const edits = casas.map(c => ({
         lote: c.lote, cliente: c.cliente, fecha: c.fecha,
         modelo: c.modelo, modeloBase: c.modeloBase,
@@ -2687,12 +2684,19 @@ function deleteCasa(index) {
         capacidad: c.capacidad, precioTotal: c.precioTotal, areaLote: c.areaLote
       }));
 
+      // 3. Persistencia en localStorage (opcional pero recomendado)
+      localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
+
+      // 4. Sincronización con la nube (POST)
+      // Usamos el cuerpo de la petición para enviar la lista COMPLETA
       fetch(SYNC_URL_INFORME, {
         method: 'POST',
-        mode: 'no-cors',
+        // Cambiamos a 'cors' para asegurar que el navegador espere la confirmación si es posible
+        mode: 'no-cors', 
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits })
       }).then(() => {
+        // 5. Solo después de enviar el comando de guardado, refrescamos la vista
         applyFilters();
         showToast('🗑️ Caso eliminado correctamente');
       });
