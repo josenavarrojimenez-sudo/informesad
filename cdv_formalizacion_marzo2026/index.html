@@ -1927,6 +1927,19 @@ function renderKPIs() {
   const totalLotesAD = filteredData.reduce((s, c) => s + c.montoLote, 0);
   const totalLotesQFI = filteredData.reduce((s, c) => s + c.montoLoteQFI, 0);
 
+  // Nueva regla de flujo de desembolso:
+  // 1) Casa terminada: 100% Casa + Lote QFI
+  // 2) Casa no terminada: 30% Casa + Lote QFI
+  const totalFlujoDesembolso = filteredData.reduce((s, c) => {
+    let monto = c.montoLoteQFI; // Siempre incluye Lote QFI según instrucción (punto 2)
+    if (c.estadoCasa === 'Casa terminada') {
+      monto += c.montoCasa; // 100%
+    } else {
+      monto += (c.montoCasa * 0.30); // 30%
+    }
+    return s + monto;
+  }, 0);
+
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi-card">
       <div class="kpi-card-label">Total Casas</div>
@@ -1934,14 +1947,14 @@ function renderKPIs() {
       <div class="kpi-card-sub">${terminadas} terminadas</div>
     </div>
     <div class="kpi-card kpi-highlight">
-      <div class="kpi-card-label">Casas + Lotes AD</div>
-      <div class="kpi-card-value">${fmt(totalDesembolso + totalLotesAD)}</div>
-      <div class="kpi-card-sub">Casas: ${fmt(totalDesembolso)} · Lotes AD: ${fmt(totalLotesAD)}</div>
+      <div class="kpi-card-label">Ingresos Totales por Ventas (Mes)</div>
+      <div class="kpi-card-value">${fmt(totalDesembolso + totalLotesAD + totalLotesQFI)}</div>
+      <div class="kpi-card-sub">Casa + Lote AD + Lote QFI</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-card-label">Total Lotes QFI</div>
-      <div class="kpi-card-value">${fmt(totalLotesQFI)}</div>
-      <div class="kpi-card-sub">Monto acumulado</div>
+      <div class="kpi-card-label">Ingresos por Desembolso (Mes)</div>
+      <div class="kpi-card-value" style="color:var(--claude-dark)">${fmt(totalFlujoDesembolso)}</div>
+      <div class="kpi-card-sub">Basado en reglas de formalización</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-card-label">Casas Terminadas</div>
@@ -1956,16 +1969,12 @@ function renderKPIs() {
       <div class="header-stat-label">Casas</div>
     </div>
     <div class="header-stat">
-      <div class="header-stat-value">${terminadas}</div>
-      <div class="header-stat-label">Terminadas</div>
+      <div class="header-stat-value">${fmt(totalDesembolso + totalLotesAD + totalLotesQFI)}</div>
+      <div class="header-stat-label">Ingresos Totales (Venta)</div>
     </div>
     <div class="header-stat">
-      <div class="header-stat-value">${fmt(totalDesembolso + totalLotesAD)}</div>
-      <div class="header-stat-label">Casas + Lotes AD</div>
-    </div>
-    <div class="header-stat">
-      <div class="header-stat-value">${fmt(totalLotesQFI)}</div>
-      <div class="header-stat-label">Lotes QFI</div>
+      <div class="header-stat-value" style="color:#FCD34D">${fmt(totalFlujoDesembolso)}</div>
+      <div class="header-stat-label">Ingresos Desembolso</div>
     </div>
     <div id="syncStatus" style="font-size:12px;color:#FCD34D;margin-left:20px;display:flex;align-items:center;gap:5px;font-weight:600"></div>
   `;
