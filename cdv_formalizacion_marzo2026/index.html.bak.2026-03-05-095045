@@ -1,4 +1,3 @@
-<!-- cachebust: 2026-03-05T17:40Z -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1262,526 +1261,196 @@ tbody td {
 </div>
 
 <script>
-
-
-
-// --- CEREBRO INVISIBLE (Sync) ---
-let SYNC_URL = 'https://script.google.com/macros/s/AKfycbw6WJK2KZr79e6AjfbN4BCX1n1JSsymuvAiniFO6nE_fnMD7d5D5gtGoIx53Prs44vwhA/exec';
-const SYNC_TOKEN = "Adelante2025";
-const STORAGE_KEY = 'cdv_formalizacion_edits';
-
-async function syncToCloud() {
-  if (!SYNC_URL) return;
-  showSyncStatus('Sincronizando...', '⏳');
-  try {
-    const edits = casas.map(c => ({
-      lote: c.lote, cliente: c.cliente, fecha: c.fecha,
-      estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
-      montoLote: c.montoLote, montoLoteQFI: c.montoLoteQFI,
-      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
-      pendientes: c.pendientes, capacidad: c.capacidad
-    }));
-    
-    await fetch(SYNC_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ token: SYNC_TOKEN, casas: edits })
-    });
-    
-    showSyncStatus('Sincronizado', '✅');
-    setTimeout(() => showSyncStatus('', ''), 3000);
-  } catch (e) {
-    console.error('Error sync:', e);
-    showSyncStatus('Error sync', '❌');
-  }
-}
-
-async function syncFromCloud() {
-  if (!SYNC_URL) return;
-  showSyncStatus('Cargando...', '⏳');
-  try {
-    const response = await fetch(SYNC_URL);
-    const result = await response.json();
-    if (result.status === 'ok' && result.casas && result.casas.length > 0) {
-      applyEdits(result.casas);
-      renderAll();
-      showSyncStatus('Datos cargados', '✅');
-    } else {
-      showSyncStatus('Sincronizado', '✅');
-    }
-    setTimeout(() => showSyncStatus('', ''), 3000);
-  } catch (e) {
-    console.error('Error load:', e);
-    showSyncStatus('Modo Local', '🏠');
-  }
-}
-
-function applyEdits(edits) {
-  if (!edits || !Array.isArray(edits)) return;
-  edits.forEach(edit => {
-    const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
-    if (!casa) return;
-    if (edit.fecha) casa.fecha = edit.fecha;
-    if (typeof edit.montoCasa === 'number') casa.montoCasa = edit.montoCasa;
-    if (typeof edit.montoLote === 'number') casa.montoLote = edit.montoLote;
-    if (typeof edit.montoLoteQFI === 'number') casa.montoLoteQFI = edit.montoLoteQFI;
-    if (typeof edit.banco === 'string') casa.banco = edit.banco;
-    if (typeof edit.traspaso === 'boolean') casa.traspaso = edit.traspaso;
-    if (typeof edit.permisos === 'boolean') casa.permisos = edit.permisos;
-    if (typeof edit.pendientes === 'string') casa.pendientes = edit.pendientes;
-    if (typeof edit.capacidad === 'string') casa.capacidad = edit.capacidad;
-    if (typeof edit.estadoCasa === 'string') {
-      casa.estadoCasa = edit.estadoCasa;
-      casa.terminada = (edit.estadoCasa === 'Casa terminada');
-    }
-  });
-}
-
-function showSyncStatus(text, icon) {
-  const el = document.getElementById('syncStatus');
-  if (el) el.innerHTML = (icon ? icon + ' ' : '') + text;
-}
-
 const casas = [
+  // HAZEL
   {
-    "lote": "M.23",
-    "modelo": "Stella A 2D 2.5B WC L(PA)",
-    "modeloBase": "Stella",
-    "cliente": "Hernan Nuñez Fioravantti",
-    "montoCasa": 17000000,
-    "montoLote": 10026955,
-    "montoLoteQFI": 7183827,
-    "fecha": "2026-03-23",
-    "banco": "BCR",
-    "formalizador": "Hazel",
-    "vendedor": "Olman",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅",
-    "pendientes": "Avalúo realizado a espera de que llegue, en proceso trámite para liberación de bono vivienda, para proceder con la venta de la casa y con esto el cliente tenga capacidad.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "M.23", modelo: "Stella A 2D 2.5B WC L(PA)", modeloBase: "Stella",
+    cliente: "Hernan Nuñez Fioravantti", montoCasa: 17000000, montoLote: 10026955, montoLoteQFI: 7183827,
+    fecha: "2026-03-23", banco: "BCR", formalizador: "Hazel", vendedor: "Olman",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Avalúo solicitado, en proceso pago de bono vivienda, para proceder con la venta de la casa y con esto el cliente tenga capacidad.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "K.14",
-    "modelo": "Neo Tripoli A 3D 2B WC OF",
-    "modeloBase": "Neo Tripoli",
-    "cliente": "Jean Monge Bonilla",
-    "montoCasa": 14000000,
-    "montoLote": 8926156,
-    "montoLoteQFI": 7844306.4,
-    "fecha": "2026-03-16",
-    "banco": "Coopeande",
-    "formalizador": "Hazel",
-    "vendedor": "Irving",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Cliente con capacidad para ¢80.0MM, la diferencia hay que financiarla, cliente ya tiene préstamo por ¢6.0MM",
-    "pendientes": "listo avalúo en proceso para ingresar a analisis",
-    "terminada": false,
-    "estadoCasa": "Reunion de inicio"
+    lote: "K.14", modelo: "Neo Tripoli A 3D 2B WC OF", modeloBase: "Neo Tripoli",
+    cliente: "Jean Monge Bonilla", montoCasa: 14000000, montoLote: 8926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-16", banco: "Coopeande", formalizador: "Hazel", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "Cliente con capacidad para ¢80.0MM, la diferencia hay que financiarla, cliente ya tiene préstamo por ¢6.0MM",
+    pendientes: "Avalúo solicitado, a la espera de que Victor confirme que pasó la revisión legal.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "D.21",
-    "modelo": "Ikaria A 2D 2B WC",
-    "modeloBase": "Ikaria",
-    "cliente": "Mauricio Valverde Céspedes",
-    "montoCasa": 73800000,
-    "montoLote": 10605988,
-    "montoLoteQFI": 6836407.2,
-    "fecha": "2026-03-23",
-    "banco": "BN",
-    "formalizador": "Hazel",
-    "vendedor": "Hannia",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "A espera de que cancele deuda para tener capacidad de pago",
-    "pendientes": "cliente vendio lote a espera del segundo pago para abonar a la deuda",
-    "terminada": true,
-    "estadoCasa": "Casa terminada"
+    lote: "D.21", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
+    cliente: "Mauricio Valverde Céspedes", montoCasa: 73800000, montoLote: 10605988, montoLoteQFI: 6836407.2,
+    fecha: "2026-03-23", banco: "BN", formalizador: "Hazel", vendedor: "Hannia",
+    traspaso: true, permisos: true, capacidad: "A espera de que cancele deuda para tener capacidad de pago",
+    pendientes: "Documentación actualizada.",
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
-    "lote": "L.53",
-    "modelo": "Zante T 4D 2.5B WC (PA)",
-    "modeloBase": "Zante",
-    "cliente": "Karen Vizcaino Vargas",
-    "montoCasa": 22000000,
-    "montoLote": 9226277.5,
-    "montoLoteQFI": 7664233.5,
-    "fecha": "2026-03-28",
-    "banco": "Coopenae",
-    "formalizador": "Hazel",
-    "vendedor": "Randall",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Cliente hoy pasó parte de la información, se está revisando.",
-    "pendientes": "Caso enviado a Coopenae, en revisión, cliente independiente no factura y declara en cero, se vio el caso con Coopenae. Caso complicado, estados no reflejan los ingresos.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "L.53", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Karen Vizcaino Vargas", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-28", banco: "Coopenae", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Cliente hoy pasó parte de la información, se está revisando.",
+    pendientes: "Revisándose información, cliente independiente no factura y declara en cero, se vio el caso con Coopenae. Caso complicado, estados no reflejan los ingresos.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "M.07",
-    "modelo": "Santorini T 3D 2.5B WC OF F30",
-    "modeloBase": "Santorini",
-    "cliente": "Andres Ureña Abarca",
-    "montoCasa": 24000000,
-    "montoLote": 8563362,
-    "montoLoteQFI": 9261982.8,
-    "fecha": "2026-03-23",
-    "banco": "Mucap",
-    "formalizador": "Hazel",
-    "vendedor": "Xinia",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "A espera de información del cliente",
-    "pendientes": "Caso con Mucap, preanalisis de la informacion en proceso para definir que documentos se deben apostillar, a espera de desgloce de gastos por parte del cliente para el CPA",
-    "terminada": false,
-    "estadoCasa": "Reunion de inicio"
+    lote: "M.07", modelo: "Santorini T 3D 2.5B WC OF F30", modeloBase: "Santorini",
+    cliente: "Andres Ureña Abarca", montoCasa: 24000000, montoLote: 8563362, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-23", banco: "Mucap", formalizador: "Hazel", vendedor: "Xinia",
+    traspaso: true, permisos: true, capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "K.26",
-    "modelo": "Tebas A 3D 2B WC (18)",
-    "modeloBase": "Tebas",
-    "cliente": "Juan Carlos Peña Ramirez",
-    "montoCasa": 16000000,
-    "montoLote": 6926156,
-    "montoLoteQFI": 7844306.4,
-    "fecha": "2026-03-23",
-    "banco": "BN,BCR,Mucap,Promerica,BP, Coopeande, Lafise",
-    "formalizador": "Hazel",
-    "vendedor": "Daniela",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Cliente transportista independiente",
-    "pendientes": "",
-    "terminada": false,
-    "estadoCasa": "Reunion de inicio"
+    lote: "K.26", modelo: "Tebas A 3D 2B WC (18)", modeloBase: "Tebas",
+    cliente: "Juan Carlos Peña Ramirez", montoCasa: 16000000, montoLote: 6926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-23", banco: "BP", formalizador: "Hazel", vendedor: "Daniela",
+    traspaso: true, permisos: false, capacidad: "Cliente transportista independiente",
+    pendientes: "A espera de información del cliente, ya envió una parte, se habló con el contador y dice está preparando la información. En revisión de boleta electrónica en CFIA.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "F.18",
-    "modelo": "Ikaria A 2D 2B WC",
-    "modeloBase": "Ikaria",
-    "cliente": "Maria Auxiliadora Araya Céspedes",
-    "montoCasa": 20000000,
-    "montoLote": 7310057,
-    "montoLoteQFI": 7613965.8,
-    "fecha": "2026-03-23",
-    "banco": "BN, Coopeande, BP, Mucap, BCR",
-    "formalizador": "Hazel",
-    "vendedor": "Randall",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Maestra MEP, quiere el trámite con Caja de Ande, con otras entidades posiblemente sin capacidad",
-    "pendientes": "enviando caso a preanalisis, cliente trabaja en sector público, cliente con deudas sin capacidad",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "F.18", modelo: "Ikaria A 2D 2B WC", modeloBase: "Ikaria",
+    cliente: "Maria Auxiliadora Araya Céspedes", montoCasa: 14000000, montoLote: 7310057, montoLoteQFI: 7613965.8,
+    fecha: "2026-03-23", banco: "Caja de Ande", formalizador: "Hazel", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Maestra MEP, quiere el trámite con Caja de Ande, con otras entidades posiblemente sin capacidad",
+    pendientes: "Cliente quiere esperar condiciones de Expo, no ha enviado información.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "K.25",
-    "modelo": "Tebas A 3D 2B WC",
-    "modeloBase": "Tebas",
-    "cliente": "Josue David Montoya Chavarría",
-    "montoCasa": 36000000,
-    "montoLote": 8839195,
-    "montoLoteQFI": 9261982.8,
-    "fecha": "2026-03-23",
-    "banco": "BN,BCR,Mucap,Promerica,BP, Coopeande, Lafise",
-    "formalizador": "Hazel",
-    "vendedor": "Mery",
-    "traspaso": true,
-    "permisos": false,
-    "capacidad": "✅ Asalariado, de acuerdo con las colillas y SUGEF sí tiene capacidad de pago",
-    "pendientes": "cliente analizando si va con BP o BN, define el 11 de enero que tiene reunión con el asesor financiero y legal",
-    "terminada": true,
-    "estadoCasa": "Casa terminada"
+    lote: "K.25", modelo: "Tebas A 3D 2B WC", modeloBase: "Tebas",
+    cliente: "Josue David Montoya Chavarría", montoCasa: 36000000, montoLote: 8839195, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-23", banco: "Por definir", formalizador: "Hazel", vendedor: "Mery",
+    traspaso: true, permisos: true, capacidad: "✅ Asalariado, de acuerdo con las colillas y SUGEF sí tiene capacidad de pago",
+    pendientes: "Constancia y SICERE del cliente.",
+    terminada: true, estadoCasa: "Casa terminada"
+  },
+  // WILLEM
+  {
+    lote: "M.05", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Silvia Salazar Sanchez", montoCasa: 91000000, montoLote: 6561241, montoLoteQFI: 9263255.4,
+    fecha: "2026-03-19", banco: "BN", formalizador: "Willem", vendedor: "Marco",
+    traspaso: true, permisos: true, capacidad: "Pagar y cerrar Promerica ¢8.000.000",
+    pendientes: "Finalizado ✅",
+    terminada: true, estadoCasa: "Casa terminada"
   },
   {
-    "lote": "M.05",
-    "modelo": "Santorini A 3D 2.5B WC",
-    "modeloBase": "Santorini",
-    "cliente": "Silvia Salazar Sanchez",
-    "montoCasa": 91000000,
-    "montoLote": 6561241,
-    "montoLoteQFI": 9263255.4,
-    "fecha": "2026-03-31",
-    "banco": "BN",
-    "formalizador": "Willem",
-    "vendedor": "Marco",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Pagar y cerrar Promerica ¢8.000.000",
-    "pendientes": "Cliente ocupa pagar deudas, dinero proviene de venta de casa, ya esta en etapa final con BAC",
-    "terminada": true,
-    "estadoCasa": "Casa terminada"
+    lote: "L.32", modelo: "Zante A 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Mario Alexander Mena Barboza", montoCasa: 22000000, montoLote: 10839195, montoLoteQFI: 7896483,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: true, permisos: true, capacidad: "Puede variar dependiendo banco",
+    pendientes: "Esperar que cliente se decida de banco, no ha querido firmar contratos para pedir avalúo. Hoy ya salió permiso, vamos a pedir presupuesto.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "L.32",
-    "modelo": "Zante A 4D 2.5B WC (PA)",
-    "modeloBase": "Zante",
-    "cliente": "Mario Alexander Mena Barboza",
-    "montoCasa": 22000000,
-    "montoLote": 10839195,
-    "montoLoteQFI": 7896483,
-    "fecha": "2026-03-31",
-    "banco": "BN",
-    "formalizador": "Willem",
-    "vendedor": "Daniela",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Puede variar dependiendo banco",
-    "pendientes": "Cliente valorando otra opcion de casa en Curri",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "I.13", modelo: "Zante T 2D 3.5B WC OF", modeloBase: "Zante",
+    cliente: "Cristian Hidalgo Avila", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-04-10", banco: "BN", formalizador: "Willem", vendedor: "Hannia",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Contrato laboral indefinido plazo, se lo dan hasta 1 abril.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "I.13",
-    "modelo": "Zante T 2D 3.5B WC OF",
-    "modeloBase": "Zante",
-    "cliente": "Cristian Hidalgo Avila",
-    "montoCasa": 22000000,
-    "montoLote": 9226277.5,
-    "montoLoteQFI": 7664233.5,
-    "fecha": "2026-04-10",
-    "banco": "BN",
-    "formalizador": "Willem",
-    "vendedor": "Hannia",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅",
-    "pendientes": "Contrato laboral indefinido plazo, se lo dan hasta 1 abril.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "M.16", modelo: "Stellita A 2D 1.5B WC", modeloBase: "Stellita",
+    cliente: "Daniel Quiros Soto", montoCasa: 14000000, montoLote: 8605988, montoLoteQFI: 6836407.2,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Willem", vendedor: "Olman",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Avalúo pendiente (cambio modelo), hoy en cambio de láminas, espero miércoles ya poder pedir avalúo.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "M.16",
-    "modelo": "Stellita A 2D 1.5B WC",
-    "modeloBase": "Stellita",
-    "cliente": "Daniel Quiros Soto",
-    "montoCasa": 14000000,
-    "montoLote": 8605988,
-    "montoLoteQFI": 6836407.2,
-    "fecha": "2026-03-17",
-    "banco": "BN",
-    "formalizador": "Willem",
-    "vendedor": "Olman",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅",
-    "pendientes": "En espera de informe de avalúo, se envio jueves y perito hoy lo esta trabajando",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "L.31", modelo: "Stella A", modeloBase: "Stella",
+    cliente: "Elizabeth Cano", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-31", banco: "Promerica", formalizador: "Willem", vendedor: "Mery",
+    traspaso: true, permisos: false, capacidad: "✅",
+    pendientes: "Permisos en CFIA, cliente esperando tasas Expo.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "L.31",
-    "modelo": "Stella A",
-    "modeloBase": "Stella",
-    "cliente": "Elizabeth Cano",
-    "montoCasa": 22000000,
-    "montoLote": 9226277.5,
-    "montoLoteQFI": 7664233.5,
-    "fecha": "2026-03-24",
-    "banco": "Promerica",
-    "formalizador": "Willem",
-    "vendedor": "Mery",
-    "traspaso": true,
-    "permisos": false,
-    "capacidad": "✅",
-    "pendientes": "Hoy soliicto avaluo ",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "K.19", modelo: "Stella A", modeloBase: "Stella",
+    cliente: "Valeria Acosta", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-03-31", banco: "BN", formalizador: "Willem", vendedor: "Daniela",
+    traspaso: false, permisos: false, capacidad: "Clienta acaba de renunciar al trabajo, entra al nuevo el 16 de este mes. Gana ¢1.400.000 brutos, tiene deuda ¢120.000, se le vendió casa de ¢92.000.000, se ve ajustado. Esperar información para confirmar.",
+    pendientes: "Traspaso hoy se solicita, permisos por tramitar, espera información laboral.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
+  },
+  // LUIS CARLOS
+  {
+    lote: "L.33", modelo: "Tebas T 3D 2D (17)", modeloBase: "Tebas",
+    cliente: "Marcelly Alvarado Chaves", montoCasa: 14000000, montoLote: 8839195, montoLoteQFI: 7896483,
+    fecha: "2026-03-06", banco: "Caja de Ande", formalizador: "Luis Carlos", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "✅ Positiva",
+    pendientes: "No hay pendientes.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "K.19",
-    "modelo": "Stella A",
-    "modeloBase": "Stella",
-    "cliente": "Valeria Acosta",
-    "montoCasa": 22000000,
-    "montoLote": 9226277.5,
-    "montoLoteQFI": 7664233.5,
-    "fecha": "2026-06-31",
-    "banco": "BN",
-    "formalizador": "Willem",
-    "vendedor": "Daniela",
-    "traspaso": false,
-    "permisos": false,
-    "capacidad": "Clienta acaba de renunciar al trabajo, entra al nuevo el 16 de este mes. Gana ¢1.400.000 brutos, tiene deuda ¢120.000, se le vendió casa de ¢92.000.000, se ve ajustado. Esperar información para confirmar.",
-    "pendientes": "Traspaso hoy se solicita, permisos por tramitar, espera información laboral.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "K.18", modelo: "Ikaria T 2D 2B", modeloBase: "Ikaria",
+    cliente: "Rafael Antonio Porras Castro", montoCasa: 14000000, montoLote: 6926156, montoLoteQFI: 7844306.4,
+    fecha: "2026-03-12", banco: "BN", formalizador: "Luis Carlos", vendedor: "Xinia",
+    traspaso: true, permisos: true, capacidad: "✅ Positiva BN",
+    pendientes: "Valores de avalúo pendientes.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "L.33",
-    "modelo": "Tebas T 3D 2D (17)",
-    "modeloBase": "Tebas",
-    "cliente": "Marcelly Alvarado Chaves",
-    "montoCasa": 14000000,
-    "montoLote": 8839195,
-    "montoLoteQFI": 7896483,
-    "fecha": "2026-03-12",
-    "banco": "Caja de Ande",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Randall",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅ Positiva",
-    "pendientes": "No hay pendientes.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "I.30", modelo: "Stella T 2D 2.5B WC L", modeloBase: "Stella",
+    cliente: "Isabel Jara Marín", montoCasa: 22000000, montoLote: 9560335, montoLoteQFI: 7463799,
+    fecha: "2026-03-21", banco: "BN", formalizador: "Luis Carlos", vendedor: "Hannia",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Contratos, formularios. Cliente BN, suegra de Joser (perito asignado del BN), quiere esperar Expo.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "K.18",
-    "modelo": "Ikaria T 2D 2B",
-    "modeloBase": "Ikaria",
-    "cliente": "Rafael Antonio Porras Castro",
-    "montoCasa": 14000000,
-    "montoLote": 6926156,
-    "montoLoteQFI": 7844306.4,
-    "fecha": "2026-03-12",
-    "banco": "BN",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Xinia",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅ Positiva BN",
-    "pendientes": "Valores de avalúo pendientes.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "I.36", modelo: "Zante T 4D 2.5B WC (PA)", modeloBase: "Zante",
+    cliente: "Geiner Ulises Naranjo Romero", montoCasa: 20000000, montoLote: 9019480, montoLoteQFI: 7788312,
+    fecha: "2026-03-27", banco: "BCR/Mucap", formalizador: "Luis Carlos", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "Positiva",
+    pendientes: "Actualizar información, contratos, formularios. Cliente quiere esperar Expo.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "I.30",
-    "modelo": "Stella T 2D 2.5B WC L",
-    "modeloBase": "Stella",
-    "cliente": "Isabel Jara Marín",
-    "montoCasa": 22000000,
-    "montoLote": 9560335,
-    "montoLoteQFI": 7463799,
-    "fecha": "2026-03-21",
-    "banco": "BN",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Hannia",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅",
-    "pendientes": "Contratos, formularios. Cliente BN, suegra de Joser (perito asignado del BN), quiere esperar Expo.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "L.01", modelo: "Stella A 3D 3.5B WC (PA)", modeloBase: "Stella",
+    cliente: "Juan Daniel Arias Pérez", montoCasa: 22000000, montoLote: 9226277.5, montoLoteQFI: 7664233.5,
+    fecha: "2026-04-14", banco: "BN/BCR/BP", formalizador: "Luis Carlos", vendedor: "Daniela",
+    traspaso: false, permisos: false, capacidad: "Trabaja para empresa del papá, debe aumentar salario y reportar a la CCSS",
+    pendientes: "Sin folios ni catastros. Constancia, contratos, formularios.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "I.36",
-    "modelo": "Zante T 4D 2.5B WC (PA)",
-    "modeloBase": "Zante",
-    "cliente": "Geiner Ulises Naranjo Romero",
-    "montoCasa": 20000000,
-    "montoLote": 9019480,
-    "montoLoteQFI": 7788312,
-    "fecha": "2026-03-27",
-    "banco": "BCR/Mucap",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Randall",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "Positiva",
-    "pendientes": "Actualizar información, contratos, formularios. Cliente quiere esperar Expo.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "I.39", modelo: "Santorini T", modeloBase: "Santorini",
+    cliente: "Lohr Campbell Arguello", montoCasa: 24000000, montoLote: 8563362, montoLoteQFI: 9261982.8,
+    fecha: "2026-03-27", banco: "BN", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: true, capacidad: "No se ha realizado",
+    pendientes: "Recopilando información.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "L.01",
-    "modelo": "Stella A 3D 3.5B WC (PA)",
-    "modeloBase": "Stella",
-    "cliente": "Juan Daniel Arias Pérez",
-    "montoCasa": 22000000,
-    "montoLote": 9226277.5,
-    "montoLoteQFI": 7664233.5,
-    "fecha": "2026-04-14",
-    "banco": "BN/BCR/BP",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Daniela",
-    "traspaso": false,
-    "permisos": false,
-    "capacidad": "Trabaja para empresa del papá, debe aumentar salario y reportar a la CCSS",
-    "pendientes": "Sin folios ni catastros. Constancia, contratos, formularios.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
+    lote: "I.40", modelo: "Santorini A 3D 2.5B WC", modeloBase: "Santorini",
+    cliente: "Carolina Ureña Jimenez", montoCasa: 25000000, montoLote: 9563362, montoLoteQFI: 7964233.5,
+    fecha: "2026-03-28", banco: "Mucap", formalizador: "Luis Carlos", vendedor: "Irving",
+    traspaso: true, permisos: false, capacidad: "A espera de información del cliente",
+    pendientes: "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
+  },
+  // ESTEBAN
+  {
+    lote: "K.05", modelo: "Santorini A", modeloBase: "Santorini",
+    cliente: "Joaquin Marin", montoCasa: 22000000, montoLote: 8618508, montoLoteQFI: 9228895.2,
+    fecha: "2026-03-12", banco: "Promerica", formalizador: "Esteban", vendedor: "Randall",
+    traspaso: true, permisos: true, capacidad: "✅",
+    pendientes: "Caso en aprobación, avalúo pendiente, contra avalúo se pasa opción de compra, para cuadrar el número, en dólares.",
+    terminada: false, estadoCasa: "Sin reunion de inicio"
   },
   {
-    "lote": "I.39",
-    "modelo": "Santorini T",
-    "modeloBase": "Santorini",
-    "cliente": "Lohr Campbell Arguello",
-    "montoCasa": 24000000,
-    "montoLote": 8563362,
-    "montoLoteQFI": 9261982.8,
-    "fecha": "2026-03-27",
-    "banco": "BN",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Irving",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "No se ha realizado",
-    "pendientes": "Recopilando información.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
-  },
-  {
-    "lote": "I.40",
-    "modelo": "Santorini A 3D 2.5B WC",
-    "modeloBase": "Santorini",
-    "cliente": "Carolina Ureña Jimenez",
-    "montoCasa": 25000000,
-    "montoLote": 9563362,
-    "montoLoteQFI": 7964233.5,
-    "fecha": "2026-03-28",
-    "banco": "Mucap",
-    "formalizador": "Luis Carlos",
-    "vendedor": "Irving",
-    "traspaso": true,
-    "permisos": false,
-    "capacidad": "A espera de información del cliente",
-    "pendientes": "Caso con Mucap, cliente con estados de cuenta pendientes, CPA y carta de referencia.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
-  },
-  {
-    "lote": "K.05",
-    "modelo": "Santorini A",
-    "modeloBase": "Santorini",
-    "cliente": "Joaquin Marin",
-    "montoCasa": 22000000,
-    "montoLote": 8618508,
-    "montoLoteQFI": 9228895.2,
-    "fecha": "2026-03-12",
-    "banco": "Promerica",
-    "formalizador": "Esteban",
-    "vendedor": "Randall",
-    "traspaso": true,
-    "permisos": true,
-    "capacidad": "✅",
-    "pendientes": "Caso en aprobación, avalúo pendiente, contra avalúo se pasa opción de compra, para cuadrar el número, en dólares.",
-    "terminada": false,
-    "estadoCasa": "Sin reunion de inicio"
-  },
-  {
-    "lote": "1-01 Barani",
-    "modelo": "Santorini A",
-    "modeloBase": "Santorini",
-    "cliente": "Jose Arturo Campos",
-    "montoCasa": 105000000,
-    "montoLote": 0,
-    "montoLoteQFI": 11430493.2,
-    "fecha": "2026-04-08",
-    "banco": "Mucap",
-    "formalizador": "Esteban",
-    "vendedor": "Hannia",
-    "traspaso": false,
-    "permisos": false,
-    "capacidad": "✅",
-    "pendientes": "Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dólares, el precio real que se vendió es el que dice la adenda en el file, ya que tiene extras.",
-    "terminada": true,
-    "estadoCasa": "Casa terminada"
+    lote: "1-01 Barani", modelo: "Santorini A", modeloBase: "Santorini",
+    cliente: "Jose Arturo Campos", montoCasa: 105000000, montoLote: 0, montoLoteQFI: 11430493.2,
+    fecha: "2026-04-08", banco: "Mucap", formalizador: "Esteban", vendedor: "Hannia",
+    traspaso: false, permisos: false, capacidad: "✅",
+    pendientes: "Escritura, Catastro, Traspaso, Permisos, Avalúo, pasar opción de compra en dólares, el precio real que se vendió es el que dice la adenda en el file, ya que tiene extras.",
+    terminada: true, estadoCasa: "Casa terminada"
   }
 ];
-
 
 // Helpers
 let selectedMonth = 3; // Default: March
@@ -1967,7 +1636,6 @@ function renderKPIs() {
       <div class="header-stat-value">${fmt(totalLotesQFI)}</div>
       <div class="header-stat-label">Lotes QFI</div>
     </div>
-    <div id="syncStatus" style="font-size:12px;color:#FCD34D;margin-left:20px;display:flex;align-items:center;gap:5px;font-weight:600"></div>
   `;
 }
 
@@ -1976,27 +1644,58 @@ const EDIT_PASSWORD = 'Adelante2025';
 let isAuthenticated = false;
 
 // PERSISTENCE - Save/Load edits from localStorage
+const STORAGE_KEY = 'cdv_formalizacion_edits';
 
 function loadEdits() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) applyEdits(JSON.parse(saved));
-  } catch (e) { console.warn('Local load err:', e); }
-  if (SYNC_URL) syncFromCloud();
+    if (!saved) return;
+    const edits = JSON.parse(saved);
+    edits.forEach(edit => {
+      const casa = casas.find(c => c.lote === edit.lote && c.cliente === edit.cliente);
+      if (!casa) return;
+
+      if (edit.fecha) casa.fecha = edit.fecha;
+      if (typeof edit.montoCasa === 'number') casa.montoCasa = edit.montoCasa;
+      if (typeof edit.montoLote === 'number') casa.montoLote = edit.montoLote;
+      if (typeof edit.montoLoteQFI === 'number') casa.montoLoteQFI = edit.montoLoteQFI;
+
+      if (typeof edit.banco === 'string') casa.banco = edit.banco;
+      if (typeof edit.traspaso === 'boolean') casa.traspaso = edit.traspaso;
+      if (typeof edit.permisos === 'boolean') casa.permisos = edit.permisos;
+      if (typeof edit.pendientes === 'string') casa.pendientes = edit.pendientes;
+      if (typeof edit.capacidad === 'string') casa.capacidad = edit.capacidad;
+
+      if (typeof edit.estadoCasa === 'string') {
+        casa.estadoCasa = edit.estadoCasa;
+        casa.terminada = (edit.estadoCasa === 'Casa terminada');
+      }
+    });
+  } catch (e) {
+    console.warn('Error cargando edits:', e);
+  }
 }
 
 function saveEdits() {
   try {
     const edits = casas.map(c => ({
-      lote: c.lote, cliente: c.cliente, fecha: c.fecha,
-      estadoCasa: c.estadoCasa, montoCasa: c.montoCasa,
-      montoLote: c.montoLote, montoLoteQFI: c.montoLoteQFI,
-      banco: c.banco, traspaso: c.traspaso, permisos: c.permisos,
-      pendientes: c.pendientes, capacidad: c.capacidad
+      lote: c.lote,
+      cliente: c.cliente,
+      fecha: c.fecha,
+      estadoCasa: c.estadoCasa,
+      montoCasa: c.montoCasa,
+      montoLote: c.montoLote,
+      montoLoteQFI: c.montoLoteQFI,
+      banco: c.banco,
+      traspaso: c.traspaso,
+      permisos: c.permisos,
+      pendientes: c.pendientes,
+      capacidad: c.capacidad
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
-    if (SYNC_URL) syncToCloud();
-  } catch (e) { console.error('Save err:', e); }
+  } catch (e) {
+    console.warn('Error guardando edits:', e);
+  }
 }
 
 function promptPassword(callback) {

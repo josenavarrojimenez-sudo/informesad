@@ -434,14 +434,14 @@
         </div>
         <div class="info-box">
           <p class="label">Tipo de Cambio <span class="badge-fixed">🔒</span></p>
-  <p class="sublabel">Vigente 10/03/2026</p>
-  <p class="big-val">₡476.82 / USD</p>
+  <p class="sublabel">Vigente 11/03/2026</p>
+  <p class="big-val">₡474.54 / USD</p>
         </div>
         <div style="margin-top:12px">
           <p style="font-size:0.7rem;font-weight:700;color:var(--text-secondary);margin-bottom:4px">Tasas de Referencia <span class="badge-fixed">🔒</span></p>
           <div class="rates-grid">
             <div class="rate-item"><div class="name">TBP</div><div class="val">3.66%</div></div>
-            <div class="rate-item"><div class="name">SOFR</div><div class="val">3.65%</div></div>
+            <div class="rate-item"><div class="name">SOFR</div><div class="val">3.64%</div></div>
             <div class="rate-item"><div class="name">Prime</div><div class="val">6.75%</div></div>
             <div class="rate-item"><div class="name">TRI 6m CRC</div><div class="val">4.69%</div></div>
             <div class="rate-item"><div class="name">TRI 6m USD</div><div class="val">3.18%</div></div>
@@ -527,7 +527,7 @@ function handleResize(){
 }
 window.addEventListener('resize',handleResize);
 
-var TC=476.82,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.65,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
+var TC=474.54,TBP=3.66,TRI6CRC=4.69,TRI6USD=3.18,TRI3USD=2.34,TRI12USD=4.07,SOFR=3.64,PRIME=6.75,PLAZO=360,LIMIT_COND=75500000;
 
 function pmt(P,a){var r=a/12/100;return r===0?P/PLAZO:P*r/(1-Math.pow(1+r,-PLAZO))}
 function fmtCRC(v){return'₡'+Math.round(v).toLocaleString('es-CR')}
