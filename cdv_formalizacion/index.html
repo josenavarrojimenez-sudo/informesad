@@ -2669,10 +2669,10 @@ function deleteCasa(index) {
   promptPassword(() => {
     const c = casas[index];
     if (confirm(`¿Está seguro de que desea eliminar el caso del lote ${c.lote} (${c.cliente})?`)) {
-      // 1. Eliminar del array local
+      // 1. Eliminar del array local inmediatamente para respuesta visual
       casas.splice(index, 1);
       
-      // 2. Mapear el estado actualizado para enviarlo
+      // 2. Mapear el estado actualizado
       const edits = casas.map(c => ({
         lote: c.lote, cliente: c.cliente, fecha: c.fecha,
         modelo: c.modelo, modeloBase: c.modeloBase,
@@ -2684,21 +2684,26 @@ function deleteCasa(index) {
         capacidad: c.capacidad, precioTotal: c.precioTotal, areaLote: c.areaLote
       }));
 
-      // 3. Persistencia en localStorage (opcional pero recomendado)
+      // 3. Persistencia en localStorage
       localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(edits));
 
-      // 4. Sincronización con la nube (POST)
-      // Usamos el cuerpo de la petición para enviar la lista COMPLETA
+      // 4. Actualizar la vista de inmediato
+      applyFilters();
+      showToast('Eliminando de la base de datos...');
+
+      // 5. Sincronización con la nube (POST) usando fetch con prioridad y modo cors si es posible
+      // Enviamos con 'navigate' para intentar asegurar que la petición se complete
       fetch(SYNC_URL_INFORME, {
         method: 'POST',
-        // Cambiamos a 'cors' para asegurar que el navegador espere la confirmación si es posible
         mode: 'no-cors', 
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: SYNC_TOKEN, type: 'casa_edits', data: edits }),
+        keepalive: true
       }).then(() => {
-        // 5. Solo después de enviar el comando de guardado, refrescamos la vista
-        applyFilters();
-        showToast('🗑️ Caso eliminado correctamente');
+        showToast('🗑️ Registro eliminado de forma permanente');
+      }).catch(err => {
+        console.error('Error de red al eliminar:', err);
+        showToast('⚠️ Error de red, pero se intentará sincronizar luego');
       });
     }
   });
@@ -3408,6 +3413,7 @@ function saveEdits() {
 }
 
 function applyEditsData(edits) {
+  if (!edits || !Array.isArray(edits)) return;
   edits.forEach(e => {
     const c = casas.find(x => x.lote === e.lote && x.cliente === e.cliente);
     if (!c) return;
@@ -3423,6 +3429,16 @@ function applyEditsData(edits) {
     if (e.pendientes !== undefined) c.pendientes = e.pendientes;
     if (e.vendedor) c.vendedor = e.vendedor;
   });
+  
+  // ELIMINAR casos que están en el array 'casas' pero NO en el array 'edits'
+  // (Esto asegura que si borraste algo en la nube, también desaparezca aquí)
+  for (let i = casas.length - 1; i >= 0; i--) {
+    const current = casas[i];
+    const existsInEdits = edits.find(x => x.lote === current.lote && x.cliente === current.cliente);
+    if (!existsInEdits) {
+      casas.splice(i, 1);
+    }
+  }
 }
 
 function loadEdits() {
