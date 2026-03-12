@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Padel Masters — Americano (8 jugadores)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f172a; --border:#23314f;
+      --text:#e5e7eb; --muted:#9aa4b2; --brand:#60a5fa; --ok:#34d399; --warn:#fbbf24;
+      --bad:#fb7185;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; background:radial-gradient(1200px 800px at 20% 0%, #14224a 0%, var(--bg) 55%); color:var(--text)}
+    header{padding:24px 16px; text-align:center; border-bottom:1px solid var(--border); background:linear-gradient(135deg, rgba(96,165,250,.18), rgba(17,26,46,.25));}
+    header h1{margin:0;font-size:1.4rem}
+    header p{margin:6px 0 0; color:var(--muted); font-size:.9rem}
+
+    .wrap{max-width:1100px; margin:0 auto; padding:16px}
+    .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .card{background:rgba(17,26,46,.92); border:1px solid var(--border); border-radius:14px; padding:14px}
+    .card h2{margin:0 0 10px; font-size:1.05rem; color:#dbeafe}
+
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    label{font-size:.8rem; color:var(--muted)}
+    input[type="text"], input[type="number"]{width:100%; padding:10px 12px; border-radius:10px; border:1px solid #2a3b64; background:var(--panel2); color:var(--text); outline:none}
+    input[type="number"]{appearance:textfield}
+    input:focus{border-color:var(--brand)}
+
+    .names{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:520px){.names{grid-template-columns:1fr}}
+
+    .btnbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    button{cursor:pointer; border:1px solid #2a3b64; background:#0b1730; color:var(--text); padding:10px 12px; border-radius:12px; font-weight:650}
+    button.primary{background:linear-gradient(180deg, rgba(96,165,250,.95), rgba(59,130,246,.85)); border-color:#3b82f6}
+    button.good{background:linear-gradient(180deg, rgba(52,211,153,.95), rgba(16,185,129,.85)); border-color:#10b981}
+    button.warn{background:linear-gradient(180deg, rgba(251,191,36,.95), rgba(245,158,11,.85)); border-color:#f59e0b; color:#0b1220}
+    button.ghost{background:transparent}
+    button:disabled{opacity:.5; cursor:not-allowed}
+
+    .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+    @media (max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    .kpi{background:rgba(15,23,42,.8); border:1px solid var(--border); border-radius:12px; padding:10px}
+    .kpi .n{font-size:1.2rem; font-weight:800; color:var(--brand)}
+    .kpi .l{font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+
+    .round{background:rgba(15,23,42,.8); border:1px solid var(--border); border-radius:12px; overflow:hidden}
+    .roundHead{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(35,49,79,.7)}
+    .roundHead .title{font-weight:800}
+    .roundHead .time{font-size:.8rem; color:var(--warn)}
+    .roundBody{padding:10px 12px}
+    .court{padding:10px; border:1px solid rgba(35,49,79,.7); border-radius:12px; margin-bottom:10px; background:rgba(17,26,46,.6)}
+
+    .pill{display:inline-flex; gap:6px; align-items:center; border:1px solid rgba(35,49,79,.9); background:rgba(15,23,42,.6); padding:6px 10px; border-radius:999px; font-size:.8rem; color:var(--muted)}
+
+    .rank{margin-top:12px}
+    .rank table{width:100%; border-collapse:collapse}
+    .rank th, .rank td{padding:9px 10px; border-bottom:1px solid rgba(35,49,79,.6); font-size:.9rem}
+    .rank th{color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; text-align:left}
+
+    .note{color:var(--muted); font-size:.85rem; line-height:1.35}
+    .small{font-size:.78rem}
+    .hidden{display:none !important}
+
+    /* Timer */
+    .timerBox{margin-top:12px; padding:12px; border-radius:14px; border:1px solid rgba(35,49,79,.9); background:rgba(15,23,42,.65)}
+    .timerTop{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+    .timerTop .r{font-weight:850; color:#dbeafe}
+    .timerTop .dur{font-size:.85rem; color:var(--warn)}
+    .timerClock{font-variant-numeric: tabular-nums; font-size:2.4rem; font-weight:900; letter-spacing:.02em; margin:10px 0; color:#fff; text-align:center}
+    .timerHint{font-size:.8rem; color:var(--muted); text-align:center}
+    .timerBtns{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Padel Masters — Americano (8 jugadores)</h1>
+    <p>2 canchas · 7 rondas · pareja cambia siempre · ranking individual por ganes + puntos</p>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>1) Configuración</h2>
+        <div class="row" style="gap:12px">
+          <div style="flex:1; min-width:220px">
+            <label>Duración total (min)</label>
+            <input id="totalMin" type="number" min="30" step="1" value="90" />
+          </div>
+          <div style="flex:1; min-width:220px">
+            <label>Descanso entre rondas (min)</label>
+            <input id="breakMin" type="number" min="0" step="1" value="2" />
+          </div>
+          <div style="flex:1; min-width:220px">
+            <label>Hora de inicio (opcional)</label>
+            <input id="startTime" type="text" placeholder="Ej: 7:00pm o 19:00" />
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="names">
+          <div><label>Jugador 1</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 2</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 3</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 4</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 5</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 6</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 7</label><input class="name" type="text" placeholder="Nombre" /></div>
+          <div><label>Jugador 8</label><input class="name" type="text" placeholder="Nombre" /></div>
+        </div>
+
+        <div class="btnbar">
+          <button class="primary" id="btnGenerate">Generar rondas</button>
+          <button class="ghost" id="btnDemo">Demo (llenar nombres)</button>
+          <button class="ghost" id="btnReset">Reset</button>
+          <span class="pill">Tip: después de generar, meté marcadores y el ranking se actualiza solo.</span>
+        </div>
+
+        <div style="margin-top:10px" class="note small">
+          <div><b>Ranking:</b> individual, ordenado por <b>más ganes</b> (equivalente a “perder menos”) y luego <b>más puntos</b>.</div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2>2) Resumen</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="n" id="kRounds">—</div><div class="l">Rondas</div></div>
+          <div class="kpi"><div class="n" id="kMatches">—</div><div class="l">Partidos</div></div>
+          <div class="kpi"><div class="n" id="kMatchMin">—</div><div class="l">Min/partido</div></div>
+          <div class="kpi"><div class="n" id="kBreak">—</div><div class="l">Descanso</div></div>
+        </div>
+
+        <div class="timerBox">
+          <div class="timerTop">
+            <div class="r">⏱️ Cronómetro</div>
+            <div class="dur" id="timerDur">—</div>
+          </div>
+          <div class="timerClock" id="timerClock">00:00</div>
+          <div class="timerHint" id="timerHint">Generá las rondas para habilitar el cronómetro por ronda.</div>
+          <div class="timerBtns">
+            <button class="good" id="btnStart" disabled>Start</button>
+            <button class="ghost" id="btnPause" disabled>Pausa</button>
+            <button class="warn" id="btnNext" disabled>Siguiente ronda</button>
+            <button class="ghost" id="btnResetTimer" disabled>Reset</button>
+          </div>
+        </div>
+
+        <div class="rank">
+          <h2 style="margin-top:12px">3) Ranking</h2>
+          <div class="note small" id="rankHint">Generá las rondas para habilitar el ranking.</div>
+          <div id="rankWrap" class="hidden">
+            <table>
+              <thead>
+                <tr><th>#</th><th>Jugador</th><th>Ganes</th><th>Pérdidas</th><th>Diferencial</th></tr>
+              </thead>
+              <tbody id="rankBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card" style="margin-top:14px">
+      <h2>Rondas & Marcadores</h2>
+      <div id="schedule" class="note">Generá las rondas para ver el calendario.</div>
+    </section>
+
+    <div class="note small" style="margin-top:10px">
+      Nota: Para que suene el “beep”, algunos navegadores piden que primero le des <b>Start</b> (interacción del usuario).
+    </div>
+
+    <div style="padding:18px 16px; text-align:center; color:var(--muted); font-size:.8rem">Hecho para <b>Padel Masters</b>. Guardá este archivo y lo podés usar offline. 🎾</div>
+  </div>
+
+<script>
+  // ===== Helpers
+  const $ = (sel, el=document) => el.querySelector(sel);
+  const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+  function parseTimeMaybe(t){
+    if(!t) return null;
+    const s = t.trim().toLowerCase();
+    let m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+    if(!m) return null;
+    let hh = parseInt(m[1],10);
+    let mm = m[2] ? parseInt(m[2],10) : 0;
+    const ap = m[3];
+    if(ap){
+      if(hh===12) hh = 0;
+      if(ap==='pm') hh += 12;
+    }
+    if(hh<0||hh>23||mm<0||mm>59) return null;
+    return {hh, mm};
+  }
+  function fmtTime(hh, mm){
+    const h = String(hh).padStart(2,'0');
+    const m = String(mm).padStart(2,'0');
+    return `${h}:${m}`;
+  }
+  function addMinutes(t, mins){
+    let total = t.hh*60 + t.mm + mins;
+    total = ((total%1440)+1440)%1440;
+    return {hh: Math.floor(total/60), mm: total%60};
+  }
+
+  // ===== Americano schedule (8 players)
+  function factorizePairs8(players){
+    const n = players.length;
+    if(n !== 8) throw new Error('Este generador está hecho para 8 jugadores.');
+
+    let rot = players.slice(0, n-1);
+    const fixed = players[n-1];
+
+    const rounds = [];
+    for(let r=0; r<n-1; r++){
+      const full = rot.concat([fixed]); // 8
+      const A = full.slice(0,4);
+      const B = full.slice(4).reverse();
+      const pairs = [];
+      for(let i=0;i<4;i++) pairs.push([A[i], B[i]]);
+      rounds.push(pairs);
+      rot = [rot[0]].concat([rot[rot.length-1]]).concat(rot.slice(1, rot.length-1));
+    }
+    return rounds;
+  }
+
+  function pairsToMatches(pairs){
+    return [
+      { court: 1, teamA: pairs[0], teamB: pairs[1] },
+      { court: 2, teamA: pairs[2], teamB: pairs[3] },
+    ];
+  }
+
+  function uniquePartnersCheck(roundPairs){
+    const seen = new Set();
+    for(const pairs of roundPairs){
+      for(const [a,b] of pairs){
+        const key = [a,b].sort().join('|');
+        if(seen.has(key)) return false;
+        seen.add(key);
+      }
+    }
+    return true;
+  }
+
+  // ===== State
+  let state = {
+    players: [],
+    rounds: [],
+  };
+
+  // ===== KPIs
+  function computeKPIs(){
+    const totalMin = parseInt($('#totalMin').value||'90',10);
+    const breakMin = parseInt($('#breakMin').value||'2',10);
+    const rounds = 7;
+    const breaks = Math.max(0, rounds-1);
+    const playable = totalMin - (breakMin * breaks);
+    const matchMin = playable / rounds;
+
+    $('#kRounds').textContent = rounds;
+    $('#kMatches').textContent = rounds*2;
+    $('#kBreak').textContent = `${breakMin}m`;
+    $('#kMatchMin').textContent = matchMin > 0 ? `${matchMin.toFixed(1)}m` : '—';
+
+    // timer label
+    const sec = Math.max(0, Math.round(matchMin*60));
+    $('#timerDur').textContent = `Partido: ${Math.floor(sec/60)}m ${sec%60}s · Descanso: ${breakMin}m`;
+  }
+
+  // ===== Beep
+  function beep(times=1){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      for(let i=0;i<times;i++){
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, now + i*0.25);
+        gain.gain.exponentialRampToValueAtTime(0.2, now + i*0.25 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i*0.25 + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i*0.25);
+        osc.stop(now + i*0.25 + 0.2);
+      }
+      setTimeout(()=>ctx.close(), 800);
+    } catch(e) {
+      // ignore
+    }
+  }
+
+  // ===== Timer
+  let timer = {
+    enabled: false,
+    mode: 'match', // 'match' | 'break'
+    currentRound: 1,
+    running: false,
+    remainingSec: 0,
+    matchSec: 0,
+    breakSec: 0,
+    intervalId: null,
+  };
+
+  function calcMatchSec(){
+    const totalMin = parseInt($('#totalMin').value||'90',10);
+    const breakMin = parseInt($('#breakMin').value||'2',10);
+    const rounds = 7;
+    const playable = totalMin - breakMin*(rounds-1);
+    return Math.max(0, Math.round((playable/rounds)*60));
+  }
+  function calcBreakSec(){
+    return Math.max(0, parseInt($('#breakMin').value||'2',10) * 60);
+  }
+  function fmtClock(sec){
+    const s = Math.max(0, sec|0);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s%60).padStart(2,'0');
+    return `${mm}:${ss}`;
+  }
+
+  function timerSetRound(n){
+    timer.currentRound = Math.min(7, Math.max(1, n));
+    timer.mode = 'match';
+    timer.remainingSec = timer.matchSec;
+    timer.running = false;
+    updateTimerUI();
+  }
+
+  function updateTimerUI(){
+    $('#timerClock').textContent = fmtClock(timer.remainingSec);
+    if(!timer.enabled){
+      $('#timerHint').textContent = 'Generá las rondas para habilitar el cronómetro por ronda.';
+      return;
+    }
+    const label = timer.mode === 'match' ? `Ronda ${timer.currentRound} — Partido` : `Ronda ${timer.currentRound} — Descanso`;
+    $('#timerHint').textContent = `${label} · ${timer.running ? 'corriendo…' : 'listo'}`;
+
+    $('#btnStart').disabled = false;
+    $('#btnPause').disabled = !timer.running;
+    $('#btnResetTimer').disabled = false;
+    $('#btnNext').disabled = false;
+  }
+
+  function timerStop(){
+    if(timer.intervalId) clearInterval(timer.intervalId);
+    timer.intervalId = null;
+    timer.running = false;
+    updateTimerUI();
+  }
+
+  function timerStart(){
+    if(!timer.enabled) return;
+    if(timer.running) return;
+    timer.running = true;
+    updateTimerUI();
+    timer.intervalId = setInterval(()=>{
+      timer.remainingSec -= 1;
+      if(timer.remainingSec <= 0){
+        timer.remainingSec = 0;
+        $('#timerClock').textContent = fmtClock(0);
+        // end of segment
+        timerStop();
+        beep(2);
+        if(timer.mode === 'match'){
+          // go to break if not last round
+          if(timer.currentRound < 7 && timer.breakSec > 0){
+            timer.mode = 'break';
+            timer.remainingSec = timer.breakSec;
+            updateTimerUI();
+          }
+        } else {
+          // break finished -> next round match
+          if(timer.currentRound < 7){
+            timer.currentRound += 1;
+            timer.mode = 'match';
+            timer.remainingSec = timer.matchSec;
+            updateTimerUI();
+          }
+        }
+        return;
+      }
+      $('#timerClock').textContent = fmtClock(timer.remainingSec);
+    }, 1000);
+  }
+
+  function timerResetSegment(){
+    if(!timer.enabled) return;
+    timerStop();
+    timer.remainingSec = (timer.mode === 'match') ? timer.matchSec : timer.breakSec;
+    updateTimerUI();
+  }
+
+  function timerNextRound(){
+    if(!timer.enabled) return;
+    timerStop();
+    if(timer.currentRound < 7) timer.currentRound += 1;
+    timer.mode = 'match';
+    timer.remainingSec = timer.matchSec;
+    updateTimerUI();
+  }
+
+  // ===== Schedule UI
+  function buildSchedule(){
+    const scheduleEl = $('#schedule');
+    scheduleEl.innerHTML = '';
+
+    const startTime = parseTimeMaybe($('#startTime').value);
+    const totalMin = parseInt($('#totalMin').value||'90',10);
+    const breakMin = parseInt($('#breakMin').value||'2',10);
+    const roundsCount = state.rounds.length;
+    const playable = totalMin - breakMin * (roundsCount-1);
+    const matchMin = playable / roundsCount;
+
+    const hint = document.createElement('div');
+    hint.className = 'note small';
+    const okPartners = uniquePartnersCheck(state.rounds.map(r => r.pairs));
+    hint.innerHTML = `${okPartners ? '✅' : '⚠️'} Parejas únicas: <b>${okPartners ? 'Sí' : 'No'}</b> · Duración por partido: <b>${matchMin.toFixed(1)} min</b> + descanso <b>${breakMin} min</b> (entre rondas)`;
+    scheduleEl.appendChild(hint);
+
+    for(const round of state.rounds){
+      const roundWrap = document.createElement('div');
+      roundWrap.className = 'round';
+      roundWrap.style.marginTop = '12px';
+
+      let timeLabel = '';
+      if(startTime){
+        const minsFromStart = Math.round((round.index-1) * (matchMin + breakMin));
+        const t0 = addMinutes(startTime, minsFromStart);
+        const t1 = addMinutes(startTime, minsFromStart + Math.round(matchMin));
+        timeLabel = `${fmtTime(t0.hh,t0.mm)}–${fmtTime(t1.hh,t1.mm)}`;
+      }
+
+      const head = document.createElement('div');
+      head.className = 'roundHead';
+      head.innerHTML = `<div class="title">Ronda ${round.index}</div><div class="time">${timeLabel ? '⏱️ ' + timeLabel : ''}</div>`;
+      roundWrap.appendChild(head);
+
+      const body = document.createElement('div');
+      body.className = 'roundBody';
+
+      for(const match of round.matches){
+        const court = document.createElement('div');
+        court.className = 'court';
+        court.innerHTML = `
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap">
+            <div style="font-weight:800; color:#dbeafe">Cancha ${match.court}</div>
+            <div style="color:var(--muted); font-weight:800">VS</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px">
+            <div style="font-weight:750">${match.teamA[0]} + ${match.teamA[1]}</div>
+            <div style="text-align:right; font-weight:750">${match.teamB[0]} + ${match.teamB[1]}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:10px">
+            <label class="small" style="margin-right:6px">Marcador</label>
+            <input type="number" min="0" step="1" placeholder="A" data-round="${round.index}" data-court="${match.court}" data-side="A" style="width:72px; text-align:center" />
+            <span class="small" style="color:var(--muted)">-</span>
+            <input type="number" min="0" step="1" placeholder="B" data-round="${round.index}" data-court="${match.court}" data-side="B" style="width:72px; text-align:center" />
+          </div>
+        `;
+        body.appendChild(court);
+      }
+
+      roundWrap.appendChild(body);
+      scheduleEl.appendChild(roundWrap);
+    }
+
+    // inputs
+    $$('#schedule input[type="number"]').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const r = parseInt(inp.dataset.round,10);
+        const c = parseInt(inp.dataset.court,10);
+        const side = inp.dataset.side;
+        const val = inp.value === '' ? null : parseInt(inp.value,10);
+        const round = state.rounds.find(x => x.index===r);
+        const match = round.matches.find(m => m.court===c);
+        if(side==='A') match.scoreA = val; else match.scoreB = val;
+        computeRanking();
+      });
+    });
+
+    computeRanking();
+  }
+
+  // ===== Ranking
+  // Reglas (según Jose):
+  // 1) Más ganes
+  // 2) Si empatan: menos pérdidas
+  // 3) Si siguen empatados: "puntos" como diferencial acumulado (ej: 4–2 => +2)
+  function computeRanking(){
+    if(!state.players.length){
+      $('#rankHint').textContent = 'Generá las rondas para habilitar el ranking.';
+      $('#rankWrap').classList.add('hidden');
+      return;
+    }
+
+    const stats = new Map();
+    for(const p of state.players) stats.set(p, { wins: 0, losses: 0, diff: 0 });
+
+    for(const round of state.rounds){
+      for(const m of round.matches){
+        if(m.scoreA == null || m.scoreB == null) continue;
+
+        const dA = (m.scoreA - m.scoreB);
+        const dB = (m.scoreB - m.scoreA);
+
+        // diferencial (se suma a cada jugador del equipo)
+        for(const pl of m.teamA) stats.get(pl).diff += dA;
+        for(const pl of m.teamB) stats.get(pl).diff += dB;
+
+        // win/loss
+        if(m.scoreA > m.scoreB){
+          for(const pl of m.teamA) stats.get(pl).wins += 1;
+          for(const pl of m.teamB) stats.get(pl).losses += 1;
+        } else if(m.scoreB > m.scoreA){
+          for(const pl of m.teamB) stats.get(pl).wins += 1;
+          for(const pl of m.teamA) stats.get(pl).losses += 1;
+        }
+      }
+    }
+
+    const rows = Array.from(stats.entries()).map(([player, s]) => ({ player, ...s }));
+    rows.sort((a,b) =>
+      (b.wins - a.wins) ||
+      (a.losses - b.losses) ||
+      (b.diff - a.diff) ||
+      a.player.localeCompare(b.player)
+    );
+
+    const body = $('#rankBody');
+    body.innerHTML = '';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td><b>${r.player}</b></td><td>${r.wins}</td><td>${r.losses}</td><td>${r.diff}</td>`;
+      body.appendChild(tr);
+    });
+
+    $('#rankHint').textContent = 'Ranking en vivo (ganes → menos pérdidas → diferencial).';
+    $('#rankWrap').classList.remove('hidden');
+  }
+
+  // ===== Generate / Reset / Demo
+  function generate(){
+    const names = $$('.name').map(i => i.value.trim()).filter(Boolean);
+    if(names.length !== 8){ alert('Necesito exactamente 8 nombres.'); return; }
+    const unique = new Set(names);
+    if(unique.size !== 8){ alert('Los nombres deben ser únicos (no repetidos).'); return; }
+
+    state.players = names;
+    const pairsRounds = factorizePairs8(names);
+    state.rounds = pairsRounds.map((pairs, idx) => ({
+      index: idx+1,
+      pairs,
+      matches: pairsToMatches(pairs).map(m => ({...m, scoreA: null, scoreB: null}))
+    }));
+
+    // enable timer
+    timer.enabled = true;
+    timer.matchSec = calcMatchSec();
+    timer.breakSec = calcBreakSec();
+    timerSetRound(1);
+
+    buildSchedule();
+  }
+
+  function resetAll(){
+    state = { players: [], rounds: [] };
+    $$('.name').forEach(i => i.value = '');
+    $('#schedule').innerHTML = 'Generá las rondas para ver el calendario.';
+
+    timerStop();
+    timer.enabled = false;
+    timer.mode = 'match';
+    timer.currentRound = 1;
+    timer.remainingSec = 0;
+    $('#btnStart').disabled = true;
+    $('#btnPause').disabled = true;
+    $('#btnNext').disabled = true;
+    $('#btnResetTimer').disabled = true;
+    $('#timerClock').textContent = '00:00';
+    $('#timerHint').textContent = 'Generá las rondas para habilitar el cronómetro por ronda.';
+
+    computeRanking();
+    computeKPIs();
+  }
+
+  function demo(){
+    const demoNames = ['Jose','Bachi','Elio','Victor','Mery','Willem','Hazel','Cornelio'];
+    $$('.name').forEach((i, idx) => i.value = demoNames[idx] || '');
+  }
+
+  // ===== Init
+  computeKPIs();
+  $('#totalMin').addEventListener('input', () => { computeKPIs(); if(timer.enabled){ timer.matchSec = calcMatchSec(); if(timer.mode==='match') {timer.remainingSec = timer.matchSec; updateTimerUI();} } });
+  $('#breakMin').addEventListener('input', () => { computeKPIs(); if(timer.enabled){ timer.breakSec = calcBreakSec(); if(timer.mode==='break') {timer.remainingSec = timer.breakSec; updateTimerUI();} } });
+
+  $('#btnGenerate').addEventListener('click', generate);
+  $('#btnReset').addEventListener('click', resetAll);
+  $('#btnDemo').addEventListener('click', demo);
+
+  $('#btnStart').addEventListener('click', timerStart);
+  $('#btnPause').addEventListener('click', timerStop);
+  $('#btnResetTimer').addEventListener('click', timerResetSegment);
+  $('#btnNext').addEventListener('click', timerNextRound);
+</script>
+</body>
+</html>
