@@ -244,7 +244,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <div class="sig-label">Firma</div>
   <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
     <img id="sigPreview" src="" style="display:none;">
-    <div class="sig-tap-hint" id="sigTapHint">✍️ Toque aquí para firmar</div>
+    <div class="sig-tap-hint" id="sigTapHint">✍️ Toque aquí para firmar<br><span style="font-size:11px;font-weight:400;color:#5a8fd4;">💡 Gire el teléfono horizontal para más espacio</span></div>
   </div>
   <button class="btn-clear" onclick="clearSig()" style="display:none" id="btnClearSig">✕ Borrar firma</button>
 
