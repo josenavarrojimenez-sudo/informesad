@@ -205,6 +205,26 @@
     flex: 1;
     height: 100%;
   }
+  .id-upload-wrapper {
+    border: 2px dashed #e0e0e0;
+    border-radius: 10px;
+    background: #fafafa;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 6px;
+    overflow: hidden;
+    padding: 8px;
+  }
+  .id-upload-wrapper:hover { border-color: #1a6ec9; background: #f0f6ff; }
+  .id-upload-hint {
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+    padding: 16px;
+  }
   .sig-preview-wrapper {
     position: relative;
     border: 2px dashed #1a6ec9;
@@ -247,6 +267,14 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
 
   <label for="cedula">Número de cédula</label>
   <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
+
+  <label>Foto del documento de identificación</label>
+  <div class="id-upload-wrapper" id="idUploadWrapper" onclick="document.getElementById('idFileInput').click()">
+    <img id="idPreview" src="" style="display:none;max-height:140px;max-width:100%;border-radius:8px;">
+    <div class="id-upload-hint" id="idUploadHint">📷 Toque para tomar foto o elegir de galería</div>
+  </div>
+  <input type="file" id="idFileInput" accept="image/*" capture="environment" style="display:none" onchange="handleIdPhoto(this)">
+  <button class="btn-clear" id="btnClearId" style="display:none" onclick="clearIdPhoto()">✕ Quitar foto</button>
 
   <div class="sig-label">Firma</div>
   <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
@@ -356,6 +384,31 @@ function confirmSig() {
   }
 }
 
+let idPhotoData = null;
+
+function handleIdPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    idPhotoData = e.target.result;
+    document.getElementById('idPreview').src = idPhotoData;
+    document.getElementById('idPreview').style.display = 'block';
+    document.getElementById('idUploadHint').style.display = 'none';
+    document.getElementById('btnClearId').style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearIdPhoto() {
+  idPhotoData = null;
+  document.getElementById('idPreview').src = '';
+  document.getElementById('idPreview').style.display = 'none';
+  document.getElementById('idUploadHint').style.display = 'block';
+  document.getElementById('btnClearId').style.display = 'none';
+  document.getElementById('idFileInput').value = '';
+}
+
 function clearSig() {
   capturedSig = null;
   hasSig = false;
@@ -376,6 +429,7 @@ async function submitForm() {
 
   if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
   if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
+  if (!idPhotoData) { showMsg('Por favor adjunte la foto de su documento de identificación.', 'error'); return; }
   if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
   const firma = capturedSig;
@@ -388,7 +442,7 @@ async function submitForm() {
     const res = await fetch(window.API_URL + '/submit', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ nombre, cedula, firma })
+      body: JSON.stringify({ nombre, cedula, firma, idPhoto: idPhotoData })
     });
     const data = await res.json();
     spin.style.display = 'none';
