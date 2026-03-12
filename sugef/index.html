@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Autorización SUGEF — Adelante Desarrollos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    padding: 32px 28px;
+    max-width: 480px;
+    width: 100%;
+  }
+  .logo {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .logo h1 {
+    font-size: 22px;
+    color: #1a3c5e;
+    font-weight: 700;
+  }
+  .logo p {
+    color: #666;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+  }
+  label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  input[type="text"] {
+    width: 100%;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+  }
+  input[type="text"]:focus {
+    border-color: #1a6ec9;
+  }
+  .sig-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .sig-wrapper {
+    position: relative;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fafafa;
+    touch-action: none;
+  }
+  #sigCanvas {
+    display: block;
+    width: 100%;
+    cursor: crosshair;
+    touch-action: none;
+  }
+  .sig-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #bbb;
+    font-size: 14px;
+    pointer-events: none;
+    text-align: center;
+    line-height: 1.4;
+  }
+  .sig-hint.hidden { display: none; }
+  .btn-clear {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 6px 0;
+    margin-top: 6px;
+    text-decoration: underline;
+  }
+  .btn-submit {
+    width: 100%;
+    background: #1a6ec9;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.2s;
+  }
+  .btn-submit:hover { background: #155fa0; }
+  .btn-submit:disabled { background: #a0c0e8; cursor: not-allowed; }
+  .msg {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+  .msg.success { background: #e6f4ea; color: #1e7e34; display: block; }
+  .msg.error { background: #fdecea; color: #c62828; display: block; }
+  .spinner {
+    display: none;
+    text-align: center;
+    margin-top: 12px;
+    color: #666;
+    font-size: 14px;
+  }
+  .disclaimer {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+  /* Fullscreen signature overlay */
+  #sigOverlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #fff;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #sigOverlay.active { display: flex; }
+  #sigOverlayCanvas {
+    touch-action: none;
+    cursor: crosshair;
+    background: #fafafa;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  .sig-overlay-hint {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: #ccc;
+    font-size: 18px;
+    pointer-events: none;
+    text-align: center;
+  }
+  .sig-overlay-hint.hidden { display: none; }
+  .sig-overlay-actions {
+    display: flex;
+    gap: 16px;
+    padding: 16px 24px;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .btn-overlay-clear {
+    background: none;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 15px;
+    color: #666;
+    cursor: pointer;
+  }
+  .btn-overlay-confirm {
+    background: #1a6ec9;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 32px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    flex: 1;
+  }
+  .sig-preview-wrapper {
+    position: relative;
+    border: 2px dashed #1a6ec9;
+    border-radius: 10px;
+    background: #f0f6ff;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-bottom: 6px;
+  }
+  .sig-preview-wrapper img {
+    max-height: 80px;
+    max-width: 100%;
+  }
+  .sig-tap-hint {
+    color: #1a6ec9;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 24px;
+    text-align: center;
+  }
+</style>
+<script>
+window.API_URL = '';
+fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; }).catch(()=>{});
+</script>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>Adelante Desarrollos</h1>
+    <p>Autorización SUGEF — Información Crediticia</p>
+  </div>
+  <hr class="divider">
+
+  <label for="nombre">Nombre completo</label>
+  <input type="text" id="nombre" placeholder="Ej: Juan Carlos Pérez Rodríguez" autocomplete="name">
+
+  <label for="cedula">Número de cédula</label>
+  <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
+
+  <div class="sig-label">Firma</div>
+  <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
+    <img id="sigPreview" src="" style="display:none;">
+    <div class="sig-tap-hint" id="sigTapHint">✍️ Toque aquí para firmar</div>
+  </div>
+  <button class="btn-clear" onclick="clearSig()" style="display:none" id="btnClearSig">✕ Borrar firma</button>
+
+  <!-- Fullscreen signature overlay -->
+  <div id="sigOverlay">
+    <div style="position:relative;width:100%;flex:1;overflow:hidden;">
+      <canvas id="sigOverlayCanvas"></canvas>
+      <div class="sig-overlay-hint" id="sigOverlayHint">✍️ Firme aquí</div>
+    </div>
+    <div class="sig-overlay-actions">
+      <button class="btn-overlay-clear" onclick="clearOverlaySig()">✕ Borrar</button>
+      <button class="btn-overlay-confirm" onclick="confirmSig()">✅ Confirmar firma</button>
+    </div>
+  </div>
+
+  <button class="btn-submit" id="btnSubmit" onclick="submitForm()">
+    Enviar documentos firmados
+  </button>
+  <div class="spinner" id="spinner">⏳ Procesando y enviando documentos...</div>
+  <div class="msg" id="msg"></div>
+
+  <p class="disclaimer">
+    Al enviar, autoriza a Adelante Desarrollos a gestionar su información crediticia<br>
+    según la Ley N° 7558. Sus datos se envían de forma segura.
+  </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+const overlayCanvas = document.getElementById('sigOverlayCanvas');
+const overlayHint = document.getElementById('sigOverlayHint');
+let hasSig = false;
+let signaturePad = null;
+let capturedSig = null;
+
+function initOverlayPad() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const w = window.innerWidth;
+  const h = window.innerHeight - 80; // leave room for buttons
+  overlayCanvas.width = w * ratio;
+  overlayCanvas.height = h * ratio;
+  overlayCanvas.style.width = w + 'px';
+  overlayCanvas.style.height = h + 'px';
+  overlayCanvas.getContext('2d').scale(ratio, ratio);
+  if (signaturePad) signaturePad.clear();
+}
+
+function openSigOverlay() {
+  const overlay = document.getElementById('sigOverlay');
+  overlay.classList.add('active');
+  // Lock to landscape via screen orientation API if available
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(() => {});
+  }
+  initOverlayPad();
+  if (!signaturePad) {
+    signaturePad = new SignaturePad(overlayCanvas, {
+      minWidth: 1.0,
+      maxWidth: 3.5,
+      throttle: 16,
+      penColor: '#1a1a2e',
+      backgroundColor: 'rgba(0,0,0,0)',
+    });
+    signaturePad.addEventListener('beginStroke', () => {
+      overlayHint.classList.add('hidden');
+    });
+  }
+  // Restore previous signature if exists
+  if (capturedSig) {
+    signaturePad.fromDataURL(capturedSig);
+    overlayHint.classList.add('hidden');
+  }
+}
+
+function clearOverlaySig() {
+  signaturePad.clear();
+  overlayHint.classList.remove('hidden');
+}
+
+function confirmSig() {
+  if (signaturePad.isEmpty()) {
+    alert('Por favor firme antes de confirmar.');
+    return;
+  }
+  capturedSig = signaturePad.toDataURL('image/png');
+  hasSig = true;
+  // Show preview
+  const preview = document.getElementById('sigPreview');
+  const tapHint = document.getElementById('sigTapHint');
+  const btnClear = document.getElementById('btnClearSig');
+  preview.src = capturedSig;
+  preview.style.display = 'block';
+  tapHint.style.display = 'none';
+  btnClear.style.display = 'inline-block';
+  // Close overlay
+  document.getElementById('sigOverlay').classList.remove('active');
+  // Unlock orientation
+  if (screen.orientation && screen.orientation.unlock) {
+    screen.orientation.unlock();
+  }
+}
+
+function clearSig() {
+  capturedSig = null;
+  hasSig = false;
+  const preview = document.getElementById('sigPreview');
+  const tapHint = document.getElementById('sigTapHint');
+  const btnClear = document.getElementById('btnClearSig');
+  preview.src = '';
+  preview.style.display = 'none';
+  tapHint.style.display = 'block';
+  btnClear.style.display = 'none';
+}
+
+async function submitForm() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const cedula = document.getElementById('cedula').value.trim();
+  const msg = document.getElementById('msg');
+  msg.className = 'msg';
+
+  if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
+  if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
+  if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
+
+  const firma = capturedSig;
+  const btn = document.getElementById('btnSubmit');
+  const spin = document.getElementById('spinner');
+  btn.disabled = true;
+  spin.style.display = 'block';
+
+  try {
+    const res = await fetch(window.API_URL + '/submit', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ nombre, cedula, firma })
+    });
+    const data = await res.json();
+    spin.style.display = 'none';
+    if (data.ok) {
+      showMsg(`✅ ¡Listo! Se enviaron ${data.docs} documentos firmados a formalizadores@adelante.cr. Gracias.`, 'success');
+      btn.style.display = 'none';
+    } else {
+      showMsg('❌ Error: ' + (data.error || 'Intente de nuevo.'), 'error');
+      btn.disabled = false;
+    }
+  } catch(e) {
+    spin.style.display = 'none';
+    showMsg('❌ Error de conexión. Intente de nuevo.', 'error');
+    btn.disabled = false;
+  }
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = 'msg ' + type;
+}
+</script>
+</body>
+</html>
