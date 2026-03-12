@@ -393,7 +393,7 @@ async function submitForm() {
     const data = await res.json();
     spin.style.display = 'none';
     if (data.ok) {
-      showMsg(`✅ ¡Listo! Se enviaron ${data.docs} documentos firmados a formalizadores@adelante.cr. Gracias.`, 'success');
+      showMsg(`✅ ¡Listo! Se enviaron ${data.docs} documentos firmados correctamente. Gracias.`, 'success');
       btn.style.display = 'none';
     } else {
       showMsg('❌ Error: ' + (data.error || 'Intente de nuevo.'), 'error');
