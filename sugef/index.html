@@ -146,12 +146,12 @@
   #sigOverlay {
     display: none;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
     background: #fff;
     z-index: 9999;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
   }
   #sigOverlay.active { display: flex; }
   #sigOverlayCanvas {
@@ -250,8 +250,8 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
 
   <!-- Fullscreen signature overlay -->
   <div id="sigOverlay">
-    <div style="position:relative;width:100%;flex:1;overflow:hidden;">
-      <canvas id="sigOverlayCanvas"></canvas>
+    <div style="position:relative;width:100%;flex:1;overflow:hidden;min-height:0;">
+      <canvas id="sigOverlayCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
       <div class="sig-overlay-hint" id="sigOverlayHint">✍️ Firme aquí</div>
     </div>
     <div class="sig-overlay-actions">
@@ -282,8 +282,9 @@ let capturedSig = null;
 
 function initOverlayPad() {
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  const w = window.innerWidth;
-  const h = window.innerHeight - 80; // leave room for buttons
+  const container = overlayCanvas.parentElement;
+  const w = container.offsetWidth || window.innerWidth;
+  const h = container.offsetHeight || (window.innerHeight - 80);
   overlayCanvas.width = w * ratio;
   overlayCanvas.height = h * ratio;
   overlayCanvas.style.width = w + 'px';
@@ -291,6 +292,10 @@ function initOverlayPad() {
   overlayCanvas.getContext('2d').scale(ratio, ratio);
   if (signaturePad) signaturePad.clear();
 }
+
+// Re-init on orientation change
+window.addEventListener('orientationchange', () => setTimeout(initOverlayPad, 300));
+window.addEventListener('resize', () => { if (document.getElementById('sigOverlay').classList.contains('active')) initOverlayPad(); });
 
 function openSigOverlay() {
   const overlay = document.getElementById('sigOverlay');
