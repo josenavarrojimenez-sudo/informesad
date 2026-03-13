@@ -221,7 +221,12 @@ function getDateRanges(mode){
   return{curr,prev};
 }
 
-async function fetchJSON(url){const r=await fetch(url);return r.json()}
+async function fetchJSON(url){
+  const r=await fetch(url);
+  const j=await r.json();
+  if(j.error){console.error('Meta API error:',j.error);throw new Error(j.error.message);}
+  return j;
+}
 
 async function loadData(){
   document.getElementById('conn-status').textContent='Actualizando...';
@@ -312,7 +317,7 @@ function campRow(c){
   const obj=(c.objective||'').replace('OUTCOME_','');
   const isExp=expandedCamps.has(c.id);
   return`<tr class="row-camp" id="camp-row-${c.id}">
-    <td class="indent-0"><span class="level-chip camp">Camp</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleCamp('${c.id}')">${isExp?'▶':'▶'}</button>${c.name}</td>
+    <td class="indent-0"><span class="level-chip camp">Camp</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleCamp('${c.id}')">${isExp?'▼':'▶'}</button>${c.name}</td>
     <td><span class="badge ${c.status.toLowerCase()}">${c.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
     <td><span class="objective-chip">${obj}</span></td>
     <td>${budget}</td>
@@ -328,6 +333,7 @@ function campRow(c){
 function adsetRows(campId){
   const adsets=adsetCache[campId];
   if(!adsets)return`<tr class="loading-row" id="adset-loading-${campId}"><td colspan="10">⏳ Cargando conjuntos de anuncios...</td></tr>`;
+  if(!adsets.length)return`<tr class="loading-row"><td colspan="10" style="color:#86868b;font-style:italic;">Sin conjuntos de anuncios activos en este periodo.</td></tr>`;
   let h='';
   adsets.forEach(as=>{h+=adsetRow(as,campId);if(expandedAdsets.has(as.id))h+=adRows(as.id,campId);});
   return h;
@@ -339,7 +345,7 @@ function adsetRow(as,campId){
   const targeting=as.targeting||{};
   const audience=formatAudience(targeting);
   return`<tr class="row-adset" id="adset-row-${as.id}">
-    <td class="indent-1"><span class="level-chip adset">Conj</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleAdset('${as.id}','${campId}')">${isExp?'▶':'▶'}</button>${as.name}</td>
+    <td class="indent-1"><span class="level-chip adset">Conj</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleAdset('${as.id}','${campId}')">${isExp?'▼':'▶'}</button>${as.name}</td>
     <td><span class="badge ${as.status.toLowerCase()}">${as.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
     <td style="max-width:200px;font-size:0.7rem;">${audience}</td>
     <td>${as.daily_budget?fmt(as.daily_budget)+'/d':as.lifetime_budget?fmt(as.lifetime_budget):'—'}</td>
@@ -413,23 +419,40 @@ async function toggleAdset(adsetId,campId){
 
 async function fetchAdsets(campId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
-  const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget,targeting&limit=30&access_token=${TOKEN}`);
-  adsetCache[campId]=data.data||[];
-  // Fetch insights for all adsets
-  await Promise.all((data.data||[]).map(as=>
-    fetchJSON(`${API}/${as.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R.since}","until":"${R.until}"}&access_token=${TOKEN}`)
+  try{
+    const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget,targeting&limit=30&access_token=${TOKEN}`);
+    adsetCache[campId]=data.data||[];
+  }catch(e){
+    // Retry without targeting field if permission error
+    try{
+      const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget&limit=30&access_token=${TOKEN}`);
+      adsetCache[campId]=data.data||[];
+    }catch(e2){
+      adsetCache[campId]=[]; adsetCache[campId]._error=e2.message;
+    }
+  }
+  const adsets=adsetCache[campId]||[];
+  const R2=currRange.curr||getDateRanges(compareMode).curr;
+  await Promise.allSettled(adsets.map(as=>
+    fetchJSON(`${API}/${as.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R2.since}","until":"${R2.until}"}&access_token=${TOKEN}`)
       .then(d=>{adInsCache[as.id]=d.data?.[0]||{}})
+      .catch(()=>{adInsCache[as.id]={};})
   ));
 }
 
 async function fetchAds(adsetId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
-  const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status,creative{title,name,thumbnail_url}&limit=30&access_token=${TOKEN}`);
-  adsCache[adsetId]=data.data||[];
-  await Promise.all((data.data||[]).map(ad=>
-    fetchJSON(`${API}/${ad.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R.since}","until":"${R.until}"}&access_token=${TOKEN}`)
-      .then(d=>{adsInsCache[ad.id]=d.data?.[0]||{}})
-  ));
+  try{
+    const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status&limit=30&access_token=${TOKEN}`);
+    adsCache[adsetId]=data.data||[];
+    await Promise.allSettled((data.data||[]).map(ad=>
+      fetchJSON(`${API}/${ad.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R.since}","until":"${R.until}"}&access_token=${TOKEN}`)
+        .then(d=>{adsInsCache[ad.id]=d.data?.[0]||{}})
+        .catch(()=>{adsInsCache[ad.id]={};})
+    ));
+  }catch(e){
+    adsCache[adsetId]=[];
+  }
 }
 
 function filterCampaigns(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.dataset.filter=s;renderHTable(allCampaigns);}
