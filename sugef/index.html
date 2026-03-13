@@ -282,22 +282,39 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <label for="asesor">Asesor de ventas</label>
   <input type="text" id="asesor" placeholder="Nombre del asesor que lo atendió" autocomplete="off">
 
-  <label>Fotos de los documentos (Cédula, etc.)</label>
+  <label>Fotos de los documentos (Cédula Frente, Cédula Atrás, etc.)</label>
   <div id="photosContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
     <!-- Photo previews will appear here -->
   </div>
   <div class="id-upload-wrapper" id="idUploadWrapper">
-    <div class="id-upload-hint" id="idUploadHint" style="padding:10px;">
+    <div class="id-upload-hint" id="idUploadHint" style="padding:10px;width:100%;">
       <p style="margin-bottom:12px;color:#666;">📷 Seleccione una opción para agregar foto:</p>
-      <div style="display:flex;gap:10px;justify-content:center;">
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idCamInput').click()">Tomar Foto</button>
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idGalInput').click()">Galería</button>
+      
+      <div style="display:flex;flex-direction:column;gap:12px;width:100%;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <p style="font-size:12px;font-weight:600;color:#1a3c5e;text-align:left;margin-left:4px;">Cédula Frente:</p>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-id-opt" style="flex:1" onclick="document.getElementById('idCamFront').click()">Cámara</button>
+            <button type="button" class="btn-id-opt" style="flex:1" onclick="document.getElementById('idGalFront').click()">Galería</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <p style="font-size:12px;font-weight:600;color:#1a3c5e;text-align:left;margin-left:4px;">Cédula Atrás:</p>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn-id-opt" style="flex:1" onclick="document.getElementById('idCamBack').click()">Cámara</button>
+            <button type="button" class="btn-id-opt" style="flex:1" onclick="document.getElementById('idGalBack').click()">Galería</button>
+          </div>
+        </div>
       </div>
-      <p style="margin-top:8px;font-size:11px;color:#888;">Puede agregar todas las fotos que necesite</p>
+
+      <p style="margin-top:12px;font-size:11px;color:#888;">Puede agregar todas las fotos adicionales que necesite</p>
     </div>
   </div>
-  <input type="file" id="idCamInput" accept="image/*" capture="environment" style="display:none" onchange="handleAddPhoto(this)">
-  <input type="file" id="idGalInput" accept="image/*" multiple style="display:none" onchange="handleAddPhoto(this)">
+  <input type="file" id="idCamFront" accept="image/*" capture="environment" style="display:none" onchange="handleAddPhoto(this, 'Frente')">
+  <input type="file" id="idGalFront" accept="image/*" multiple style="display:none" onchange="handleAddPhoto(this, 'Frente')">
+  <input type="file" id="idCamBack" accept="image/*" capture="environment" style="display:none" onchange="handleAddPhoto(this, 'Atrás')">
+  <input type="file" id="idGalBack" accept="image/*" multiple style="display:none" onchange="handleAddPhoto(this, 'Atrás')">
 
   <div class="sig-label">Firma</div>
   <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
@@ -409,7 +426,7 @@ function confirmSig() {
 
 let uploadedPhotos = [];
 
-function handleAddPhoto(input) {
+function handleAddPhoto(input, side) {
   const files = input.files;
   if (!files || files.length === 0) return;
   
@@ -419,7 +436,7 @@ function handleAddPhoto(input) {
     reader.onload = (e) => {
       const data = e.target.result;
       const photoId = Date.now() + Math.random();
-      uploadedPhotos.push({ id: photoId, data: data });
+      uploadedPhotos.push({ id: photoId, data: data, label: side });
       renderPhotos();
     };
     reader.readAsDataURL(file);
@@ -446,6 +463,7 @@ function renderPhotos() {
     
     div.innerHTML = `
       <img src="${photo.data}" style="width:100%;height:100%;object-fit:cover;">
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.5);color:white;font-size:9px;text-align:center;padding:2px;">${photo.label || ''}</div>
       <div onclick="removePhoto(${photo.id})" style="position:absolute;top:2px;right:2px;background:rgba(255,0,0,0.7);color:white;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">✕</div>
     `;
     container.appendChild(div);
@@ -491,7 +509,7 @@ async function submitForm() {
         cedula, 
         asesor,
         firma: capturedSig, 
-        photos: uploadedPhotos.map(p => p.data) 
+        photos: uploadedPhotos.map(p => ({ data: p.data, label: p.label })) 
       })
     });
     const data = await res.json();
