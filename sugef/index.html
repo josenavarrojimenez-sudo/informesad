@@ -279,6 +279,9 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <label for="cedula">Número de cédula</label>
   <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
 
+  <label for="asesor">Asesor de ventas</label>
+  <input type="text" id="asesor" placeholder="Nombre del asesor que lo atendió" autocomplete="off">
+
   <label>Fotos de los documentos (Cédula, etc.)</label>
   <div id="photosContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
     <!-- Photo previews will appear here -->
@@ -464,11 +467,13 @@ function clearSig() {
 async function submitForm() {
   const nombre = document.getElementById('nombre').value.trim();
   const cedula = document.getElementById('cedula').value.trim();
+  const asesor = document.getElementById('asesor').value.trim();
   const msg = document.getElementById('msg');
   msg.className = 'msg';
 
   if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
   if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
+  if (!asesor) { showMsg('Por favor ingrese el nombre de su asesor de ventas.', 'error'); return; }
   if (uploadedPhotos.length === 0) { showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
   if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
@@ -484,6 +489,7 @@ async function submitForm() {
       body: JSON.stringify({ 
         nombre, 
         cedula, 
+        asesor,
         firma: capturedSig, 
         photos: uploadedPhotos.map(p => p.data) 
       })
