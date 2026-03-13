@@ -205,7 +205,8 @@ const API='https://graph.facebook.com/v19.0';
 
 let allCampaigns=[],insightsData={},compareMode='prev30';
 let spendChart,objectiveChart;
-let allAdsSpend=[]; // [{name, spend}] for chart
+let allAdsSpend=[]; // [{name, spend, campName}] for chart
+const CAMP_COLORS=['#1a73e8','#34c759','#ff9f0a','#af52de','#ff375f','#32ade6','#ff6b35','#795548','#607d8b','#009688'];
 // Expanded state: campId -> bool, adsetId -> bool
 let expandedCamps=new Set(), expandedAdsets=new Set();
 // Cache
@@ -281,16 +282,32 @@ async function loadData(){
     ));
     // Reset caches on full reload
     adsetCache={};adInsCache={};adsCache={};adsInsCache={};
-    // Fetch ad-level spend for chart
+    // Fetch ad-level spend grouped by campaign for chart
     try{
-      const adsData=await fetchJSON(`${API}/${ACCOUNT}/ads?fields=name,status&limit=100&access_token=${TOKEN}`);
-      const adsList=adsData.data||[];
-      const adSpendResults=await Promise.allSettled(adsList.map(ad=>
-        fetchJSON(`${API}/${ad.id}/insights?fields=spend&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`)
-          .then(d=>({name:ad.name,spend:parseFloat(d.data?.[0]?.spend||0)}))
-          .catch(()=>({name:ad.name,spend:0}))
-      ));
-      allAdsSpend=adSpendResults.filter(r=>r.status==='fulfilled'&&r.value.spend>0).map(r=>r.value).sort((a,b)=>b.spend-a.spend).slice(0,12);
+      // For each campaign, get its ads and their spend
+      const campColorMap={};
+      allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
+      const allAdsRaw=[];
+      await Promise.allSettled(allCampaigns.map(async camp=>{
+        try{
+          const adsetD=await fetchJSON(`${API}/${camp.id}/adsets?fields=id&limit=30&access_token=${TOKEN}`);
+          const adsets=adsetD.data||[];
+          await Promise.allSettled(adsets.map(async as=>{
+            try{
+              const adD=await fetchJSON(`${API}/${as.id}/ads?fields=name&limit=30&access_token=${TOKEN}`);
+              const ads=adD.data||[];
+              await Promise.allSettled(ads.map(async ad=>{
+                try{
+                  const ins=await fetchJSON(`${API}/${ad.id}/insights?fields=spend&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`);
+                  const spend=parseFloat(ins.data?.[0]?.spend||0);
+                  if(spend>0)allAdsRaw.push({name:ad.name,spend,campId:camp.id,campName:camp.name,color:campColorMap[camp.id]});
+                }catch(e){}
+              }));
+            }catch(e){}
+          }));
+        }catch(e){}
+      }));
+      allAdsSpend=allAdsRaw.sort((a,b)=>b.spend-a.spend).slice(0,15);
     }catch(e){ allAdsSpend=[]; }
     renderPubKPIs(tCd,tPd);renderComKPIs();renderHTable(allCampaigns);renderCharts(active);
     document.getElementById('conn-status').textContent='✓ Conectado — Adelante Desarrollos CDV';
@@ -449,21 +466,27 @@ function formatAudience(t){
 }
 
 async function toggleCamp(campId){
-  if(expandedCamps.has(campId)){expandedCamps.delete(campId);}
-  else{
+  if(expandedCamps.has(campId)){
+    expandedCamps.delete(campId);
+    renderHTable(allCampaigns);
+  } else {
     expandedCamps.add(campId);
-    if(!adsetCache[campId])await fetchAdsets(campId);
+    renderHTable(allCampaigns); // Show loading row immediately
+    if(!adsetCache[campId]) await fetchAdsets(campId);
+    renderHTable(allCampaigns); // Re-render with actual data
   }
-  renderHTable(allCampaigns);
 }
 
 async function toggleAdset(adsetId,campId){
-  if(expandedAdsets.has(adsetId)){expandedAdsets.delete(adsetId);}
-  else{
+  if(expandedAdsets.has(adsetId)){
+    expandedAdsets.delete(adsetId);
+    renderHTable(allCampaigns);
+  } else {
     expandedAdsets.add(adsetId);
-    if(!adsCache[adsetId])await fetchAds(adsetId);
+    renderHTable(allCampaigns); // Show loading row immediately
+    if(!adsCache[adsetId]) await fetchAds(adsetId);
+    renderHTable(allCampaigns); // Re-render with actual data
   }
-  renderHTable(allCampaigns);
 }
 
 async function fetchAdsets(campId){
@@ -508,20 +531,31 @@ async function fetchAds(adsetId){
 function filterCampaigns(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.dataset.filter=s;renderHTable(allCampaigns);}
 
 function renderCharts(active){
-  // Use ad-level spend if available, fall back to campaign-level
-  let labels=[],vals=[];
+  // Use ad-level spend grouped by campaign color
+  let labels=[],vals=[],barColors=[];
   if(allAdsSpend.length){
-    allAdsSpend.forEach(a=>{labels.push(a.name.substring(0,22));vals.push(a.spend);});
+    allAdsSpend.forEach(a=>{
+      labels.push(a.name.substring(0,20));
+      vals.push(a.spend);
+      barColors.push(a.color||'#1a73e8');
+    });
   }else{
-    active.forEach(c=>{const ins=insightsData[c.id];if(ins?.spend){labels.push(c.name.substring(0,20));vals.push(parseFloat(ins.spend));}});
+    active.forEach(c=>{const ins=insightsData[c.id];if(ins?.spend){labels.push(c.name.substring(0,20));vals.push(parseFloat(ins.spend));barColors.push('#1a73e8');}});
   }
+  // Build legend for campaigns that appear in the chart
+  const campsSeen={};
+  allAdsSpend.forEach(a=>{if(!campsSeen[a.campId])campsSeen[a.campId]={name:a.campName,color:a.color};});
+  const legendHtml=Object.values(campsSeen).map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 6px;font-size:0.7rem;color:#555;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c.color}"></span>${c.name.substring(0,30)}</span>`).join('');
+  const legendEl=document.querySelector('#spendChart').closest('.section').querySelector('.chart-legend');
+  if(legendEl)legendEl.innerHTML=legendHtml;
+  else{const d=document.createElement('div');d.className='chart-legend';d.style.cssText='margin-top:8px;flex-wrap:wrap;display:flex;';d.innerHTML=legendHtml;document.querySelector('#spendChart').closest('.section').appendChild(d);}
   const objC={};allCampaigns.forEach(c=>{const o=(c.objective||'OTHER').replace('OUTCOME_','');objC[o]=(objC[o]||0)+1;});
   if(spendChart)spendChart.destroy();if(objectiveChart)objectiveChart.destroy();
   Chart.defaults.color='#86868b';Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
   spendChart=new Chart(document.getElementById('spendChart'),{
     type:'bar',
-    data:{labels:labels.length?labels:['Sin datos'],datasets:[{label:'Gasto ₡',data:vals.length?vals:[0],backgroundColor:'#1a73e8',borderRadius:6}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#86868b',font:{size:9}},grid:{color:'#f0f0f0'}},y:{ticks:{color:'#86868b',callback:v=>'₡'+(v/1000).toFixed(0)+'K'},grid:{color:'#f0f0f0'}}}}
+    data:{labels:labels.length?labels:['Sin datos'],datasets:[{label:'Gasto ₡',data:vals.length?vals:[0],backgroundColor:barColors.length?barColors:'#1a73e8',borderRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const ad=allAdsSpend[ctx.dataIndex];return ad?`${ad.campName}: ₡${ctx.parsed.y.toLocaleString('es-CR',{maximumFractionDigits:0})}`:`₡${ctx.parsed.y.toLocaleString('es-CR',{maximumFractionDigits:0})}`;}}}},scales:{x:{ticks:{color:'#86868b',font:{size:9},maxRotation:35},grid:{color:'#f0f0f0'}},y:{ticks:{color:'#86868b',callback:v=>'₡'+(v/1000).toFixed(0)+'K'},grid:{color:'#f0f0f0'}}}}
   });
   objectiveChart=new Chart(document.getElementById('objectiveChart'),{
     type:'doughnut',
