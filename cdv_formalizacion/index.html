@@ -3465,7 +3465,19 @@ function loadEdits() {
     if (saved) applyEditsData(JSON.parse(saved));
   } catch(e) { console.warn('Load edits err:', e); }
   // Then try cloud (fresher data)
-  // Load from data.json (fuente de verdad)
+  // 1. Cargar localStorage primero (cambios del usuario tienen prioridad)
+  const savedLocal = localStorage.getItem(STORAGE_KEY_TEST);
+  if (savedLocal) {
+    try {
+      const parsed = JSON.parse(savedLocal);
+      if (parsed && parsed.length > 0) {
+        applyEditsData(parsed);
+        applyFilters();
+        return; // localStorage tiene datos — no sobreescribir con data.json
+      }
+    } catch(e) {}
+  }
+  // 2. Si localStorage está vacío, cargar desde data.json (seed inicial)
   fetch('./data.json?v=' + Date.now())
     .then(r => r.json())
     .then(res => {
@@ -3474,11 +3486,7 @@ function loadEdits() {
         applyEditsData(res.data);
         applyFilters();
       }
-    }).catch(() => {
-      // Fallback: localStorage
-      const saved = localStorage.getItem(STORAGE_KEY_TEST);
-      if (saved) { applyEditsData(JSON.parse(saved)); applyFilters(); }
-    });
+    }).catch(() => {});
 }
 
 function editMontos(index) {
