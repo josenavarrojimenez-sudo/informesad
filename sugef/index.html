@@ -282,6 +282,39 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <label for="asesor">Asesor de ventas</label>
   <input type="text" id="asesor" placeholder="Nombre del asesor que lo atendió" autocomplete="off">
 
+  <label>Tipo de ingresos</label>
+  <div style="display:flex;gap:10px;margin-bottom:20px;">
+    <label style="flex:1;display:flex;align-items:center;gap:8px;background:#fafafa;border:2px solid #e0e0e0;padding:12px;border-radius:10px;cursor:pointer;font-weight:normal;">
+      <input type="radio" name="tipoIngreso" value="Asalariado" onchange="toggleIngresoSections()"> Asalariado
+    </label>
+    <label style="flex:1;display:flex;align-items:center;gap:8px;background:#fafafa;border:2px solid #e0e0e0;padding:12px;border-radius:10px;cursor:pointer;font-weight:normal;">
+      <input type="radio" name="tipoIngreso" value="Ingresos Propios" onchange="toggleIngresoSections()"> Ingresos Propios
+    </label>
+    <label style="flex:1;display:flex;align-items:center;gap:8px;background:#fafafa;border:2px solid #e0e0e0;padding:12px;border-radius:10px;cursor:pointer;font-weight:normal;">
+      <input type="radio" name="tipoIngreso" value="Combinado" onchange="toggleIngresoSections()"> Ambos
+    </label>
+  </div>
+
+  <div id="sectionAsalariado" style="display:none;margin-bottom:20px;padding:15px;background:#f0f7ff;border-radius:12px;border:1px solid #d0e3f7;">
+    <p style="font-size:13px;font-weight:700;color:#1a3c5e;margin-bottom:12px;">📄 Documentos Asalariado:</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button type="button" class="btn-id-opt" onclick="document.getElementById('inputColillas').click()">➕ Adjuntar 3 Últimas Colillas de Pago</button>
+      <button type="button" class="btn-id-opt" onclick="document.getElementById('inputOrden').click()">➕ Adjuntar Orden Patronal</button>
+    </div>
+    <input type="file" id="inputColillas" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Colilla Pago')">
+    <input type="file" id="inputOrden" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Orden Patronal')">
+  </div>
+
+  <div id="sectionPropios" style="display:none;margin-bottom:20px;padding:15px;background:#fff8f0;border-radius:12px;border:1px solid #f7e3d0;">
+    <p style="font-size:13px;font-weight:700;color:#5e3c1a;margin-bottom:12px;">📄 Documentos Ingresos Propios:</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button type="button" class="btn-id-opt" style="border-color:#d97706;color:#d97706" onclick="document.getElementById('inputEstados').click()">➕ Adjuntar 2 Últimos Estados de Cuenta</button>
+      <button type="button" class="btn-id-opt" style="border-color:#d97706;color:#d97706" onclick="document.getElementById('inputCertificacion').click()">➕ Adjuntar Certificación de Ingresos</button>
+    </div>
+    <input type="file" id="inputEstados" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Estado Cuenta')">
+    <input type="file" id="inputCertificacion" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Certificación Ingresos')">
+  </div>
+
   <label>Fotos de los documentos (Cédula Frente, Cédula Atrás, etc.)</label>
   <div id="photosContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
     <!-- Photo previews will appear here -->
@@ -486,12 +519,14 @@ async function submitForm() {
   const nombre = document.getElementById('nombre').value.trim();
   const cedula = document.getElementById('cedula').value.trim();
   const asesor = document.getElementById('asesor').value.trim();
+  const tipoIngreso = document.querySelector('input[name="tipoIngreso"]:checked')?.value;
   const msg = document.getElementById('msg');
   msg.className = 'msg';
 
   if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
   if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
   if (!asesor) { showMsg('Por favor ingrese el nombre de su asesor de ventas.', 'error'); return; }
+  if (!tipoIngreso) { showMsg('Por favor seleccione su tipo de ingreso.', 'error'); return; }
   if (uploadedPhotos.length === 0) { showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
   if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
@@ -508,6 +543,7 @@ async function submitForm() {
         nombre, 
         cedula, 
         asesor,
+        tipoIngreso,
         firma: capturedSig, 
         photos: uploadedPhotos.map(p => ({ data: p.data, label: p.label })) 
       })
@@ -532,6 +568,15 @@ function showMsg(text, type) {
   const el = document.getElementById('msg');
   el.textContent = text;
   el.className = 'msg ' + type;
+}
+
+function toggleIngresoSections() {
+  const val = document.querySelector('input[name="tipoIngreso"]:checked')?.value;
+  const secAsalariado = document.getElementById('sectionAsalariado');
+  const secPropios = document.getElementById('sectionPropios');
+  
+  secAsalariado.style.display = (val === 'Asalariado' || val === 'Combinado') ? 'block' : 'none';
+  secPropios.style.display = (val === 'Ingresos Propios' || val === 'Combinado') ? 'block' : 'none';
 }
 </script>
 </body>
