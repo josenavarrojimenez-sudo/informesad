@@ -268,7 +268,7 @@ async function loadData(){
   document.getElementById('conn-status').style.color='#ff9f0a';
   const R=getDateRanges(compareMode);currRange=R;
   try{
-    const campData=await fetchJSON(`${API}/${ACCOUNT}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective&limit=50&access_token=${TOKEN}`);
+    const campData=await fetchJSON(`${API}/${ACCOUNT}/campaigns?fields=name,status,daily_budget,lifetime_budget,objective,start_time,created_time&limit=50&access_token=${TOKEN}`);
     allCampaigns=campData.data||[];
     const [tC,tP]=await Promise.all([
       fetchJSON(`${API}/${ACCOUNT}/insights?fields=spend,reach,impressions,clicks,ctr,cpc,cpm&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`),
@@ -377,10 +377,13 @@ function campRow(c){
   const ins=insightsData[c.id]||{};
   const budget=c.daily_budget?fmt(c.daily_budget)+'/d':c.lifetime_budget?fmt(c.lifetime_budget):'—';
   const obj=(c.objective||'').replace('OUTCOME_','');
+  const startDate=c.start_time||c.created_time;
+  const daysActive=startDate?Math.floor((Date.now()-new Date(startDate).getTime())/(86400000)):null;
+  const daysLabel=daysActive!=null?`<span style="font-size:0.68rem;color:#86868b;font-weight:500;">📅 ${daysActive}d activa</span>`:'';
   const isExp=expandedCamps.has(c.id);
   return`<tr class="row-camp" id="camp-row-${c.id}">
     <td class="indent-0"><span class="level-chip camp">Camp</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleCamp('${c.id}')">${isExp?'▼':'▶'}</button>${c.name}</td>
-    <td><span class="badge ${c.status.toLowerCase()}">${c.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
+    <td><span class="badge ${c.status.toLowerCase()}">${c.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span> ${daysLabel}</td>
     <td><span class="objective-chip">${obj}</span></td>
     <td>${budget}</td>
     <td>${ins.spend?fmt(ins.spend):'—'}</td>
