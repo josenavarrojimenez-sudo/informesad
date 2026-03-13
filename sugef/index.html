@@ -308,7 +308,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <div id="sectionPropios" style="display:none;margin-bottom:20px;padding:15px;background:#fff8f0;border-radius:12px;border:1px solid #f7e3d0;">
     <p style="font-size:13px;font-weight:700;color:#5e3c1a;margin-bottom:12px;">📄 Documentos Ingresos Propios:</p>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <button type="button" class="btn-id-opt" style="border-color:#d97706;color:#d97706" onclick="document.getElementById('inputEstados').click()">➕ Adjuntar 2 Últimos Estados de Cuenta</button>
+      <button type="button" class="btn-id-opt" style="border-color:#d97706;color:#d97706" onclick="document.getElementById('inputEstados').click()">➕ Adjuntar 12 Últimos Estados de Cuenta</button>
       <button type="button" class="btn-id-opt" style="border-color:#d97706;color:#d97706" onclick="document.getElementById('inputCertificacion').click()">➕ Adjuntar Certificación de Ingresos</button>
     </div>
     <input type="file" id="inputEstados" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Estado Cuenta')">
