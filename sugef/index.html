@@ -160,6 +160,16 @@
     cursor: crosshair;
     background: #fafafa;
   }
+  .sig-overlay-line {
+    position: absolute;
+    bottom: 120px;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: #ccc;
+    pointer-events: none;
+    z-index: 1;
+  }
   .sig-overlay-hint {
     position: absolute;
     top: calc(50% - 36px); left: 50%;
@@ -360,6 +370,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <!-- Fullscreen signature overlay -->
   <div id="sigOverlay">
     <canvas id="sigOverlayCanvas"></canvas>
+    <div class="sig-overlay-line"></div>
     <div class="sig-overlay-hint" id="sigOverlayHint">✍️ Firme aquí</div>
     <div class="sig-overlay-actions">
       <button class="btn-overlay-clear" onclick="clearOverlaySig()">✕ Borrar</button>
