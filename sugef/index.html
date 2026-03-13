@@ -452,8 +452,15 @@ function confirmSig() {
     alert('Por favor firme antes de confirmar.');
     return;
   }
+  
+  // Capture if it was horizontal (landscape)
+  const isLandscape = window.innerWidth > window.innerHeight;
+  
   capturedSig = signaturePad.toDataURL('image/png');
   hasSig = true;
+  // Store the orientation with the signature
+  window.lastSigIsLandscape = isLandscape;
+
   // Show preview
   const preview = document.getElementById('sigPreview');
   const tapHint = document.getElementById('sigTapHint');
@@ -565,7 +572,8 @@ async function submitForm() {
         cedula, 
         asesor,
         tipoIngreso,
-        firma: capturedSig, 
+        firma: capturedSig,
+        isLandscape: !!window.lastSigIsLandscape,
         photos: uploadedPhotos.map(p => ({ data: p.data, label: p.label })) 
       })
     });
