@@ -219,6 +219,17 @@
     padding: 8px;
   }
   .id-upload-wrapper:hover { border-color: #1a6ec9; background: #f0f6ff; }
+  .btn-id-opt {
+    background: #fff;
+    border: 1px solid #1a6ec9;
+    color: #1a6ec9;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-id-opt:active { background: #1a6ec9; color: #fff; }
   .id-upload-hint {
     color: #999;
     font-size: 14px;
@@ -269,11 +280,18 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
 
   <label>Foto del documento de identificación</label>
-  <div class="id-upload-wrapper" id="idUploadWrapper" onclick="document.getElementById('idFileInput').click()">
+  <div class="id-upload-wrapper" id="idUploadWrapper">
     <img id="idPreview" src="" style="display:none;max-height:140px;max-width:100%;border-radius:8px;">
-    <div class="id-upload-hint" id="idUploadHint">📷 Toque para tomar foto o elegir de galería</div>
+    <div class="id-upload-hint" id="idUploadHint" style="padding:10px;">
+      <p style="margin-bottom:12px;color:#666;">📷 Seleccione una opción:</p>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button type="button" class="btn-id-opt" onclick="document.getElementById('idFileInputCam').click()">Tomar Foto</button>
+        <button type="button" class="btn-id-opt" onclick="document.getElementById('idFileInputGal').click()">Galería</button>
+      </div>
+    </div>
   </div>
-  <input type="file" id="idFileInput" accept="image/*" style="display:none" onchange="handleIdPhoto(this)">
+  <input type="file" id="idFileInputCam" accept="image/*" capture="environment" style="display:none" onchange="handleIdPhoto(this)">
+  <input type="file" id="idFileInputGal" accept="image/*" style="display:none" onchange="handleIdPhoto(this)">
   <button class="btn-clear" id="btnClearId" style="display:none" onclick="clearIdPhoto()">✕ Quitar foto</button>
 
   <div class="sig-label">Firma</div>
@@ -406,7 +424,8 @@ function clearIdPhoto() {
   document.getElementById('idPreview').style.display = 'none';
   document.getElementById('idUploadHint').style.display = 'block';
   document.getElementById('btnClearId').style.display = 'none';
-  document.getElementById('idFileInput').value = '';
+  document.getElementById('idFileInputCam').value = '';
+  document.getElementById('idFileInputGal').value = '';
 }
 
 function clearSig() {
