@@ -135,7 +135,7 @@
   </div>
 
   <div class="chart-grid">
-    <div class="section"><h3>📈 Gasto por campaña activa (últimos 30d)</h3><canvas id="spendChart" height="210"></canvas></div>
+    <div class="section"><h3>📈 Gasto por anuncio (últimos 30d)</h3><canvas id="spendChart" height="210"></canvas></div>
     <div class="section"><h3>🎯 Distribución por objetivo</h3><canvas id="objectiveChart" height="210"></canvas></div>
   </div>
 
@@ -172,6 +172,7 @@ const API='https://graph.facebook.com/v19.0';
 
 let allCampaigns=[],insightsData={},compareMode='prev30';
 let spendChart,objectiveChart;
+let allAdsSpend=[]; // [{name, spend}] for chart
 // Expanded state: campId -> bool, adsetId -> bool
 let expandedCamps=new Set(), expandedAdsets=new Set();
 // Cache
@@ -247,6 +248,17 @@ async function loadData(){
     ));
     // Reset caches on full reload
     adsetCache={};adInsCache={};adsCache={};adsInsCache={};
+    // Fetch ad-level spend for chart
+    try{
+      const adsData=await fetchJSON(`${API}/${ACCOUNT}/ads?fields=name,status&limit=100&access_token=${TOKEN}`);
+      const adsList=adsData.data||[];
+      const adSpendResults=await Promise.allSettled(adsList.map(ad=>
+        fetchJSON(`${API}/${ad.id}/insights?fields=spend&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`)
+          .then(d=>({name:ad.name,spend:parseFloat(d.data?.[0]?.spend||0)}))
+          .catch(()=>({name:ad.name,spend:0}))
+      ));
+      allAdsSpend=adSpendResults.filter(r=>r.status==='fulfilled'&&r.value.spend>0).map(r=>r.value).sort((a,b)=>b.spend-a.spend).slice(0,12);
+    }catch(e){ allAdsSpend=[]; }
     renderPubKPIs(tCd,tPd);renderComKPIs();renderHTable(allCampaigns);renderCharts(active);
     document.getElementById('conn-status').textContent='✓ Conectado — Adelante Desarrollos CDV';
     document.getElementById('conn-status').style.color='#34c759';
@@ -458,8 +470,13 @@ async function fetchAds(adsetId){
 function filterCampaigns(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.dataset.filter=s;renderHTable(allCampaigns);}
 
 function renderCharts(active){
-  const labels=[],vals=[];
-  active.forEach(c=>{const ins=insightsData[c.id];if(ins?.spend){labels.push(c.name.substring(0,20));vals.push(parseFloat(ins.spend));}});
+  // Use ad-level spend if available, fall back to campaign-level
+  let labels=[],vals=[];
+  if(allAdsSpend.length){
+    allAdsSpend.forEach(a=>{labels.push(a.name.substring(0,22));vals.push(a.spend);});
+  }else{
+    active.forEach(c=>{const ins=insightsData[c.id];if(ins?.spend){labels.push(c.name.substring(0,20));vals.push(parseFloat(ins.spend));}});
+  }
   const objC={};allCampaigns.forEach(c=>{const o=(c.objective||'OTHER').replace('OUTCOME_','');objC[o]=(objC[o]||0)+1;});
   if(spendChart)spendChart.destroy();if(objectiveChart)objectiveChart.destroy();
   Chart.defaults.color='#86868b';Chart.defaults.font.family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
