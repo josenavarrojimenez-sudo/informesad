@@ -279,35 +279,22 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <label for="cedula">Número de cédula</label>
   <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
 
-  <label>Foto del documento de identificación (Frente)</label>
-  <div class="id-upload-wrapper" id="idFrontWrapper">
-    <img id="idFrontPreview" src="" style="display:none;max-height:140px;max-width:100%;border-radius:8px;">
-    <div class="id-upload-hint" id="idFrontHint" style="padding:10px;">
-      <p style="margin-bottom:12px;color:#666;">📷 Frente: Seleccione una opción</p>
+  <label>Fotos de los documentos (Cédula, etc.)</label>
+  <div id="photosContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+    <!-- Photo previews will appear here -->
+  </div>
+  <div class="id-upload-wrapper" id="idUploadWrapper">
+    <div class="id-upload-hint" id="idUploadHint" style="padding:10px;">
+      <p style="margin-bottom:12px;color:#666;">📷 Seleccione una opción para agregar foto:</p>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idFrontCam').click()">Tomar Foto</button>
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idFrontGal').click()">Galería</button>
+        <button type="button" class="btn-id-opt" onclick="document.getElementById('idCamInput').click()">Tomar Foto</button>
+        <button type="button" class="btn-id-opt" onclick="document.getElementById('idGalInput').click()">Galería</button>
       </div>
+      <p style="margin-top:8px;font-size:11px;color:#888;">Puede agregar todas las fotos que necesite</p>
     </div>
   </div>
-  <input type="file" id="idFrontCam" accept="image/*" capture="environment" style="display:none" onchange="handleIdPhoto(this, 'front')">
-  <input type="file" id="idFrontGal" accept="image/*" style="display:none" onchange="handleIdPhoto(this, 'front')">
-  <button class="btn-clear" id="btnFrontClear" style="display:none" onclick="clearIdPhoto('front')">✕ Quitar foto</button>
-
-  <label style="margin-top:10px;">Foto del documento de identificación (Atrás)</label>
-  <div class="id-upload-wrapper" id="idBackWrapper">
-    <img id="idBackPreview" src="" style="display:none;max-height:140px;max-width:100%;border-radius:8px;">
-    <div class="id-upload-hint" id="idBackHint" style="padding:10px;">
-      <p style="margin-bottom:12px;color:#666;">📷 Atrás: Seleccione una opción</p>
-      <div style="display:flex;gap:10px;justify-content:center;">
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idBackCam').click()">Tomar Foto</button>
-        <button type="button" class="btn-id-opt" onclick="document.getElementById('idBackGal').click()">Galería</button>
-      </div>
-    </div>
-  </div>
-  <input type="file" id="idBackCam" accept="image/*" capture="environment" style="display:none" onchange="handleIdPhoto(this, 'back')">
-  <input type="file" id="idBackGal" accept="image/*" style="display:none" onchange="handleIdPhoto(this, 'back')">
-  <button class="btn-clear" id="btnBackClear" style="display:none" onclick="clearIdPhoto('back')">✕ Quitar foto</button>
+  <input type="file" id="idCamInput" accept="image/*" capture="environment" style="display:none" onchange="handleAddPhoto(this)">
+  <input type="file" id="idGalInput" accept="image/*" multiple style="display:none" onchange="handleAddPhoto(this)">
 
   <div class="sig-label">Firma</div>
   <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
@@ -417,36 +404,49 @@ function confirmSig() {
   }
 }
 
-let idFrontData = null;
-let idBackData = null;
+let uploadedPhotos = [];
 
-function handleIdPhoto(input, side) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = e.target.result;
-    const prefix = side === 'front' ? 'idFront' : 'idBack';
-    if (side === 'front') idFrontData = data; else idBackData = data;
-    
-    document.getElementById(prefix + 'Preview').src = data;
-    document.getElementById(prefix + 'Preview').style.display = 'block';
-    document.getElementById(prefix + 'Hint').style.display = 'none';
-    document.getElementById('btn' + (side === 'front' ? 'Front' : 'Back') + 'Clear').style.display = 'inline-block';
-  };
-  reader.readAsDataURL(file);
+function handleAddPhoto(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target.result;
+      const photoId = Date.now() + Math.random();
+      uploadedPhotos.push({ id: photoId, data: data });
+      renderPhotos();
+    };
+    reader.readAsDataURL(file);
+  }
+  input.value = ''; // Reset for next selection
 }
 
-function clearIdPhoto(side) {
-  const prefix = side === 'front' ? 'idFront' : 'idBack';
-  if (side === 'front') idFrontData = null; else idBackData = null;
-  
-  document.getElementById(prefix + 'Preview').src = '';
-  document.getElementById(prefix + 'Preview').style.display = 'none';
-  document.getElementById(prefix + 'Hint').style.display = 'block';
-  document.getElementById('btn' + (side === 'front' ? 'Front' : 'Back') + 'Clear').style.display = 'none';
-  document.getElementById(prefix + 'Cam').value = '';
-  document.getElementById(prefix + 'Gal').value = '';
+function removePhoto(id) {
+  uploadedPhotos = uploadedPhotos.filter(p => p.id !== id);
+  renderPhotos();
+}
+
+function renderPhotos() {
+  const container = document.getElementById('photosContainer');
+  container.innerHTML = '';
+  uploadedPhotos.forEach(photo => {
+    const div = document.createElement('div');
+    div.style.position = 'relative';
+    div.style.width = '80px';
+    div.style.height = '80px';
+    div.style.border = '1px solid #ddd';
+    div.style.borderRadius = '8px';
+    div.style.overflow = 'hidden';
+    
+    div.innerHTML = `
+      <img src="${photo.data}" style="width:100%;height:100%;object-fit:cover;">
+      <div onclick="removePhoto(${photo.id})" style="position:absolute;top:2px;right:2px;background:rgba(255,0,0,0.7);color:white;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">✕</div>
+    `;
+    container.appendChild(div);
+  });
 }
 
 function clearSig() {
@@ -469,7 +469,7 @@ async function submitForm() {
 
   if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
   if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
-  if (!idFrontData || !idBackData) { showMsg('Por favor adjunte ambas fotos de su documento de identificación (frente y atrás).', 'error'); return; }
+  if (uploadedPhotos.length === 0) { showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
   if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
   const btn = document.getElementById('btnSubmit');
@@ -481,7 +481,12 @@ async function submitForm() {
     const res = await fetch(window.API_URL + '/submit', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ nombre, cedula, firma, idFront: idFrontData, idBack: idBackData })
+      body: JSON.stringify({ 
+        nombre, 
+        cedula, 
+        firma: capturedSig, 
+        photos: uploadedPhotos.map(p => p.data) 
+      })
     });
     const data = await res.json();
     spin.style.display = 'none';
