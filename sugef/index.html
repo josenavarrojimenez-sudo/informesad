@@ -528,6 +528,15 @@ async function submitForm() {
   if (!cedula) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
   if (!asesor) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor ingrese el nombre de su asesor de ventas.', 'error'); return; }
   if (uploadedPhotos.length === 0) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
+  
+  const tieneFrente = uploadedPhotos.some(p => p.label === 'Frente');
+  const tieneAtras = uploadedPhotos.some(p => p.label === 'Atrás');
+  if (!tieneFrente || !tieneAtras) {
+    alert('Debes completar los requisitos que son obligatorios.');
+    showMsg('Es obligatorio subir la foto de la cédula por el frente y por atrás.', 'error');
+    return;
+  }
+
   if (!hasSig) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
   const btn = document.getElementById('btnSubmit');
