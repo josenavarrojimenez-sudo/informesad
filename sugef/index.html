@@ -273,7 +273,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
     <img id="idPreview" src="" style="display:none;max-height:140px;max-width:100%;border-radius:8px;">
     <div class="id-upload-hint" id="idUploadHint">📷 Toque para tomar foto o elegir de galería</div>
   </div>
-  <input type="file" id="idFileInput" accept="image/*" capture="environment" style="display:none" onchange="handleIdPhoto(this)">
+  <input type="file" id="idFileInput" accept="image/*" style="display:none" onchange="handleIdPhoto(this)">
   <button class="btn-clear" id="btnClearId" style="display:none" onclick="clearIdPhoto()">✕ Quitar foto</button>
 
   <div class="sig-label">Firma</div>
