@@ -273,16 +273,17 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   </div>
   <hr class="divider">
 
-  <label for="nombre">Nombre completo</label>
+  <label for="nombre">Nombre completo <span style="color:red">*</span></label>
   <input type="text" id="nombre" placeholder="Ej: Juan Carlos Pérez Rodríguez" autocomplete="name">
 
-  <label for="cedula">Número de cédula</label>
+  <label for="cedula">Número de cédula <span style="color:red">*</span></label>
   <input type="text" id="cedula" placeholder="Ej: 1-0234-0567" autocomplete="off" inputmode="numeric">
 
-  <label for="asesor">Asesor de ventas</label>
+  <label for="asesor">Asesor de ventas <span style="color:red">*</span></label>
   <input type="text" id="asesor" placeholder="Nombre del asesor que lo atendió" autocomplete="off">
 
-  <label>Tipo de ingresos</label>
+  <label>Tipo de ingresos (Opcional)</label>
+  <p style="font-size:11px;color:#5a8fd4;margin-top:-6px;margin-bottom:10px;line-height:1.3;">💡 Nota: Si completa esta información, podemos lograr su preaprobación mucho más rápido.</p>
   <div style="display:flex;gap:10px;margin-bottom:20px;">
     <label style="flex:1;display:flex;align-items:center;gap:8px;background:#fafafa;border:2px solid #e0e0e0;padding:12px;border-radius:10px;cursor:pointer;font-weight:normal;">
       <input type="radio" name="tipoIngreso" value="Asalariado" onchange="toggleIngresoSections()"> Asalariado
@@ -315,7 +316,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
     <input type="file" id="inputCertificacion" accept="image/*,application/pdf" multiple style="display:none" onchange="handleAddPhoto(this, 'Certificación Ingresos')">
   </div>
 
-  <label>Fotos de los documentos (Cédula Frente, Cédula Atrás, etc.)</label>
+  <label>Fotos de los documentos (Cédula Frente, Cédula Atrás, etc.) <span style="color:red">*</span></label>
   <div id="photosContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
     <!-- Photo previews will appear here -->
   </div>
@@ -349,7 +350,7 @@ fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; })
   <input type="file" id="idCamBack" accept="image/*" capture="environment" style="display:none" onchange="handleAddPhoto(this, 'Atrás')">
   <input type="file" id="idGalBack" accept="image/*" multiple style="display:none" onchange="handleAddPhoto(this, 'Atrás')">
 
-  <div class="sig-label">Firma</div>
+  <div class="sig-label">Firma <span style="color:red">*</span></div>
   <div class="sig-preview-wrapper" id="sigPreviewWrapper" onclick="openSigOverlay()">
     <img id="sigPreview" src="" style="display:none;">
     <div class="sig-tap-hint" id="sigTapHint">✍️ Toque aquí para firmar<br><span style="font-size:11px;font-weight:400;color:#5a8fd4;">💡 Gire el teléfono horizontal para más espacio</span></div>
@@ -523,12 +524,11 @@ async function submitForm() {
   const msg = document.getElementById('msg');
   msg.className = 'msg';
 
-  if (!nombre) { showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
-  if (!cedula) { showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
-  if (!asesor) { showMsg('Por favor ingrese el nombre de su asesor de ventas.', 'error'); return; }
-  if (!tipoIngreso) { showMsg('Por favor seleccione su tipo de ingreso.', 'error'); return; }
-  if (uploadedPhotos.length === 0) { showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
-  if (!hasSig) { showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
+  if (!nombre) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor ingrese su nombre completo.', 'error'); return; }
+  if (!cedula) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor ingrese su número de cédula.', 'error'); return; }
+  if (!asesor) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor ingrese el nombre de su asesor de ventas.', 'error'); return; }
+  if (uploadedPhotos.length === 0) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor adjunte al menos una foto de su documento de identificación.', 'error'); return; }
+  if (!hasSig) { alert('Debes completar los requisitos que son obligatorios.'); showMsg('Por favor firme en el espacio indicado.', 'error'); return; }
 
   const btn = document.getElementById('btnSubmit');
   const spin = document.getElementById('spinner');
