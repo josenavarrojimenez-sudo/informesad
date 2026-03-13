@@ -196,12 +196,25 @@ const get = url => fetch(url).then(r => r.json());
 const fmtCRC = n => n ? '₡' + Number(n).toLocaleString('es-CR',{maximumFractionDigits:0}) : '—';
 const fmtN = n => n ? Number(n).toLocaleString('es-CR') : '—';
 const fmtPct = n => n ? parseFloat(n).toFixed(2)+'%' : '—';
-// Get lead action value from actions array
+// Get conversions from actions array
 function getLeads(actions) { return +(actions?.find(a=>a.action_type==='lead')?.value||0); }
+function getMsgConv(actions) { return +(actions?.find(a=>a.action_type==='onsite_conversion.total_messaging_connection')?.value||0); }
+function getAcq(actions) {
+  // Total acquisitions = leads + messaging connections
+  return getLeads(actions) + getMsgConv(actions);
+}
 function getCPA(spend, actions) {
+  const acq = getAcq(actions);
+  if (!spend || !acq) return '—';
+  return fmtCRC(spend/acq);
+}
+function fmtAcq(actions) {
+  if (!actions) return '—';
   const leads = getLeads(actions);
-  if (!spend || !leads) return '—';
-  return fmtCRC(spend/leads);
+  const msg = getMsgConv(actions);
+  const total = leads + msg;
+  if (!total) return '—';
+  return `${total} (L:${leads} M:${msg})`;
 }
 
 async function loadData() {
@@ -283,7 +296,7 @@ function renderTable() {
   let html = `<table><thead><tr>
     <th style="width:32px"></th>
     <th>Campaña</th><th>Estado</th><th>Objetivo</th><th>Presupuesto</th>
-    <th>Gasto 30d</th><th>Impresiones</th><th>CTR</th><th>CPAL</th><th>Leads</th>
+    <th>Gasto 30d</th><th>Impresiones</th><th>CTR</th><th>CPAL</th><th>Adquisiciones</th>
   </tr></thead><tbody>`;
   filtered.forEach(c => {
     const ins = insights[c.id]||{};
@@ -300,7 +313,7 @@ function renderTable() {
       <td>${fmtN(ins.impressions)}</td>
       <td>${fmtPct(ins.ctr)}</td>
       <td style="color:var(--accent);font-weight:600">${getCPA(ins.spend,ins.actions)}</td>
-      <td>${getLeads(ins.actions)||'—'}</td>
+      <td>${fmtAcq(ins.actions)}</td>
     </tr>`;
     if (isOpen) {
       html += `<tr class="drilldown-row"><td colspan="10"><div class="drilldown-panel" id="panel-${c.id}">
@@ -309,6 +322,7 @@ function renderTable() {
             <button class="dtab ${(activeDrillTab[c.id]||'audience')==='audience'?'active':''}" onclick="showDrillTab('${c.id}','audience',event)">👥 Público</button>
             <button class="dtab ${activeDrillTab[c.id]==='adsets'?'active':''}" onclick="showDrillTab('${c.id}','adsets',event)">📦 Conjuntos</button>
             <button class="dtab ${activeDrillTab[c.id]==='ads'?'active':''}" onclick="showDrillTab('${c.id}','ads',event)">🖼 Anuncios</button>
+            <button class="dtab ${activeDrillTab[c.id]==='byaudience'?'active':''}" onclick="showDrillTab('${c.id}','byaudience',event)">📊 Por público</button>
           </div>
           <div class="drilldown-content" id="dc-${c.id}">
             <div class="loading-sm"><div class="spinner-sm"></div> Cargando...</div>
@@ -353,6 +367,10 @@ async function loadDrillTab(campId, tab) {
       } else if (tab === 'adsets') {
         const data = await get(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget,insights{spend,impressions,clicks,ctr,actions}&access_token=${TOKEN}`);
         drillCache[cacheKey] = data.data || [];
+      } else if (tab === 'byaudience') {
+        // Each adset = one audience segment - get insights per adset
+        const data = await get(`${API}/${campId}/adsets?fields=name,status,targeting,insights{spend,impressions,clicks,ctr,actions}&access_token=${TOKEN}`);
+        drillCache[cacheKey] = data.data || [];
       } else if (tab === 'ads') {
         const data = await get(`${API}/${campId}/ads?fields=name,status,creative{title,body,thumbnail_url},insights{spend,impressions,clicks,ctr,actions}&limit=20&access_token=${TOKEN}`);
         drillCache[cacheKey] = data.data || [];
@@ -366,6 +384,7 @@ async function loadDrillTab(campId, tab) {
   if (tab === 'audience') renderAudience(dc, d);
   else if (tab === 'adsets') renderAdsets(dc, d);
   else if (tab === 'ads') renderAds(dc, d);
+  else if (tab === 'byaudience') renderByAudience(dc, d);
 }
 
 function renderAudience(el, adsets) {
@@ -410,7 +429,7 @@ function renderAdsets(el, adsets) {
       <td>${fmtN(ins.clicks)}</td>
       <td>${fmtPct(ins.ctr)}</td>
       <td style="color:var(--accent);font-weight:600">${getCPA(ins.spend,ins.actions)}</td>
-      <td>${getLeads(ins.actions)||'—'}</td>
+      <td>${fmtAcq(ins.actions)}</td>
     </tr>`;
   });
   html += '</tbody></table>';
@@ -430,7 +449,41 @@ function renderAds(el, ads) {
       <td>${fmtN(ins.clicks)}</td>
       <td>${fmtPct(ins.ctr)}</td>
       <td style="color:var(--accent);font-weight:600">${getCPA(ins.spend,ins.actions)}</td>
-      <td>${getLeads(ins.actions)||'—'}</td>
+      <td>${fmtAcq(ins.actions)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function renderByAudience(el, adsets) {
+  if (!adsets.length) { el.innerHTML = '<div class="empty">Sin datos de audiencia</div>'; return; }
+  // Sort by CPAL (lowest = best)
+  const sorted = [...adsets].sort((a,b) => {
+    const cpaA = getAcq(a.insights?.data?.[0]?.actions) > 0 ? +(a.insights?.data?.[0]?.spend||0)/getAcq(a.insights?.data?.[0]?.actions) : Infinity;
+    const cpaB = getAcq(b.insights?.data?.[0]?.actions) > 0 ? +(b.insights?.data?.[0]?.spend||0)/getAcq(b.insights?.data?.[0]?.actions) : Infinity;
+    return cpaA - cpaB;
+  });
+  const maxSpend = Math.max(...sorted.map(a=>+(a.insights?.data?.[0]?.spend||0)));
+  let html = `<div style="font-size:0.75rem;color:var(--text2);margin-bottom:12px">Ordenado por CPAL (menor = más eficiente) · Últimos 30 días</div>`;
+  html += `<table class="mini-table"><thead><tr><th>Público</th><th>Estado</th><th>Gasto</th><th>Impresiones</th><th>Clics</th><th>CTR</th><th>CPAL</th><th>Adquisiciones</th><th>Eficiencia</th></tr></thead><tbody>`;
+  sorted.forEach((a, i) => {
+    const ins = a.insights?.data?.[0] || {};
+    const spendVal = +(ins.spend||0);
+    const pct = maxSpend>0 ? (spendVal/maxSpend*100) : 0;
+    const acq = getAcq(ins.actions);
+    const cpaVal = acq>0 ? spendVal/acq : null;
+    const rank = i===0 && acq>0 ? '🥇 Mejor' : i===1 && acq>0 ? '🥈' : '';
+    html += `<tr>
+      <td style="font-weight:500">${a.name}</td>
+      <td><span class="badge ${a.status.toLowerCase()}">${a.status==='ACTIVE'?'● Activo':'⏸ Pausado'}</span></td>
+      <td>${fmtCRC(ins.spend)}<div class="perf-bar"><div class="perf-fill" style="width:${pct}%"></div></div></td>
+      <td>${fmtN(ins.impressions)}</td>
+      <td>${fmtN(ins.clicks)}</td>
+      <td>${fmtPct(ins.ctr)}</td>
+      <td style="color:var(--accent);font-weight:600">${cpaVal ? fmtCRC(cpaVal) : '—'}</td>
+      <td>${fmtAcq(ins.actions)}</td>
+      <td>${rank}</td>
     </tr>`;
   });
   html += '</tbody></table>';
