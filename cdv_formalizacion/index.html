@@ -3325,7 +3325,7 @@ function authBackToEmail() {
   document.getElementById('authStepEmail').style.display = '';
 }
 const STORAGE_KEY_TEST = 'cdvFormTest_edits';
-const SYNC_URL_EXP = 'https://script.google.com/macros/s/AKfycbxNnPk1HMgEq9qgG2_Nnm4vPXmXkDYWuuNo7xLaiktCsajsY4-BK2DyxOoFD5IpFI7L/exec';
+const SYNC_URL_EXP = 'https://cdv-formalizacion.j-d6a.workers.dev';
 // Cache de avance de expedientes: { "K.18": 75, "F.18": 40, ... }
 const expedienteAvance = {};
 // Total de requisitos obligatorios (no opcionales)
@@ -3379,7 +3379,7 @@ async function loadAllExpedientes() {
     applyFilters(); // re-render with avance data
   } catch(e) {}
 }
-const SYNC_URL_INFORME = 'https://script.google.com/macros/s/AKfycbxNnPk1HMgEq9qgG2_Nnm4vPXmXkDYWuuNo7xLaiktCsajsY4-BK2DyxOoFD5IpFI7L/exec';
+const SYNC_URL_INFORME = 'https://cdv-formalizacion.j-d6a.workers.dev';
 const SYNC_TOKEN = 'Adelante2025';
 
 // promptPassword defined above (auth system)
@@ -3465,28 +3465,24 @@ function loadEdits() {
     if (saved) applyEditsData(JSON.parse(saved));
   } catch(e) { console.warn('Load edits err:', e); }
   // Then try cloud (fresher data)
-  // 1. Cargar localStorage primero (cambios del usuario tienen prioridad)
-  const savedLocal = localStorage.getItem(STORAGE_KEY_TEST);
-  if (savedLocal) {
-    try {
-      const parsed = JSON.parse(savedLocal);
-      if (parsed && parsed.length > 0) {
-        applyEditsData(parsed);
-        applyFilters();
-        return; // localStorage tiene datos — no sobreescribir con data.json
-      }
-    } catch(e) {}
-  }
-  // 2. Si localStorage está vacío, cargar desde data.json (seed inicial)
-  fetch('./data.json?v=' + Date.now())
+  // Cargar desde Cloudflare Worker (fuente de verdad en la nube)
+  fetch(SYNC_URL_INFORME)
     .then(r => r.json())
     .then(res => {
       if (res.status === 'ok' && res.data && res.data.length > 0) {
         localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(res.data));
         applyEditsData(res.data);
         applyFilters();
+      } else {
+        // Fallback localStorage
+        const saved = localStorage.getItem(STORAGE_KEY_TEST);
+        if (saved) { try { applyEditsData(JSON.parse(saved)); applyFilters(); } catch(e){} }
       }
-    }).catch(() => {});
+    }).catch(() => {
+      // Offline fallback: localStorage
+      const saved = localStorage.getItem(STORAGE_KEY_TEST);
+      if (saved) { try { applyEditsData(JSON.parse(saved)); applyFilters(); } catch(e){} }
+    });
 }
 
 function editMontos(index) {
