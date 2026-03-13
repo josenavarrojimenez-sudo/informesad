@@ -3465,28 +3465,20 @@ function loadEdits() {
     if (saved) applyEditsData(JSON.parse(saved));
   } catch(e) { console.warn('Load edits err:', e); }
   // Then try cloud (fresher data)
-  // Try GitHub Pages JSON first (reliable fallback)
-  fetch('./data.json')
+  // Load from data.json (fuente de verdad)
+  fetch('./data.json?v=' + Date.now())
     .then(r => r.json())
     .then(res => {
       if (res.status === 'ok' && res.data && res.data.length > 0) {
         localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(res.data));
         applyEditsData(res.data);
+        applyFilters();
       }
-    }).catch(() => {});
-
-  if (SYNC_URL_INFORME) {
-    fetch(SYNC_URL_INFORME + '?type=casa_edits')
-      .then(r => r.json())
-      .then(res => {
-        if (res.status === 'ok' && res.data && Array.isArray(res.data) && res.data.length > 0) {
-          localStorage.setItem(STORAGE_KEY_TEST, JSON.stringify(res.data));
-          applyEditsData(res.data);
-          applyFilters();
-        }
-      })
-      .catch(() => {});
-  }
+    }).catch(() => {
+      // Fallback: localStorage
+      const saved = localStorage.getItem(STORAGE_KEY_TEST);
+      if (saved) { applyEditsData(JSON.parse(saved)); applyFilters(); }
+    });
 }
 
 function editMontos(index) {
