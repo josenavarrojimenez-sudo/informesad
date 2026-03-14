@@ -52,35 +52,23 @@
   .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .filter-btn { background: #f5f5f7; border: 1px solid #e5e5e7; color: #1d1d1f; padding: 5px 13px; border-radius: 20px; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: all 0.15s; }
   .filter-btn.active,.filter-btn:hover{background:#1a73e8;border-color:#1a73e8;color:white}
-
-  /* Hierarchy table */
   .htable { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
   .htable th { text-align: left; padding: 9px 10px; color: #86868b; font-weight: 600; text-transform: uppercase; font-size: 0.67rem; letter-spacing: 0.5px; border-bottom: 2px solid #e5e5e7; background: #fafafa; }
   .htable td { padding: 10px; border-bottom: 1px solid #f0f0f2; vertical-align: middle; }
-
-  /* Campaign rows */
   .row-camp td { background: #fff; font-weight: 600; }
   .row-camp:hover td { background: #f0f4ff; }
   .row-camp td:first-child { cursor: pointer; }
-
-  /* Adset rows */
   .row-adset td { background: #f8f9fb; padding-left: 12px; font-size: 0.8rem; }
   .row-adset:hover td { background: #eef2f8; }
   .row-adset td:first-child { cursor: pointer; }
-
-  /* Ad rows */
   .row-ad td { background: #f3f5f8; padding-left: 20px; font-size: 0.77rem; color: #555; }
   .row-ad:hover td { background: #e8ecf3; }
-
-  /* Audience rows */
   .row-audience td { background: #fdf8f3; padding-left: 28px; font-size: 0.72rem; color: #86868b; border-bottom: 1px dashed #f0e8dc; }
-
   .expand-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; color: #86868b; margin-right: 6px; transition: transform 0.15s; display: inline-block; width: 16px; text-align: center; }
   .expand-btn.open { transform: rotate(90deg); }
   .indent-1 { padding-left: 28px !important; }
   .indent-2 { padding-left: 44px !important; }
   .indent-3 { padding-left: 60px !important; }
-
   .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:0.68rem;font-weight:600}
   .badge.active{background:#e6f9ed;color:#1e8e3e} .badge.paused{background:#fff3e0;color:#e65100}
   .objective-chip{background:#f5f5f7;color:#86868b;padding:2px 7px;border-radius:4px;font-size:0.66rem;font-weight:500}
@@ -95,8 +83,6 @@
   .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
   @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
   @media(max-width:768px){.chart-grid{grid-template-columns:1fr}.container{padding:14px}header{padding:12px 16px}}
-
-  /* Audience Modal */
   .audience-link { color: #1a73e8; cursor: pointer; text-decoration: underline dotted; font-size: 0.72rem; }
   .audience-link:hover { color: #0d47a1; }
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; }
@@ -134,9 +120,7 @@
   <div>Estado: <span id="conn-status">Conectando...</span></div>
   <div id="compare-label" style="font-size:0.75rem;">Comparando: vs 30 días anteriores</div>
 </div>
-
 <div class="container">
-  <!-- Compare -->
   <div class="compare-bar">
     <label>Comparar:</label>
     <button class="compare-btn active" data-mode="prev30" onclick="setCompare('prev30',this)">vs 30 días anteriores</button>
@@ -144,8 +128,6 @@
     <button class="compare-btn" data-mode="trend7" onclick="setCompare('trend7',this)">tendencia 7d</button>
     <button class="compare-btn" data-mode="trend30" onclick="setCompare('trend30',this)">tendencia 30d</button>
   </div>
-
-  <!-- Publicitario -->
   <div class="seg-header">
     <div class="seg-icon pub">📣</div>
     <div><h2>Rendimiento Publicitario <span class="seg-badge pub">Meta Ads · Automático</span></h2></div>
@@ -155,13 +137,10 @@
     <div class="skeleton" style="height:96px;"></div><div class="skeleton" style="height:96px;"></div>
     <div class="skeleton" style="height:96px;"></div><div class="skeleton" style="height:96px;"></div>
   </div>
-
   <div class="chart-grid">
     <div class="section"><h3>📈 Gasto por anuncio (últimos 30d)</h3><canvas id="spendChart" height="210"></canvas></div>
     <div class="section"><h3>🎯 Distribución por objetivo</h3><canvas id="objectiveChart" height="210"></canvas></div>
   </div>
-
-  <!-- Hierarchy Table -->
   <div class="section">
     <h3>📋 Campañas · Conjuntos · Anuncios</h3>
     <p style="font-size:0.72rem;color:#86868b;margin-bottom:12px;">Haz clic en ▶ para expandir cada nivel y ver los conjuntos de anuncios, anuncios individuales y audiencias configuradas.</p>
@@ -174,10 +153,7 @@
       <div style="padding:40px;text-align:center;color:#86868b;font-size:0.85rem;">Cargando...</div>
     </div>
   </div>
-
   <hr class="divider">
-
-  <!-- Comercial -->
   <div class="seg-header">
     <div class="seg-icon com">🏠</div>
     <div><h2>Rendimiento Comercial <span class="seg-badge com">Ingreso Manual · Futura integración</span></h2></div>
@@ -185,8 +161,6 @@
   <p class="seg-note">⚠️ Meta Ads no expone esta data. Ingresá los valores con ✏️ en cada tarjeta. Se guardan en tu navegador.</p>
   <div class="kpi-grid" id="kpi-com"></div>
 </div>
-
-<!-- Audience Modal -->
 <div class="modal-overlay" id="audience-modal" onclick="closeModal(event)">
   <div class="modal-box" id="modal-content">
     <div class="modal-header">
@@ -196,23 +170,18 @@
     <div id="modal-body"></div>
   </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const TOKEN='EAAhaEoAZAiZCQBQZBUpN9yuSbqpDDnJUU9gZClMHhJnQZBzfkxZC6tDsrWiMtdgH4370z02ltWfj7lrJ2bZB7s9p7KqaILy3pKK0rSf4bh8kMEz93dLGUqKOXR3FNaQ6nwjcZA7UrqyvB87d5sWRvKOayCgJS6rLFkm9u1ZAUuS1o4hcvcmbyKuCs3MMx80vbu4h54gZDZD';
 const ACCOUNT='act_227998218377271';
 const API='https://graph.facebook.com/v19.0';
-
 let allCampaigns=[],insightsData={},compareMode='prev30';
 let spendChart,objectiveChart;
-let allAdsSpend=[]; // [{name, spend, campName}] for chart
+let allAdsSpend=[];
 const CAMP_COLORS=['#1a73e8','#34c759','#ff9f0a','#af52de','#ff375f','#32ade6','#ff6b35','#795548','#607d8b','#009688'];
-// Expanded state: campId -> bool, adsetId -> bool
 let expandedCamps=new Set(), expandedAdsets=new Set();
-// Cache
 let adsetCache={}, adInsCache={}, adsCache={}, adsInsCache={};
 let currRange={};
-
 const COM_KPIS=[
   {key:'adquisiciones',label:'Adquisiciones',color:'green',prefix:'',desc:'Leads captados'},
   {key:'cpa',label:'CPA',color:'blue',prefix:'₡',desc:'Costo por Adquisición'},
@@ -223,26 +192,22 @@ const COM_KPIS=[
   {key:'formalizaciones',label:'Formalizaciones',color:'green',prefix:'',desc:'Contratos formalizados'},
   {key:'cpf',label:'CPF',color:'orange',prefix:'₡',desc:'Costo por Formalización'},
 ];
-
 function saveComData(d){localStorage.setItem('adelante_com_kpis',JSON.stringify(d));}
 function loadComData(){try{return JSON.parse(localStorage.getItem('adelante_com_kpis')||'{}')}catch(e){return{}}}
 function fmt(n){if(n==null||isNaN(n))return'—';return'₡'+Number(n).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function fmtN(n){if(n==null||isNaN(n))return'—';return Number(n).toLocaleString('es-CR')}
-function fmtP(n){if(n==null||isNaN(n))return'—';return parseFloat(n).toFixed(2)+'%'}
-function crc(n){if(!n)return'—';return'₡'+Number(n*600).toLocaleString('es-CR',{maximumFractionDigits:0})}
+function fmtP(n){if(n==null||isNaN(n))return'—';return parseFloat(n).toFixed(2)+'%'}\nfunction crc(n){if(!n)return'—';return'₡'+Number(n*600).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function delta(c,p){if(!p||!c||isNaN(c)||isNaN(p)||p==0)return null;return((c-p)/Math.abs(p))*100}
 function dHtml(pct,inv=false){
   if(pct==null)return'<span class="kpi-delta neutral">—</span>';
   const good=inv?pct<0:pct>0;const cls=good?'up':'down';const arrow=pct>0?'▲':'▼';
   return`<span class="kpi-delta ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}%</span>`;
 }
-
 function setCompare(mode,btn){
   compareMode=mode;document.querySelectorAll('.compare-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
   const lbl={prev30:'vs 30 días anteriores',prevmonth:'vs mismo periodo mes anterior',trend7:'tendencia 7d',trend30:'tendencia 30d'};
   document.getElementById('compare-label').textContent='Comparando: '+lbl[mode];loadData();
 }
-
 function getDateRanges(mode){
   const today=new Date();today.setHours(0,0,0,0);
   const pad=n=>String(n).padStart(2,'0');
@@ -255,14 +220,12 @@ function getDateRanges(mode){
   else{const pm30=new Date(d30);pm30.setMonth(pm30.getMonth()-1);const pmY=new Date(today);pmY.setMonth(pmY.getMonth()-1);pmY.setDate(pmY.getDate()-1);prev={since:f(pm30),until:f(pmY)};}
   return{curr,prev};
 }
-
 async function fetchJSON(url){
   const r=await fetch(url);
   const j=await r.json();
   if(j.error){console.error('Meta API error:',j.error);throw new Error(j.error.message);}
   return j;
 }
-
 async function loadData(){
   document.getElementById('conn-status').textContent='Actualizando...';
   document.getElementById('conn-status').style.color='#ff9f0a';
@@ -280,13 +243,9 @@ async function loadData(){
       fetchJSON(`${API}/${c.id}/insights?fields=spend,impressions,clicks,ctr,reach,cpc,cpm&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`)
         .then(d=>{insightsData[c.id]=d.data?.[0]||{}})
     ));
-    // Reset caches on full reload
     adsetCache={};adInsCache={};adsCache={};adsInsCache={};
-    // Fetch ad-level spend grouped by campaign for chart
     try{
-      // For each campaign, get its ads and their spend
-      const campColorMap={};
-      allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
+      const campColorMap={};allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
       const allAdsRaw=[];
       await Promise.allSettled(allCampaigns.map(async camp=>{
         try{
@@ -308,7 +267,7 @@ async function loadData(){
         }catch(e){}
       }));
       allAdsSpend=allAdsRaw.sort((a,b)=>b.spend-a.spend).slice(0,15);
-    }catch(e){ allAdsSpend=[]; }
+    }catch(e){allAdsSpend=[];}
     renderPubKPIs(tCd,tPd);renderComKPIs();renderHTable(allCampaigns);renderCharts(active);
     document.getElementById('conn-status').textContent='✓ Conectado — Adelante Desarrollos CDV';
     document.getElementById('conn-status').style.color='#34c759';
@@ -318,7 +277,6 @@ async function loadData(){
     document.getElementById('conn-status').style.color='#ff375f';
   }
 }
-
 function renderPubKPIs(tC,tP){
   const kpis=[
     {label:'Inversión',color:'blue',val:tC.spend?fmt(tC.spend):'—',raw:+tC.spend||0,prev:+tP.spend||0,inv:true},
@@ -335,7 +293,6 @@ function renderPubKPIs(tC,tP){
       <div class="kpi-sub">vs periodo anterior</div>
     </div>`).join('');
 }
-
 function renderComKPIs(){
   const stored=loadComData();
   document.getElementById('kpi-com').innerHTML=COM_KPIS.map(k=>{
@@ -360,10 +317,7 @@ function saveKPI(key){
   const p=parseFloat(document.getElementById(`com-inp-prev-${key}`).value)||null;
   const d=loadComData();d[key]={curr:c,prev:p};saveComData(d);renderComKPIs();
 }
-
-// ── Hierarchy Table ──────────────────────────────────────────────────
 const TH_COLS=['Nombre','Estado','Objetivo / Audiencia','Presupuesto','Gasto','Alcance','Impresiones','Clics','CTR','CPC'];
-
 function renderHTable(campaigns){
   const f=document.querySelector('.filter-btn.active')?.dataset?.filter||'ALL';
   const rows=f==='ALL'?campaigns:campaigns.filter(c=>c.status===f);
@@ -372,7 +326,6 @@ function renderHTable(campaigns){
   h+='</tbody></table>';
   document.getElementById('campaigns-table').innerHTML=h;
 }
-
 function campRow(c){
   const ins=insightsData[c.id]||{};
   const budget=c.daily_budget?fmt(c.daily_budget)+'/d':c.lifetime_budget?fmt(c.lifetime_budget):'—';
@@ -394,7 +347,6 @@ function campRow(c){
     <td>${ins.cpc?crc(ins.cpc):'—'}</td>
   </tr>`;
 }
-
 function adsetRows(campId){
   const adsets=adsetCache[campId];
   if(!adsets)return`<tr class="loading-row" id="adset-loading-${campId}"><td colspan="10">⏳ Cargando conjuntos de anuncios...</td></tr>`;
@@ -403,30 +355,15 @@ function adsetRows(campId){
   adsets.forEach(as=>{h+=adsetRow(as,campId);if(expandedAdsets.has(as.id))h+=adRows(as.id,campId);});
   return h;
 }
-
 function adsetRow(as,campId){
   const ins=adInsCache[as.id]||{};
   const isExp=expandedAdsets.has(as.id);
   const targeting=as.targeting||{};
   const audience=formatAudience(targeting);
   const hasTarget=Object.keys(targeting).length>0;
-  const audienceCell=hasTarget
-    ? `${audience} <span class="audience-link" onclick="showTargeting('${as.id}','${as.name.replace(/'/g,"\\'")}')">Ver detalle →</span>`
-    : audience;
-  return`<tr class="row-adset" id="adset-row-${as.id}">
-    <td class="indent-1"><span class="level-chip adset">Conj</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleAdset('${as.id}','${campId}')">${isExp?'▼':'▶'}</button>${as.name}</td>
-    <td><span class="badge ${as.status.toLowerCase()}">${as.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
-    <td style="max-width:220px;font-size:0.7rem;">${audienceCell}</td>
-    <td>${as.daily_budget?fmt(as.daily_budget)+'/d':as.lifetime_budget?fmt(as.lifetime_budget):'—'}</td>
-    <td>${ins.spend?fmt(ins.spend):'—'}</td>
-    <td>${ins.reach?fmtN(ins.reach):'—'}</td>
-    <td>${ins.impressions?fmtN(ins.impressions):'—'}</td>
-    <td>${ins.clicks?fmtN(ins.clicks):'—'}</td>
-    <td>${ins.ctr?fmtP(ins.ctr):'—'}</td>
-    <td>${ins.cpc?crc(ins.cpc):'—'}</td>
-  </tr>`;
+  const audienceCell=hasTarget ? `${audience} <span class="audience-link" onclick="showTargeting('${as.id}','${as.name.replace(/'/g,"\\'")}')">Ver detalle →</span>` : audience;
+  return`<tr class=\"row-adset\" id=\"adset-row-${as.id}\">\n    <td class=\"indent-1\"><span class=\"level-chip adset\">Conj</span><button class=\"expand-btn ${isExp?'open':''}\" onclick=\"toggleAdset('${as.id}','${campId}')\">${isExp?'▼':'▶'}</button>${as.name}</td>\n    <td><span class=\"badge ${as.status.toLowerCase()}\">${as.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>\n    <td style=\"max-width:220px;font-size:0.7rem;\">${audienceCell}</td>\n    <td>${as.daily_budget?fmt(as.daily_budget)+'/d':as.lifetime_budget?fmt(as.lifetime_budget):'—'}</td>\n    <td>${ins.spend?fmt(ins.spend):'—'}</td>\n    <td>${ins.reach?fmtN(ins.reach):'—'}</td>\n    <td>${ins.impressions?fmtN(ins.impressions):'—'}</td>\n    <td>${ins.clicks?fmtN(ins.clicks):'—'}</td>\n    <td>${ins.ctr?fmtP(ins.ctr):'—'}</td>\n    <td>${ins.cpc?crc(ins.cpc):'—'}</td>\n  </tr>`;
 }
-
 function adRows(adsetId,campId){
   const ads=adsCache[adsetId];
   if(!ads)return`<tr class="loading-row"><td colspan="10">⏳ Cargando anuncios...</td></tr>`;
@@ -447,7 +384,6 @@ function adRows(adsetId,campId){
     </tr>`;
   }).join('');
 }
-
 function formatAudience(t){
   if(!t||Object.keys(t).length===0)return'<span style="color:#c7c7cc">Sin targeting</span>';
   const tags=[];
@@ -463,45 +399,41 @@ function formatAudience(t){
   }
   if(t.interests&&t.interests.length)tags.push('🎯 '+t.interests.slice(0,2).map(i=>i.name).join(', ')+(t.interests.length>2?` +${t.interests.length-2}`:''));
   if(t.behaviors&&t.behaviors.length)tags.push('⚙️ '+t.behaviors.slice(0,1).map(b=>b.name).join(''));
-  if(t.custom_audiences&&t.custom_audiences.length)tags.push(`👥 ${t.custom_audiences.length} audiencia(s)personalizada(s)`);
+  if(t.custom_audiences&&t.custom_audiences.length)tags.push(`👥 ${t.custom_audiences.length} audiencia(s)`);
   if(t.lookalike_audience)tags.push('🔍 Lookalike');
   return tags.length?tags.map(t=>`<span class="audience-tag">${t}</span>`).join(' '):'<span style="color:#c7c7cc">General</span>';
 }
-
 async function toggleCamp(campId){
   if(expandedCamps.has(campId)){
     expandedCamps.delete(campId);
     renderHTable(allCampaigns);
   } else {
     expandedCamps.add(campId);
-    renderHTable(allCampaigns); // Show loading row immediately
+    renderHTable(allCampaigns);
     if(!adsetCache[campId]) await fetchAdsets(campId);
-    renderHTable(allCampaigns); // Re-render with actual data
+    renderHTable(allCampaigns);
   }
 }
-
 async function toggleAdset(adsetId,campId){
   if(expandedAdsets.has(adsetId)){
     expandedAdsets.delete(adsetId);
     renderHTable(allCampaigns);
   } else {
     expandedAdsets.add(adsetId);
-    renderHTable(allCampaigns); // Show loading row immediately
+    renderHTable(allCampaigns);
     if(!adsCache[adsetId]) await fetchAds(adsetId);
-    renderHTable(allCampaigns); // Re-render with actual data
+    renderHTable(allCampaigns);
   }
 }
-
 async function fetchAdsets(campId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
   try{
-    const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget,targeting&limit=30&access_token=${TOKEN}`);
+    const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting&limit=50&access_token=${TOKEN}`);
     adsetCache[campId]=data.data||[];
     (data.data||[]).forEach(as=>{if(as.targeting)targetingCache[as.id]=as.targeting;});
   }catch(e){
-    // Retry without targeting field if permission error
     try{
-      const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,daily_budget,lifetime_budget&limit=30&access_token=${TOKEN}`);
+      const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget&limit=50&access_token=${TOKEN}`);
       adsetCache[campId]=data.data||[];
     }catch(e2){
       adsetCache[campId]=[]; adsetCache[campId]._error=e2.message;
@@ -515,11 +447,10 @@ async function fetchAdsets(campId){
       .catch(()=>{adInsCache[as.id]={};})
   ));
 }
-
 async function fetchAds(adsetId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
   try{
-    const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status&limit=30&access_token=${TOKEN}`);
+    const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status&limit=50&access_token=${TOKEN}`);
     adsCache[adsetId]=data.data||[];
     await Promise.allSettled((data.data||[]).map(ad=>
       fetchJSON(`${API}/${ad.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R.since}","until":"${R.until}"}&access_token=${TOKEN}`)
@@ -530,11 +461,8 @@ async function fetchAds(adsetId){
     adsCache[adsetId]=[];
   }
 }
-
 function filterCampaigns(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.dataset.filter=s;renderHTable(allCampaigns);}
-
 function renderCharts(active){
-  // Use ad-level spend grouped by campaign color
   let labels=[],vals=[],barColors=[];
   if(allAdsSpend.length){
     allAdsSpend.forEach(a=>{
@@ -545,7 +473,6 @@ function renderCharts(active){
   }else{
     active.forEach(c=>{const ins=insightsData[c.id];if(ins?.spend){labels.push(c.name.substring(0,20));vals.push(parseFloat(ins.spend));barColors.push('#1a73e8');}});
   }
-  // Build legend for campaigns that appear in the chart
   const campsSeen={};
   allAdsSpend.forEach(a=>{if(!campsSeen[a.campId])campsSeen[a.campId]={name:a.campName,color:a.color};});
   const legendHtml=Object.values(campsSeen).map(c=>`<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 6px;font-size:0.7rem;color:#555;"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c.color}"></span>${c.name.substring(0,30)}</span>`).join('');
@@ -566,10 +493,7 @@ function renderCharts(active){
     options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#1d1d1f',font:{size:11},padding:12}}}}
   });
 }
-
-// Cache adset targeting by id
 const targetingCache={};
-
 function showTargeting(adsetId, adsetName){
   const t=targetingCache[adsetId];
   if(!t){document.getElementById('modal-body').innerHTML='<p class="empty-targeting">Sin datos de targeting disponibles.</p>';}
@@ -578,12 +502,9 @@ function showTargeting(adsetId, adsetName){
   document.getElementById('audience-modal').classList.add('open');
 }
 function closeModal(e){if(e.target===document.getElementById('audience-modal'))document.getElementById('audience-modal').classList.remove('open');}
-
 function renderTargetingDetail(t){
   if(!t||Object.keys(t).length===0)return'<p class="empty-targeting">Sin configuración de targeting registrada.</p>';
   let h='';
-
-  // Demographics
   const demo=[];
   if(t.age_min||t.age_max)demo.push(`<span class="t-tag">👤 Edad: ${t.age_min||'—'}–${t.age_max||'—'} años</span>`);
   if(t.genders&&t.genders.length){
@@ -592,8 +513,6 @@ function renderTargetingDetail(t){
     demo.push(`<span class="t-tag">⚥ Género: ${gLabel}</span>`);
   }
   if(demo.length){h+=`<div class="targeting-section"><h4>Demografía</h4><div>${demo.join(' ')}</div></div>`;}
-
-  // Locations
   const geo=t.geo_locations;
   if(geo){
     const locs=[];
@@ -604,40 +523,28 @@ function renderTargetingDetail(t){
     if(locs.length)h+=`<div class="targeting-section"><h4>Ubicaciones</h4><div>${locs.join(' ')}</div></div>`;
     if(geo.location_types&&geo.location_types.length)h+=`<div class="targeting-section"><h4>Tipo de ubicación</h4><div>${geo.location_types.map(l=>`<span class="t-tag geo">${l}</span>`).join(' ')}</div></div>`;
   }
-
-  // Interests
   if(t.interests&&t.interests.length){
     h+=`<div class="targeting-section"><h4>Intereses (${t.interests.length})</h4><div>${t.interests.map(i=>`<span class="t-tag interest">🎯 ${i.name}</span>`).join(' ')}</div></div>`;
   }
-
-  // Behaviors
   if(t.behaviors&&t.behaviors.length){
     h+=`<div class="targeting-section"><h4>Comportamientos (${t.behaviors.length})</h4><div>${t.behaviors.map(b=>`<span class="t-tag behavior">⚙️ ${b.name}</span>`).join(' ')}</div></div>`;
   }
-
-  // Custom Audiences
   if(t.custom_audiences&&t.custom_audiences.length){
     h+=`<div class="targeting-section"><h4>Audiencias Personalizadas (${t.custom_audiences.length})</h4><div>${t.custom_audiences.map(a=>`<span class="t-tag custom">👥 ${a.name||a.id}</span>`).join(' ')}</div></div>`;
   }
   if(t.excluded_custom_audiences&&t.excluded_custom_audiences.length){
     h+=`<div class="targeting-section"><h4>Audiencias Excluidas</h4><div>${t.excluded_custom_audiences.map(a=>`<span class="t-tag custom" style="opacity:.6">🚫 ${a.name||a.id}</span>`).join(' ')}</div></div>`;
   }
-
-  // Placements
   const placements=[];
   if(t.publisher_platforms&&t.publisher_platforms.length)placements.push(...t.publisher_platforms.map(p=>`<span class="t-tag device">📱 ${p}</span>`));
   if(t.device_platforms&&t.device_platforms.length)placements.push(...t.device_platforms.map(p=>`<span class="t-tag device">💻 ${p}</span>`));
   if(t.facebook_positions&&t.facebook_positions.length)placements.push(...t.facebook_positions.map(p=>`<span class="t-tag device">👍 FB: ${p}</span>`));
   if(t.instagram_positions&&t.instagram_positions.length)placements.push(...t.instagram_positions.map(p=>`<span class="t-tag device">📸 IG: ${p}</span>`));
   if(placements.length)h+=`<div class="targeting-section"><h4>Ubicaciones de Anuncio</h4><div>${placements.join(' ')}</div></div>`;
-
-  // Languages
   if(t.locales&&t.locales.length)h+=`<div class="targeting-section"><h4>Idiomas</h4><div>${t.locales.map(l=>`<span class="t-tag">🗣 ${l}</span>`).join(' ')}</div></div>`;
-
   if(!h)h='<p class="empty-targeting">Targeting configurado pero sin detalles adicionales disponibles.</p>';
   return h;
 }
-
 loadData();setInterval(loadData,300000);
 </script>
 </body>
