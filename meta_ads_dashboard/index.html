@@ -198,7 +198,7 @@ function loadComData(){try{return JSON.parse(localStorage.getItem('adelante_com_
 function fmt(n){if(n==null||isNaN(n))return'—';return'₡'+Number(n).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function fmtN(n){if(n==null||isNaN(n))return'—';return Number(n).toLocaleString('es-CR')}
 function fmtP(n){if(n==null||isNaN(n))return'—';return parseFloat(n).toFixed(2)+'%'}
-function crc(n){if(!n)return'—';return'₡'+Number(n*600).toLocaleString('es-CR',{maximumFractionDigits:0})}
+function crc(n){if(!n)return'—';return'₡'+Number(n).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function delta(c,p){if(!p||!c||isNaN(c)||isNaN(p)||p==0)return null;return((c-p)/Math.abs(p))*100}
 function dHtml(pct,inv=false){
   if(pct==null)return'<span class="kpi-delta neutral">—</span>';
