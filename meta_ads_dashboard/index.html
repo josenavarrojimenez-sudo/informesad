@@ -207,8 +207,7 @@ function dHtml(pct,inv=false){
 }
 function setCompare(mode,btn){
   compareMode=mode;document.querySelectorAll('.compare-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const lbl={prev30:'vs 30 días anteriores',prevmonth:'vs mismo periodo mes anterior',trend7:'tendencia 7d',trend30:'tendencia 30d'};
-  document.getElementById('compare-label').textContent='Comparando: '+lbl[mode];loadData();
+  const lbl={prev30:'vs 30 días anteriores',prevmonth:'vs mismo periodo mes anterior',trend7:'tendencia 7d',trend30:'tendencia 30d'};\n  document.getElementById('compare-label').textContent='Comparando: '+lbl[mode];loadData();
 }
 function getDateRanges(mode){
   const today=new Date();today.setHours(0,0,0,0);
@@ -241,35 +240,23 @@ async function loadData(){
     ]);
     const tCd=tC.data?.[0]||{},tPd=tP.data?.[0]||{};
     const active=allCampaigns.filter(c=>c.status==='ACTIVE');
-    await Promise.all(active.map(c=>
+    await Promise.allSettled(active.map(c=>
       fetchJSON(`${API}/${c.id}/insights?fields=spend,impressions,clicks,ctr,reach,cpc,cpm&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`)
         .then(d=>{insightsData[c.id]=d.data?.[0]||{}})
     ));
     adsetCache={};adInsCache={};adsCache={};adsInsCache={};
     try{
       const campColorMap={};allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
-      const allAdsRaw=[];
-      await Promise.allSettled(allCampaigns.slice(0,10).map(async camp=>{
-        try{
-          const adsetD=await fetchJSON(`${API}/${camp.id}/adsets?fields=id&limit=10&access_token=${TOKEN}`);
-          const adsets=adsetD.data||[];
-          await Promise.allSettled(adsets.map(async as=>{
-            try{
-              const adD=await fetchJSON(`${API}/${as.id}/ads?fields=name&limit=10&access_token=${TOKEN}`);
-              const ads=adD.data||[];
-              await Promise.allSettled(ads.map(async ad=>{
-                try{
-                  const ins=await fetchJSON(`${API}/${ad.id}/insights?fields=spend&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`);
-                  const spend=parseFloat(ins.data?.[0]?.spend||0);
-                  if(spend>0)allAdsRaw.push({name:ad.name,spend,campId:camp.id,campName:camp.name,color:campColorMap[camp.id]});
-                }catch(e){}
-              }));
-            }catch(e){}
-          }));
-        }catch(e){}
-      }));
-      allAdsSpend=allAdsRaw.sort((a,b)=>b.spend-a.spend).slice(0,15);
-    }catch(e){allAdsSpend=[];}
+      const adInsightsData = await fetchJSON(`${API}/${ACCOUNT}/insights?level=ad&fields=ad_name,spend,campaign_id,campaign_name&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&limit=100&access_token=${TOKEN}`);
+      const adInsights = adInsightsData.data || [];
+      allAdsSpend = adInsights.map(i => ({
+          name: i.ad_name,
+          spend: parseFloat(i.spend||0),
+          campId: i.campaign_id,
+          campName: i.campaign_name,
+          color: campColorMap[i.campaign_id] || '#1a73e8'
+        })).filter(a => a.spend > 0).sort((a,b) => b.spend - a.spend).slice(0, 15);
+    } catch(e) { console.error('Chart error:', e); allAdsSpend=[]; }
     renderPubKPIs(tCd,tPd);renderComKPIs();renderHTable(allCampaigns);renderCharts(active);
     document.getElementById('conn-status').textContent='✓ Conectado — Adelante Desarrollos CDV';
     document.getElementById('conn-status').style.color='#34c759';
