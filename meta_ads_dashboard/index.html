@@ -207,7 +207,8 @@ function dHtml(pct,inv=false){
 }
 function setCompare(mode,btn){
   compareMode=mode;document.querySelectorAll('.compare-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const lbl={prev30:'vs 30 días anteriores',prevmonth:'vs mismo periodo mes anterior',trend7:'tendencia 7d',trend30:'tendencia 30d'};\n  document.getElementById('compare-label').textContent='Comparando: '+lbl[mode];loadData();
+  const lbl={prev30:'vs 30 días anteriores',prevmonth:'vs mismo periodo mes anterior',trend7:'tendencia 7d',trend30:'tendencia 30d'};
+  document.getElementById('compare-label').textContent='Comparando: '+lbl[mode];loadData();
 }
 function getDateRanges(mode){
   const today=new Date();today.setHours(0,0,0,0);
@@ -240,14 +241,14 @@ async function loadData(){
     ]);
     const tCd=tC.data?.[0]||{},tPd=tP.data?.[0]||{};
     const active=allCampaigns.filter(c=>c.status==='ACTIVE');
-    await Promise.allSettled(active.map(c=>
+    await Promise.all(active.map(c=>
       fetchJSON(`${API}/${c.id}/insights?fields=spend,impressions,clicks,ctr,reach,cpc,cpm&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&access_token=${TOKEN}`)
         .then(d=>{insightsData[c.id]=d.data?.[0]||{}})
     ));
     adsetCache={};adInsCache={};adsCache={};adsInsCache={};
     try{
       const campColorMap={};allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
-      const adInsightsData = await fetchJSON(`${API}/${ACCOUNT}/insights?level=ad&fields=ad_name,spend,campaign_id,campaign_name&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&limit=100&access_token=${TOKEN}`);
+      const adInsightsData = await fetchJSON(`${API}/${ACCOUNT}/insights?level=ad&fields=ad_name,spend,campaign_id,campaign_name&time_range={"since":"${R.curr.since}","until":"${R.curr.until}"}&limit=50&access_token=${TOKEN}`);
       const adInsights = adInsightsData.data || [];
       allAdsSpend = adInsights.map(i => ({
           name: i.ad_name,
@@ -262,7 +263,9 @@ async function loadData(){
     document.getElementById('conn-status').style.color='#34c759';
     document.getElementById('last-update').textContent='Actualizado: '+new Date().toLocaleTimeString('es-CR');
   }catch(e){
-    document.getElementById('conn-status').textContent='Error: '+e.message;
+    let msg = e.message;
+    if(msg.includes('limit')) msg = 'Error: Límite de Meta alcanzado. Reintenta en 5 min.';
+    document.getElementById('conn-status').textContent=msg;
     document.getElementById('conn-status').style.color='#ff375f';
   }
 }
@@ -341,7 +344,8 @@ function campRow(c){
 function adsetRows(campId){
   const adsets=adsetCache[campId];
   if(!adsets)return`<tr class="loading-row" id="adset-loading-${campId}"><td colspan="10">⏳ Cargando conjuntos de anuncios...</td></tr>`;
-  if(!adsets.length)return`<tr class="loading-row"><td colspan="10" style="color:#86868b;font-style:italic;">Sin conjuntos de anuncios activos en este periodo.</td></tr>`;
+  if(adsets._error)return`<tr class="loading-row"><td colspan="10" style="color:#ff375f;font-style:italic;">${adsets._error}</td></tr>`;
+  if(!adsets.length)return`<tr class="loading-row"><td colspan="10" style="color:#86868b;font-style:italic;">Sin conjuntos de anuncios en este periodo.</td></tr>`;
   let h='';
   adsets.forEach(as=>{h+=adsetRow(as,campId);if(expandedAdsets.has(as.id))h+=adRows(as.id,campId);});
   return h;
@@ -375,7 +379,7 @@ function adRows(adsetId,campId){
     return`<tr class="row-ad">
       <td class="indent-2"><span class="level-chip ad">Ad</span>${ad.name}</td>
       <td><span class="badge ${(ad.status||'').toLowerCase()}">${ad.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
-      <td style="font-size:0.7rem;color:#86868b;">${ad.creative?.title||ad.creative?.name||'—'}</td>
+      <td style="font-size:0.7rem;color:#86868b;">—</td>
       <td>—</td>
       <td>${ins.spend?fmt(ins.spend):'—'}</td>
       <td>${ins.reach?fmtN(ins.reach):'—'}</td>
@@ -401,8 +405,7 @@ function formatAudience(t){
   }
   if(t.interests&&t.interests.length)tags.push('🎯 '+t.interests.slice(0,2).map(i=>i.name).join(', ')+(t.interests.length>2?` +${t.interests.length-2}`:''));
   if(t.behaviors&&t.behaviors.length)tags.push('⚙️ '+t.behaviors.slice(0,1).map(b=>b.name).join(''));
-  if(t.custom_audiences&&t.custom_audiences.length)tags.push(`👥 ${t.custom_audiences.length} audiencia(s)`);
-  if(t.lookalike_audience)tags.push('🔍 Lookalike');
+  if(t.custom_audiences&&t.custom_audiences.length)tags.push(`👥 ${t.custom_audiences.length} aud.`);
   return tags.length?tags.map(t=>`<span class="audience-tag">${t}</span>`).join(' '):'<span style="color:#c7c7cc">General</span>';
 }
 async function toggleCamp(campId){
@@ -430,38 +433,36 @@ async function toggleAdset(adsetId,campId){
 async function fetchAdsets(campId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
   try{
-    const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting&limit=50&access_token=${TOKEN}`);
-    adsetCache[campId]=data.data||[];
-    (data.data||[]).forEach(as=>{if(as.targeting)targetingCache[as.id]=as.targeting;});
+    const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,targeting,insights.time_range({"since":"${R.since}","until":"${R.until}"}){spend,reach,impressions,clicks,ctr,cpc}&limit=50&access_token=${TOKEN}`);
+    const adsets=data.data||[];
+    adsetCache[campId]=adsets;
+    adsets.forEach(as=>{
+      if(as.targeting)targetingCache[as.id]=as.targeting;
+      if(as.insights && as.insights.data && as.insights.data[0]) adInsCache[as.id]=as.insights.data[0];
+      else adInsCache[as.id]={};
+    });
   }catch(e){
-    try{
-      const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget&limit=50&access_token=${TOKEN}`);
-      adsetCache[campId]=data.data||[];
-    }catch(e2){
-      adsetCache[campId]=[]; adsetCache[campId]._error=e2.message;
+    console.error('Error fetching adsets:', e);
+    if(e.message.includes('limit')) adsetCache[campId]={_error:'Límite de API alcanzado.'};
+    else{
+      try{
+        const data=await fetchJSON(`${API}/${campId}/adsets?fields=name,status,effective_status,daily_budget,lifetime_budget,insights.time_range({"since":"${R.since}","until":"${R.until}"}){spend,reach,impressions,clicks,ctr,cpc}&limit=50&access_token=${TOKEN}`);
+        adsetCache[campId]=data.data||[];
+      }catch(e2){ adsetCache[campId]={_error:e2.message}; }
     }
   }
-  const adsets=adsetCache[campId]||[];
-  const R2=currRange.curr||getDateRanges(compareMode).curr;
-  await Promise.allSettled(adsets.map(as=>
-    fetchJSON(`${API}/${as.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R2.since}","until":"${R2.until}"}&access_token=${TOKEN}`)
-      .then(d=>{adInsCache[as.id]=d.data?.[0]||{}})
-      .catch(()=>{adInsCache[as.id]={};})
-  ));
 }
 async function fetchAds(adsetId){
   const R=currRange.curr||getDateRanges(compareMode).curr;
   try{
-    const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status&limit=50&access_token=${TOKEN}`);
-    adsCache[adsetId]=data.data||[];
-    await Promise.allSettled((data.data||[]).map(ad=>
-      fetchJSON(`${API}/${ad.id}/insights?fields=spend,reach,impressions,clicks,ctr,cpc&time_range={"since":"${R.since}","until":"${R.until}"}&access_token=${TOKEN}`)
-        .then(d=>{adsInsCache[ad.id]=d.data?.[0]||{}})
-        .catch(()=>{adsInsCache[ad.id]={};})
-    ));
-  }catch(e){
-    adsCache[adsetId]=[];
-  }
+    const data=await fetchJSON(`${API}/${adsetId}/ads?fields=name,status,insights.time_range({"since":"${R.since}","until":"${R.until}"}){spend,reach,impressions,clicks,ctr,cpc}&limit=50&access_token=${TOKEN}`);
+    const ads=data.data||[];
+    adsCache[adsetId]=ads;
+    ads.forEach(ad=>{
+      if(ad.insights && ad.insights.data && ad.insights.data[0]) adsInsCache[ad.id]=ad.insights.data[0];
+      else adsInsCache[ad.id]={};
+    });
+  }catch(e){ adsCache[adsetId]=[]; }
 }
 function filterCampaigns(s,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');btn.dataset.filter=s;renderHTable(allCampaigns);}
 function renderCharts(active){
