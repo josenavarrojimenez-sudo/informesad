@@ -182,6 +182,7 @@ const CAMP_COLORS=['#1a73e8','#34c759','#ff9f0a','#af52de','#ff375f','#32ade6','
 let expandedCamps=new Set(), expandedAdsets=new Set();
 let adsetCache={}, adInsCache={}, adsCache={}, adsInsCache={};
 let currRange={};
+const targetingCache={};
 const COM_KPIS=[
   {key:'adquisiciones',label:'Adquisiciones',color:'green',prefix:'',desc:'Leads captados'},
   {key:'cpa',label:'CPA',color:'blue',prefix:'₡',desc:'Costo por Adquisición'},
@@ -196,7 +197,8 @@ function saveComData(d){localStorage.setItem('adelante_com_kpis',JSON.stringify(
 function loadComData(){try{return JSON.parse(localStorage.getItem('adelante_com_kpis')||'{}')}catch(e){return{}}}
 function fmt(n){if(n==null||isNaN(n))return'—';return'₡'+Number(n).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function fmtN(n){if(n==null||isNaN(n))return'—';return Number(n).toLocaleString('es-CR')}
-function fmtP(n){if(n==null||isNaN(n))return'—';return parseFloat(n).toFixed(2)+'%'}\nfunction crc(n){if(!n)return'—';return'₡'+Number(n*600).toLocaleString('es-CR',{maximumFractionDigits:0})}
+function fmtP(n){if(n==null||isNaN(n))return'—';return parseFloat(n).toFixed(2)+'%'}
+function crc(n){if(!n)return'—';return'₡'+Number(n*600).toLocaleString('es-CR',{maximumFractionDigits:0})}
 function delta(c,p){if(!p||!c||isNaN(c)||isNaN(p)||p==0)return null;return((c-p)/Math.abs(p))*100}
 function dHtml(pct,inv=false){
   if(pct==null)return'<span class="kpi-delta neutral">—</span>';
@@ -247,13 +249,13 @@ async function loadData(){
     try{
       const campColorMap={};allCampaigns.forEach((c,i)=>{campColorMap[c.id]=CAMP_COLORS[i%CAMP_COLORS.length];});
       const allAdsRaw=[];
-      await Promise.allSettled(allCampaigns.map(async camp=>{
+      await Promise.allSettled(allCampaigns.slice(0,10).map(async camp=>{
         try{
-          const adsetD=await fetchJSON(`${API}/${camp.id}/adsets?fields=id&limit=30&access_token=${TOKEN}`);
+          const adsetD=await fetchJSON(`${API}/${camp.id}/adsets?fields=id&limit=10&access_token=${TOKEN}`);
           const adsets=adsetD.data||[];
           await Promise.allSettled(adsets.map(async as=>{
             try{
-              const adD=await fetchJSON(`${API}/${as.id}/ads?fields=name&limit=30&access_token=${TOKEN}`);
+              const adD=await fetchJSON(`${API}/${as.id}/ads?fields=name&limit=10&access_token=${TOKEN}`);
               const ads=adD.data||[];
               await Promise.allSettled(ads.map(async ad=>{
                 try{
@@ -321,7 +323,9 @@ const TH_COLS=['Nombre','Estado','Objetivo / Audiencia','Presupuesto','Gasto','A
 function renderHTable(campaigns){
   const f=document.querySelector('.filter-btn.active')?.dataset?.filter||'ALL';
   const rows=f==='ALL'?campaigns:campaigns.filter(c=>c.status===f);
-  let h=`<table class="htable"><thead><tr>${TH_COLS.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+  let h='<table class="htable"><thead><tr>';
+  TH_COLS.forEach(c=>{ h+=`<th>${c}</th>`; });
+  h+='</tr></thead><tbody>';
   rows.forEach(c=>{h+=campRow(c);if(expandedCamps.has(c.id))h+=adsetRows(c.id);});
   h+='</tbody></table>';
   document.getElementById('campaigns-table').innerHTML=h;
@@ -362,7 +366,18 @@ function adsetRow(as,campId){
   const audience=formatAudience(targeting);
   const hasTarget=Object.keys(targeting).length>0;
   const audienceCell=hasTarget ? `${audience} <span class="audience-link" onclick="showTargeting('${as.id}','${as.name.replace(/'/g,"\\'")}')">Ver detalle →</span>` : audience;
-  return`<tr class=\"row-adset\" id=\"adset-row-${as.id}\">\n    <td class=\"indent-1\"><span class=\"level-chip adset\">Conj</span><button class=\"expand-btn ${isExp?'open':''}\" onclick=\"toggleAdset('${as.id}','${campId}')\">${isExp?'▼':'▶'}</button>${as.name}</td>\n    <td><span class=\"badge ${as.status.toLowerCase()}\">${as.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>\n    <td style=\"max-width:220px;font-size:0.7rem;\">${audienceCell}</td>\n    <td>${as.daily_budget?fmt(as.daily_budget)+'/d':as.lifetime_budget?fmt(as.lifetime_budget):'—'}</td>\n    <td>${ins.spend?fmt(ins.spend):'—'}</td>\n    <td>${ins.reach?fmtN(ins.reach):'—'}</td>\n    <td>${ins.impressions?fmtN(ins.impressions):'—'}</td>\n    <td>${ins.clicks?fmtN(ins.clicks):'—'}</td>\n    <td>${ins.ctr?fmtP(ins.ctr):'—'}</td>\n    <td>${ins.cpc?crc(ins.cpc):'—'}</td>\n  </tr>`;
+  return `<tr class="row-adset" id="adset-row-${as.id}">
+    <td class="indent-1"><span class="level-chip adset">Conj</span><button class="expand-btn ${isExp?'open':''}" onclick="toggleAdset('${as.id}','${campId}')">${isExp?'▼':'▶'}</button>${as.name}</td>
+    <td><span class="badge ${as.status.toLowerCase()}">${as.status==='ACTIVE'?'● Activa':'⏸ Pausada'}</span></td>
+    <td style="max-width:220px;font-size:0.7rem;">${audienceCell}</td>
+    <td>${as.daily_budget?fmt(as.daily_budget)+'/d':as.lifetime_budget?fmt(as.lifetime_budget):'—'}</td>
+    <td>${ins.spend?fmt(ins.spend):'—'}</td>
+    <td>${ins.reach?fmtN(ins.reach):'—'}</td>
+    <td>${ins.impressions?fmtN(ins.impressions):'—'}</td>
+    <td>${ins.clicks?fmtN(ins.clicks):'—'}</td>
+    <td>${ins.ctr?fmtP(ins.ctr):'—'}</td>
+    <td>${ins.cpc?crc(ins.cpc):'—'}</td>
+  </tr>`;
 }
 function adRows(adsetId,campId){
   const ads=adsCache[adsetId];
@@ -493,7 +508,6 @@ function renderCharts(active){
     options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#1d1d1f',font:{size:11},padding:12}}}}
   });
 }
-const targetingCache={};
 function showTargeting(adsetId, adsetName){
   const t=targetingCache[adsetId];
   if(!t){document.getElementById('modal-body').innerHTML='<p class="empty-targeting">Sin datos de targeting disponibles.</p>';}
