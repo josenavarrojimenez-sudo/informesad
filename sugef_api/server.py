@@ -357,7 +357,7 @@ def submit():
         nombre = data.get('nombre', '').strip()
         cedula = data.get('cedula', '').strip()
         asesor = data.get('asesor', '').strip() or "No especificado"
-        tipo_ingreso = data.get('tipoIngreso', '').strip() or "No especificado"
+        tipo_ingreso = (data.get('tipoIngreso') or '').strip() or "No especificado"
         firma_b64 = data.get('firma', '')
         photos_list = data.get('photos', []) # List of b64 strings
 
