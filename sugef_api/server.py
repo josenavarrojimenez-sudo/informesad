@@ -72,6 +72,8 @@ import pymupdf as fitz
 import smtplib
 from email.message import EmailMessage
 
+import requests
+
 app = Flask(__name__, static_folder='.')
 
 ALLOWED_ORIGINS = {
@@ -382,6 +384,107 @@ def send_email_smtp(nombre, cedula, attachments, asesor="No especificado", tipo_
         s.send_message(msg)
     return True
 
+
+
+# Gmail API (OAuth)
+GMAIL_OAUTH_CLIENT_ID = os.environ.get('GMAIL_OAUTH_CLIENT_ID', '')
+GMAIL_OAUTH_CLIENT_SECRET = os.environ.get('GMAIL_OAUTH_CLIENT_SECRET', '')
+GMAIL_SENDER = os.environ.get('GMAIL_SENDER', '')
+GMAIL_TOKEN_FILE = '/etc/secrets/gmail-token.json'
+
+
+def gmail_load_token():
+    if not os.path.exists(GMAIL_TOKEN_FILE):
+        return None
+    with open(GMAIL_TOKEN_FILE, 'r') as f:
+        return json.load(f)
+
+
+def gmail_save_token(tok: dict):
+    os.makedirs(os.path.dirname(GMAIL_TOKEN_FILE), exist_ok=True)
+    with open(GMAIL_TOKEN_FILE, 'w') as f:
+        json.dump(tok, f)
+
+
+def gmail_refresh_access_token(refresh_token: str) -> dict:
+    resp = requests.post('https://oauth2.googleapis.com/token', data={
+        'client_id': GMAIL_OAUTH_CLIENT_ID,
+        'client_secret': GMAIL_OAUTH_CLIENT_SECRET,
+        'refresh_token': refresh_token,
+        'grant_type': 'refresh_token',
+    }, timeout=20)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def gmail_get_access_token() -> str:
+    if not (GMAIL_OAUTH_CLIENT_ID and GMAIL_OAUTH_CLIENT_SECRET and GMAIL_SENDER):
+        raise RuntimeError('Gmail OAuth is not configured (missing GMAIL_OAUTH_CLIENT_ID/GMAIL_OAUTH_CLIENT_SECRET/GMAIL_SENDER)')
+
+    tok = gmail_load_token()
+    if not tok or not tok.get('refresh_token'):
+        raise RuntimeError('Gmail token not initialized. Need one-time authorization to obtain refresh_token.')
+
+    refreshed = gmail_refresh_access_token(tok['refresh_token'])
+    tok.update({
+        'access_token': refreshed.get('access_token'),
+        'expires_in': refreshed.get('expires_in'),
+        'scope': refreshed.get('scope'),
+        'token_type': refreshed.get('token_type', 'Bearer'),
+        'updated_at': int(datetime.utcnow().timestamp()),
+    })
+    gmail_save_token(tok)
+    return tok['access_token']
+
+
+def gmail_build_message_raw(to_list, subject, body_text, attachments):
+    msg = EmailMessage()
+    msg['To'] = ', '.join(to_list)
+    msg['From'] = GMAIL_SENDER
+    msg['Subject'] = subject
+    msg.set_content(body_text)
+
+    for fname, content in attachments:
+        if fname.lower().endswith('.pdf'):
+            maintype, subtype = 'application', 'pdf'
+        elif fname.lower().endswith('.png'):
+            maintype, subtype = 'image', 'png'
+        else:
+            maintype, subtype = 'image', 'jpeg'
+        msg.add_attachment(content, maintype=maintype, subtype=subtype, filename=fname)
+
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode('utf-8')
+    return raw
+
+
+def send_email_gmail_api(nombre, cedula, attachments, asesor="No especificado", tipo_ingreso="No especificado"):
+    """Send email via Gmail API. Requires gmail-token.json secret file with refresh_token."""
+    access_token = gmail_get_access_token()
+
+    subject = f"SUGEF: {nombre}"
+    body_text = (
+        "Estimado equipo de Adelante Desarrollos,\n\n"
+        "Se adjuntan las autorizaciones SUGEF firmadas digitalmente por:\n\n"
+        f"Nombre: {nombre}\n"
+        f"Cédula: {cedula}\n"
+        f"Asesor de Ventas: {asesor}\n"
+        f"Tipo de Ingreso: {tipo_ingreso}\n"
+        f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+        f"Documentos adjuntos: {len(attachments)}\n\n"
+        "Saludos,\nPortal de Firmas Adelante\n"
+    )
+
+    raw = gmail_build_message_raw(DEST_EMAILS, subject, body_text, attachments)
+
+    r = requests.post(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+        headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+        json={'raw': raw},
+        timeout=30,
+    )
+    r.raise_for_status()
+    return True
+
 def generate_summary_pdf(nombre, cedula, asesor, tipo_ingreso, photos_count):
     """Generates a summary PDF with the form data."""
     doc = fitz.open()
@@ -513,8 +616,10 @@ def submit():
             with open(path, 'wb') as f:
                 f.write(pdf_bytes)
 
-        # Send email (prefer SMTP if configured; fallback to Microsoft Graph)
-        if SMTP_HOST and SMTP_USER and SMTP_PASS:
+        # Send email (prefer Gmail API if configured; fallback to SMTP; then Microsoft Graph)
+        if GMAIL_OAUTH_CLIENT_ID and GMAIL_OAUTH_CLIENT_SECRET and GMAIL_SENDER:
+            ok = send_email_gmail_api(nombre, cedula, attachments, asesor=asesor, tipo_ingreso=tipo_ingreso)
+        elif SMTP_HOST and SMTP_USER and SMTP_PASS:
             ok = send_email_smtp(nombre, cedula, attachments, asesor=asesor, tipo_ingreso=tipo_ingreso)
         else:
             token = get_access_token()
