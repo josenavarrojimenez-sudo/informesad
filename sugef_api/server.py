@@ -68,6 +68,10 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory, make_response
 import pymupdf as fitz
 
+# SMTP (Google Workspace)
+import smtplib
+from email.message import EmailMessage
+
 app = Flask(__name__, static_folder='.')
 
 @app.after_request
@@ -95,6 +99,11 @@ DEST_EMAILS = [
     'j@adelante.cr',
 ]
 FROM_EMAIL = 'j@adelante.cr'
+
+SMTP_HOST = os.environ.get('SMTP_HOST', '')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASS = os.environ.get('SMTP_PASS', '')
 
 # Which PDFs to process (name → file)
 DOCS = {
@@ -315,6 +324,47 @@ def send_email_graph(token, nombre, cedula, attachments, asesor="No especificado
         raise e
 
 
+
+
+
+def send_email_smtp(nombre, cedula, attachments, asesor="No especificado", tipo_ingreso="No especificado"):
+    """Send email via SMTP (Google Workspace/Gmail)."""
+    if not (SMTP_HOST and SMTP_PORT and SMTP_USER and SMTP_PASS):
+        raise RuntimeError("SMTP is not configured (missing SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS)")
+
+    msg = EmailMessage()
+    msg['Subject'] = f"SUGEF: {nombre}"
+    msg['From'] = SMTP_USER
+    msg['To'] = ", ".join(DEST_EMAILS)
+    msg.set_content(
+        "Estimado equipo de Adelante Desarrollos,\n\n"
+        "Se adjuntan las autorizaciones SUGEF firmadas digitalmente por:\n\n"
+        f"Nombre: {nombre}\n"
+        f"Cédula: {cedula}\n"
+        f"Asesor de Ventas: {asesor}\n"
+        f"Tipo de Ingreso: {tipo_ingreso}\n"
+        f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}\n\n"
+        f"Documentos adjuntos: {len(attachments)}\n\n"
+        "Saludos,\nPortal de Firmas Adelante\n"
+    )
+
+    for fname, content in attachments:
+        if fname.lower().endswith('.pdf'):
+            maintype, subtype = 'application', 'pdf'
+        elif fname.lower().endswith('.png'):
+            maintype, subtype = 'image', 'png'
+        else:
+            maintype, subtype = 'image', 'jpeg'
+        msg.add_attachment(content, maintype=maintype, subtype=subtype, filename=fname)
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30) as s:
+        s.ehlo()
+        s.starttls()
+        s.ehlo()
+        s.login(SMTP_USER, SMTP_PASS)
+        s.send_message(msg)
+    return True
+
 def generate_summary_pdf(nombre, cedula, asesor, tipo_ingreso, photos_count):
     """Generates a summary PDF with the form data."""
     doc = fitz.open()
@@ -446,9 +496,12 @@ def submit():
             with open(path, 'wb') as f:
                 f.write(pdf_bytes)
 
-        # Send email
-        token = get_access_token()
-        ok = send_email_graph(token, nombre, cedula, attachments, asesor=asesor, tipo_ingreso=tipo_ingreso)
+        # Send email (prefer SMTP if configured; fallback to Microsoft Graph)
+        if SMTP_HOST and SMTP_USER and SMTP_PASS:
+            ok = send_email_smtp(nombre, cedula, attachments, asesor=asesor, tipo_ingreso=tipo_ingreso)
+        else:
+            token = get_access_token()
+            ok = send_email_graph(token, nombre, cedula, attachments, asesor=asesor, tipo_ingreso=tipo_ingreso)
 
         if ok:
             return jsonify({'ok': True, 'docs': len(attachments)})
