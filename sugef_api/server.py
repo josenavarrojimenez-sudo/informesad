@@ -82,7 +82,10 @@ def submit_options():
     return make_response('', 200)
 
 PDF_DIR = os.path.join(os.path.dirname(__file__), 'pdfs')
-TOKEN_FILE = '/data/.openclaw/workspace/ms-token.json'
+# Token file location:
+# - Render Secret Files mount under /etc/secrets/<filename>
+# - Local dev uses workspace path
+TOKEN_FILE = '/etc/secrets/ms-token.json' if os.path.exists('/etc/secrets/ms-token.json') else '/data/.openclaw/workspace/ms-token.json'
 CLIENT_ID = 'adbc90ee-fd38-4706-ac40-f9c187e91b34'
 TENANT_ID = '27272476-d569-411c-ab78-6d3f3b7596e5'
 DEST_EMAILS = [
