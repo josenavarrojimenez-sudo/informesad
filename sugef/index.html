@@ -272,7 +272,9 @@
   }
 </style>
 <script>
-window.API_URL = 'https://adelante-sugef-api.loca.lt';
+// Stable API endpoint (Render)
+window.API_URL = 'https://sugef-api.adelante.cr';
+// Optional override via config.json if needed later:
 // fetch('./config.json').then(r=>r.json()).then(d=>{ window.API_URL = d.apiUrl; }).catch(()=>{});
 </script>
 </head>
@@ -566,7 +568,7 @@ async function submitForm() {
   try {
     const res = await fetch(window.API_URL + '/submit', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true'},
+      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ 
         nombre, 
         cedula, 
