@@ -74,16 +74,33 @@ from email.message import EmailMessage
 
 app = Flask(__name__, static_folder='.')
 
+ALLOWED_ORIGINS = {
+    'https://portal.adelante.cr',
+    'https://portal.adelante.cr/sugef',
+    'https://portal.adelante.cr/sugef/',
+}
+
 @app.after_request
 def add_cors(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
+    origin = request.headers.get('Origin', '')
+    if origin in ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    else:
+        # Safe default: allow only our portal domain if origin missing (e.g., curl)
+        response.headers['Access-Control-Allow-Origin'] = 'https://portal.adelante.cr'
+    response.headers['Vary'] = 'Origin'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, bypass-tunnel-reminder'
+    # Keep headers minimal to avoid extra preflight issues
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
 @app.route('/submit', methods=['OPTIONS'])
 def submit_options():
-    return make_response('', 200)
+    resp = make_response('', 200)
+    # CORS headers will also be applied by after_request, but set explicitly for clarity
+    resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return resp
 
 PDF_DIR = os.path.join(os.path.dirname(__file__), 'pdfs')
 # Token file location:
